@@ -1,39 +1,50 @@
 import { Button } from '@/components/ui/button'
-import { FileText, FileQuestion } from 'lucide-react'
+import { InkdownLogo } from '@/components/inkdown-logo'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { FileQuestion, ArrowRight, Home } from 'lucide-react'
 import Link from 'next/link'
 
 export default function NotFound() {
   return (
     <div className="flex min-h-svh flex-col">
       {/* Header */}
-      <header className="border-b">
-        <div className="mx-auto flex h-14 max-w-4xl items-center px-4">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <FileText className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-semibold">MarkdownHub</span>
+      <header className="border-b bg-background/80 backdrop-blur-md">
+        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
+          <Link href="/">
+            <InkdownLogo size="sm" />
           </Link>
+          <ThemeToggle />
         </div>
       </header>
 
       {/* Content */}
-      <main className="flex flex-1 flex-col items-center justify-center gap-6 p-4">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+      <main className="relative flex flex-1 flex-col items-center justify-center gap-6 p-4">
+        {/* Background decoration */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute left-1/2 top-1/2 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-3xl" />
+        </div>
+
+        <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-muted">
           <FileQuestion className="h-10 w-10 text-muted-foreground" />
         </div>
-        <div className="text-center">
+        <div className="relative text-center">
           <h1 className="text-2xl font-bold">Document not found</h1>
           <p className="mt-2 text-muted-foreground">
             This document may have been deleted or made private.
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="relative flex gap-3">
           <Button variant="outline" asChild>
-            <Link href="/">Go home</Link>
+            <Link href="/">
+              <Home className="mr-1.5 h-4 w-4" />
+              Go home
+            </Link>
           </Button>
           <Button asChild>
-            <Link href="/auth/sign-up">Create your own</Link>
+            <Link href="/auth/sign-up">
+              Start writing
+              <ArrowRight className="ml-1.5 h-4 w-4" />
+            </Link>
           </Button>
         </div>
       </main>

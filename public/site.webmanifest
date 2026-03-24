@@ -1,0 +1,17 @@
+{
+  "name": "Inkdown",
+  "short_name": "Inkdown",
+  "description": "Create, organize, and share beautiful markdown documents",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0a1a",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

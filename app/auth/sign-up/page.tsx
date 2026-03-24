@@ -11,10 +11,11 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { InkdownLogo } from '@/components/inkdown-logo'
+import { ThemeToggle } from '@/components/theme-toggle'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { FileText } from 'lucide-react'
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('')
@@ -62,20 +63,30 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center bg-muted/30 p-6 md:p-10">
-      <div className="w-full max-w-sm">
+    <div className="relative flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+      {/* Background decoration */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-1/2 right-1/4 h-[600px] w-[600px] rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute -bottom-1/2 left-1/4 h-[500px] w-[500px] rounded-full bg-accent/5 blur-3xl" />
+      </div>
+
+      {/* Theme toggle */}
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
+
+      <div className="relative w-full max-w-sm">
         <div className="flex flex-col gap-6">
-          <div className="flex items-center justify-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-              <FileText className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-semibold">MarkdownHub</span>
+          <div className="flex items-center justify-center">
+            <Link href="/">
+              <InkdownLogo size="lg" />
+            </Link>
           </div>
-          <Card>
+          <Card className="border-border/50 shadow-xl shadow-primary/5">
             <CardHeader>
               <CardTitle className="text-2xl">Create an account</CardTitle>
               <CardDescription>
-                Start organizing your markdown files today
+                Start organizing your markdown today
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -123,7 +134,7 @@ export default function SignUpPage() {
                   Already have an account?{' '}
                   <Link
                     href="/auth/login"
-                    className="text-foreground underline underline-offset-4 hover:text-primary"
+                    className="text-primary underline underline-offset-4 hover:text-primary/80"
                   >
                     Sign in
                   </Link>

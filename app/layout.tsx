@@ -1,32 +1,60 @@
-import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import type { Metadata, Viewport } from 'next'
+import { Inter, JetBrains_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
+const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" })
 
 export const metadata: Metadata = {
-  title: 'MarkdownHub - Create, Organize & Share Markdown',
-  description: 'A powerful markdown editor to create, organize, and share your documents. Write in markdown, preview in real-time, and share with anyone.',
-  generator: 'v0.app',
-  icons: {
-    icon: [
+  title: {
+    default: 'Inkdown - Beautiful Markdown Editor & Sharing Platform',
+    template: '%s | Inkdown',
+  },
+  description: 'Create, organize, and share beautiful markdown documents. Inkdown provides a seamless writing experience with live preview, folder organization, and instant sharing.',
+  keywords: ['markdown', 'editor', 'writing', 'documentation', 'notes', 'sharing', 'collaboration'],
+  authors: [{ name: 'Inkdown' }],
+  creator: 'Inkdown',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://inkdown.app'),
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: '/',
+    title: 'Inkdown - Beautiful Markdown Editor & Sharing Platform',
+    description: 'Create, organize, and share beautiful markdown documents with live preview and instant sharing.',
+    siteName: 'Inkdown',
+    images: [
       {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Inkdown - Markdown Editor',
       },
     ],
-    apple: '/apple-icon.png',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Inkdown - Beautiful Markdown Editor',
+    description: 'Create, organize, and share beautiful markdown documents.',
+    images: ['/og-image.png'],
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.png', type: 'image/png' },
+    ],
+    apple: '/favicon.png',
+  },
+  manifest: '/site.webmanifest',
+}
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f0a1a' },
+  ],
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({
@@ -35,9 +63,16 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className="font-sans antialiased">
-        {children}
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og'
 import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'edge'
-export const alt = 'MarkdownHub Document Preview'
+export const alt = 'Inkdown Document Preview'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -27,7 +27,7 @@ export default async function OGImage({
     .filter((line: string) => line.trim() && !line.startsWith('#'))
     .slice(0, 3)
     .join(' ')
-    .slice(0, 150) || 'Read this document on MarkdownHub'
+    .slice(0, 150) || 'Read this document on Inkdown'
 
   return new ImageResponse(
     (
@@ -38,50 +38,65 @@ export default async function OGImage({
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          backgroundColor: '#fafafa',
+          background: 'linear-gradient(135deg, #1a1333 0%, #0f0a1a 50%, #1a1333 100%)',
           padding: '60px',
+          position: 'relative',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        {/* Background gradient orbs */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '-150px',
+            right: '-50px',
+            width: '400px',
+            height: '400px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(124, 58, 237, 0.3) 0%, transparent 70%)',
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '-100px',
+            left: '-50px',
+            width: '300px',
+            height: '300px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(34, 211, 238, 0.2) 0%, transparent 70%)',
+          }}
+        />
+
+        {/* Header with logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', zIndex: 10 }}>
           <div
             style={{
               width: '48px',
               height: '48px',
-              backgroundColor: '#171717',
+              background: 'linear-gradient(135deg, #7c3aed 0%, #22d3ee 100%)',
               borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              fontSize: '24px',
+              fontWeight: 'bold',
+              color: 'white',
             }}
           >
-            <svg
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-              <line x1="10" y1="9" x2="8" y2="9" />
-            </svg>
+            I
           </div>
-          <span style={{ fontSize: '24px', fontWeight: 600, color: '#171717' }}>
-            MarkdownHub
+          <span style={{ fontSize: '24px', fontWeight: 600, color: 'white' }}>
+            Inkdown
           </span>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* Title and preview */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', zIndex: 10 }}>
           <h1
             style={{
-              fontSize: '56px',
+              fontSize: '52px',
               fontWeight: 700,
-              color: '#171717',
+              color: 'white',
               lineHeight: 1.2,
               margin: 0,
             }}
@@ -90,8 +105,8 @@ export default async function OGImage({
           </h1>
           <p
             style={{
-              fontSize: '24px',
-              color: '#737373',
+              fontSize: '22px',
+              color: 'rgba(255, 255, 255, 0.7)',
               lineHeight: 1.5,
               margin: 0,
             }}
@@ -100,9 +115,10 @@ export default async function OGImage({
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '18px', color: '#a3a3a3' }}>
-            markdownhub.vercel.app
+        {/* Footer */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', zIndex: 10 }}>
+          <span style={{ fontSize: '16px', color: 'rgba(255, 255, 255, 0.5)' }}>
+            inkdown.app
           </span>
         </div>
       </div>

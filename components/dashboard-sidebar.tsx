@@ -9,7 +9,9 @@ import { ShareDialog } from '@/components/share-dialog'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
-import { FileText, FolderPlus, FilePlus, LogOut } from 'lucide-react'
+import { FolderPlus, FilePlus, LogOut } from 'lucide-react'
+import { InkdownLogo } from '@/components/inkdown-logo'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { TreeItem, File, Folder } from '@/lib/types'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -181,13 +183,11 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
   return (
     <div className="flex h-full w-64 flex-col border-r bg-sidebar">
       {/* Header */}
-      <div className="flex h-14 items-center border-b px-4">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <FileText className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="font-semibold text-sidebar-foreground">MarkdownHub</span>
+      <div className="flex h-14 items-center justify-between border-b px-4">
+        <Link href="/dashboard">
+          <InkdownLogo size="sm" />
         </Link>
+        <ThemeToggle />
       </div>
 
       {/* Actions */}
