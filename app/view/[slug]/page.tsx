@@ -12,6 +12,10 @@ interface ViewPageProps {
   params: Promise<{ slug: string }>
 }
 
+const BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ||
+  'https://inkdown.app'
+
 // Generate dynamic metadata for OG tags
 export async function generateMetadata({ params }: ViewPageProps): Promise<Metadata> {
   const { slug } = await params
@@ -25,34 +29,50 @@ export async function generateMetadata({ params }: ViewPageProps): Promise<Metad
     .single()
 
   if (!file) {
-    return {
-      title: 'Not Found',
-    }
+    return { title: 'Not Found' }
   }
 
-  // Extract first paragraph as description
-  const description = file.content
+  const title = file.name.replace(/\.md$/, '')
+
+  // Extract first non-heading paragraph for the description / OG preview
+  const preview = file.content
     .split('\n')
     .filter((line: string) => line.trim() && !line.startsWith('#'))
     .slice(0, 2)
     .join(' ')
     .slice(0, 200)
 
-  const title = file.name.replace(/\.md$/, '')
+  const description = preview || `Read "${title}" on Inkdown`
+
+  // Build the absolute OG image URL pointing at our dedicated /api/og route
+  const ogImageUrl = new URL('/api/og', BASE_URL)
+  ogImageUrl.searchParams.set('title', title)
+  ogImageUrl.searchParams.set('preview', preview)
+  ogImageUrl.searchParams.set('doc', '1')
+
+  const ogImage = {
+    url: ogImageUrl.toString(),
+    width: 1200,
+    height: 630,
+    alt: title,
+  }
 
   return {
-    title: title,
-    description: description || `Read "${title}" on Inkdown`,
+    title,
+    description,
     openGraph: {
-      title: title,
-      description: description || `Read "${title}" on Inkdown`,
+      title,
+      description,
       type: 'article',
       siteName: 'Inkdown',
+      url: `${BASE_URL}/view/${slug}`,
+      images: [ogImage],
     },
     twitter: {
       card: 'summary_large_image',
-      title: title,
-      description: description || `Read "${title}" on Inkdown`,
+      title,
+      description,
+      images: [ogImageUrl.toString()],
     },
   }
 }
