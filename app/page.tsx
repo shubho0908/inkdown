@@ -9,9 +9,6 @@ import {
   Edit3, 
   Eye, 
   Lock,
-  Sparkles,
-  Zap,
-  Globe,
   ArrowRight
 } from 'lucide-react'
 
@@ -44,11 +41,6 @@ export default function HomePage() {
           </div>
           
           <div className="relative mx-auto max-w-6xl px-4 py-24 text-center md:py-32 lg:py-40">
-            <div className="mx-auto mb-6 flex w-fit items-center gap-2 rounded-full border bg-muted/50 px-4 py-1.5 text-sm text-muted-foreground">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span>Now with live collaboration</span>
-            </div>
-            
             <h1 className="text-balance text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
               Write beautiful markdown,
               <br />
@@ -72,21 +64,7 @@ export default function HomePage() {
               </Button>
             </div>
 
-            {/* Stats */}
-            <div className="mt-16 grid grid-cols-3 gap-8 border-t pt-8">
-              <div>
-                <div className="text-3xl font-bold text-primary">10k+</div>
-                <div className="text-sm text-muted-foreground">Documents created</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-primary">99.9%</div>
-                <div className="text-sm text-muted-foreground">Uptime</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-primary">50ms</div>
-                <div className="text-sm text-muted-foreground">Avg. load time</div>
-              </div>
-            </div>
+
           </div>
         </section>
 
@@ -130,36 +108,6 @@ export default function HomePage() {
                 icon={<FileText className="h-5 w-5" />}
                 title="GFM Support"
                 description="Tables, task lists, code blocks, and all GitHub Flavored Markdown features."
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* How it works */}
-        <section className="py-24">
-          <div className="mx-auto max-w-6xl px-4">
-            <div className="text-center">
-              <h2 className="text-3xl font-bold md:text-4xl">Simple by design</h2>
-              <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-                Get started in seconds. No complex setup required.
-              </p>
-            </div>
-            
-            <div className="mt-16 grid gap-8 md:grid-cols-3">
-              <StepCard
-                number="1"
-                title="Create"
-                description="Sign up and create your first markdown document in seconds."
-              />
-              <StepCard
-                number="2"
-                title="Write"
-                description="Use our rich editor with live preview to craft your content."
-              />
-              <StepCard
-                number="3"
-                title="Share"
-                description="Toggle a document public and share the link with anyone."
               />
             </div>
           </div>
@@ -226,22 +174,4 @@ function FeatureCard({
   )
 }
 
-function StepCard({
-  number,
-  title,
-  description,
-}: {
-  number: string
-  title: string
-  description: string
-}) {
-  return (
-    <div className="text-center">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground">
-        {number}
-      </div>
-      <h3 className="mt-4 text-lg font-semibold">{title}</h3>
-      <p className="mt-2 text-sm text-muted-foreground">{description}</p>
-    </div>
-  )
-}
+
