@@ -36,10 +36,10 @@ export default function LoginPage() {
         password,
       })
       if (error) throw error
-      router.push('/dashboard')
+      // Force a full page navigation to ensure middleware picks up the new session
+      window.location.href = '/dashboard'
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An error occurred')
-    } finally {
       setIsLoading(false)
     }
   }
