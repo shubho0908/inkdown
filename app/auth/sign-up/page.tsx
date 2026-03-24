@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { InkdownLogo } from '@/components/inkdown-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { getAuthRedirectUrl } from '@/lib/site-url'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -48,9 +49,10 @@ export default function SignUpPage() {
         email,
         password,
         options: {
-          emailRedirectTo:
-            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-            `${window.location.origin}/`,
+          emailRedirectTo: getAuthRedirectUrl(
+            '/auth/callback',
+            window.location.origin,
+          ),
         },
       })
       if (error) throw error

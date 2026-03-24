@@ -46,7 +46,11 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Redirect authenticated users away from auth pages to the workspace root.
-  if (request.nextUrl.pathname.startsWith('/auth') && user) {
+  if (
+    request.nextUrl.pathname.startsWith('/auth') &&
+    !request.nextUrl.pathname.startsWith('/auth/callback') &&
+    user
+  ) {
     const url = request.nextUrl.clone()
     url.pathname = '/'
     return NextResponse.redirect(url)
