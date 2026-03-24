@@ -1,15 +1,61 @@
+import { memo } from 'react'
 import ReactMarkdown from 'react-markdown'
+import rehypeKatex from 'rehype-katex'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import { MermaidDiagram } from '@/components/mermaid-diagram'
 
 interface MarkdownPreviewProps {
   content: string
 }
 
-export function MarkdownPreview({ content }: MarkdownPreviewProps) {
+function normalizeUrl(value?: string) {
+  const trimmed = value?.trim()
+
+  if (!trimmed) {
+    return null
+  }
+
+  if (
+    trimmed.startsWith('/') ||
+    trimmed.startsWith('./') ||
+    trimmed.startsWith('../') ||
+    trimmed.startsWith('#')
+  ) {
+    return trimmed
+  }
+
+  try {
+    const url = new URL(trimmed)
+
+    if (['http:', 'https:', 'mailto:', 'tel:', 'data:', 'blob:'].includes(url.protocol)) {
+      return trimmed
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}
+
+function normalizeImageSrc(value?: string) {
+  const normalized = normalizeUrl(value)
+
+  if (!normalized || normalized.startsWith('mailto:') || normalized.startsWith('tel:') || normalized.startsWith('#')) {
+    return null
+  }
+
+  return normalized
+}
+
+export const MarkdownPreview = memo(function MarkdownPreview({
+  content,
+}: MarkdownPreviewProps) {
   return (
-    <article className="prose prose-neutral dark:prose-invert max-w-none break-words text-sm sm:text-base">
+    <article className="prose prose-neutral dark:prose-invert min-w-0 w-full max-w-full break-words text-sm sm:text-base">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeKatex]}
         components={{
           h1: ({ children }) => (
             <h1 className="mb-4 border-b pb-2 text-2xl font-bold tracking-tight sm:text-3xl">{children}</h1>
@@ -40,6 +86,12 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
           ),
           code: ({ className, children, ...props }) => {
             const match = /language-(\w+)/.exec(className || '')
+            const value = String(children).replace(/\n$/, '')
+
+            if (match?.[1] === 'mermaid') {
+              return <MermaidDiagram chart={value} />
+            }
+
             const isInline = !match
             return isInline ? (
               <code
@@ -53,35 +105,57 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
                 className={`block overflow-x-auto rounded-lg bg-muted p-4 font-mono text-sm ${className}`}
                 {...props}
               >
-                {children}
+                {value}
               </code>
             )
           },
-          pre: ({ children }) => (
-            <pre className="mt-4 overflow-x-auto rounded-lg bg-muted p-4">
-              {children}
-            </pre>
-          ),
-          a: ({ href, children }) => (
-            <a
-              href={href}
-              className="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {children}
-            </a>
-          ),
-          img: ({ src, alt }) => (
-            <span className="my-4 block overflow-hidden rounded-lg border">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={src}
-                alt={alt || ''}
-                className="h-auto max-w-full"
-              />
-            </span>
-          ),
+          pre: ({ children }) => <>{children}</>,
+          a: ({ href, children }) => {
+            const safeHref = normalizeUrl(href)
+
+            if (!safeHref) {
+              return (
+                <span className="font-medium text-muted-foreground underline underline-offset-4">
+                  {children}
+                </span>
+              )
+            }
+
+            const isExternal = !safeHref.startsWith('/') && !safeHref.startsWith('./') && !safeHref.startsWith('../') && !safeHref.startsWith('#')
+
+            return (
+              <a
+                href={safeHref}
+                className="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
+                target={isExternal ? '_blank' : undefined}
+                rel={isExternal ? 'noopener noreferrer' : undefined}
+              >
+                {children}
+              </a>
+            )
+          },
+          img: ({ src, alt }) => {
+            const safeSrc = normalizeImageSrc(src)
+
+            if (!safeSrc) {
+              return (
+                <span className="my-4 block rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
+                  {alt?.trim() ? `Add an image URL for "${alt.trim()}" to preview it.` : 'Add an image URL to preview it.'}
+                </span>
+              )
+            }
+
+            return (
+              <span className="my-4 block overflow-hidden rounded-lg border">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={safeSrc}
+                  alt={alt || ''}
+                  className="h-auto max-w-full"
+                />
+              </span>
+            )
+          },
           hr: () => <hr className="my-6 border-border" />,
           table: ({ children }) => (
             <div className="my-4 overflow-x-auto">
@@ -121,4 +195,4 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
       </ReactMarkdown>
     </article>
   )
-}
+})

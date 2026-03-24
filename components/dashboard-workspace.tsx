@@ -9,12 +9,12 @@ export function DashboardWorkspace() {
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
 
   return (
-    <div className="flex min-h-svh flex-col md:h-svh md:grid md:grid-cols-[var(--workspace-sidebar-width)_minmax(0,1fr)]">
+    <div className="flex h-svh min-h-svh w-full flex-col overflow-x-hidden md:grid md:grid-cols-[var(--workspace-sidebar-width)_minmax(0,1fr)]">
       <DashboardSidebar
         selectedFileId={selectedFileId}
         onFileSelect={setSelectedFileId}
       />
-      <main className="flex min-h-0 min-w-0 flex-1 overflow-hidden bg-background">
+      <main className="flex h-full min-h-0 min-w-0 w-full flex-1 overflow-hidden bg-background">
         {selectedFileId ? (
           <MarkdownEditor fileId={selectedFileId} />
         ) : (

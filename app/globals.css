@@ -143,3 +143,19 @@
     font: inherit;
   }
 }
+
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.25rem;
+}
+
+.katex-display > .katex {
+  min-width: max-content;
+}
+
+.mermaid-diagram svg {
+  display: block;
+  height: auto;
+  max-width: 100%;
+}

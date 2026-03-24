@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useRef, useState } from 'react'
 import { ShareDialog } from '@/components/share-dialog'
 import { MarkdownEditorHeader, type ViewMode } from '@/components/markdown-editor-header'
 import { MarkdownEditorLoading } from '@/components/markdown-editor-loading'
@@ -29,6 +29,7 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
   const [shareOpen, setShareOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const deferredPreviewContent = useDeferredValue(content)
   const updateFileMutation = useUpdateFileMutation({
     onSuccess: () => {
       setHasChanges(false)
@@ -101,12 +102,6 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
     }
   }, [])
 
-  useEffect(() => {
-    if (isMobile && viewMode === 'split') {
-      setViewMode('edit')
-    }
-  }, [isMobile, viewMode])
-
   const insertMarkdown = (before: string, after = '') => {
     const textarea = textareaRef.current
     if (!textarea) return
@@ -165,7 +160,7 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
   }
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col">
+    <div className="flex h-full min-h-0 min-w-0 w-full flex-col overflow-x-hidden">
       <MarkdownEditorHeader
         fileName={file.name}
         isSaving={isSaving}
@@ -185,16 +180,16 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
 
       <div
         className={cn(
-          'flex min-h-0 flex-1 overflow-hidden',
+          'flex min-h-0 min-w-0 flex-1 overflow-hidden',
           viewMode === 'split' && isMobile ? 'flex-col' : 'flex-row',
         )}
       >
         {(viewMode === 'edit' || viewMode === 'split') && (
           <div
             className={cn(
-              'min-h-0 min-w-0 bg-background',
+              'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
               viewMode === 'split'
-                ? cn('flex-1', isMobile ? 'border-b' : 'border-r')
+                ? cn('flex-1 basis-1/2', isMobile ? 'border-b' : 'border-r')
                 : 'w-full',
             )}
           >
@@ -202,9 +197,10 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
               ref={textareaRef}
               value={content}
               onChange={(event) => handleContentChange(event.target.value)}
-              className="h-full min-h-[18rem] w-full resize-none bg-background p-4 font-mono text-sm leading-6 focus:outline-none sm:p-6"
+              className="min-h-0 w-full flex-1 resize-none overflow-x-hidden bg-background p-4 font-mono text-sm leading-6 whitespace-pre-wrap [overflow-wrap:anywhere] focus:outline-none sm:p-6"
               placeholder="Start writing markdown..."
               spellCheck={false}
+              wrap="soft"
             />
           </div>
         )}
@@ -212,12 +208,12 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
         {(viewMode === 'preview' || viewMode === 'split') && (
           <div
             className={cn(
-              'min-h-0 min-w-0',
-              viewMode === 'split' ? 'flex-1' : 'w-full',
+              'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
+              viewMode === 'split' ? 'flex-1 basis-1/2' : 'w-full',
             )}
           >
-            <div className="h-full overflow-auto p-4 sm:p-6">
-              <MarkdownPreview content={content} />
+            <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6">
+              <MarkdownPreview content={deferredPreviewContent} />
             </div>
           </div>
         )}

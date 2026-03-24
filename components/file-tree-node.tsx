@@ -197,8 +197,9 @@ export function TreeNode({
               Rename
             </DropdownMenuItem>
             <DropdownMenuItem
+              variant="destructive"
               onClick={() => onDelete(item)}
-              className="text-destructive focus:text-destructive"
+              className="mt-1 rounded-lg"
             >
               <Trash2 className="mr-2 h-4 w-4" />
               Delete

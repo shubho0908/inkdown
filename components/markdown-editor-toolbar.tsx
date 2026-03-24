@@ -84,32 +84,34 @@ export function MarkdownEditorToolbar({
   onLinePrefix,
 }: MarkdownEditorToolbarProps) {
   return (
-    <div className="border-b bg-muted/30">
-      <div className="flex min-w-max items-center gap-1 overflow-x-auto px-2 py-1.5">
-        {toolbarButtons.map((button, index) =>
-          button.type === 'divider' ? (
-            <div key={index} className="mx-1 h-6 w-px bg-border" />
-          ) : (
-            <Button
-              key={index}
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 shrink-0"
-              onClick={() => {
-                if (button.action === 'wrap') {
-                  onWrap(button.args[0], button.args[1])
-                  return
-                }
+    <div className="min-w-0 overflow-hidden border-b bg-muted/30">
+      <div className="overflow-x-visible sm:overflow-x-auto">
+        <div className="flex min-w-full flex-wrap items-center gap-1 px-2 py-1.5 sm:w-max sm:min-w-full sm:flex-nowrap">
+          {toolbarButtons.map((button, index) =>
+            button.type === 'divider' ? (
+              <div key={index} className="mx-1 hidden h-6 w-px bg-border sm:block" />
+            ) : (
+              <Button
+                key={index}
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => {
+                  if (button.action === 'wrap') {
+                    onWrap(button.args[0], button.args[1])
+                    return
+                  }
 
-                onLinePrefix(button.args[0])
-              }}
-              title={button.title}
-            >
-              <button.icon className="h-4 w-4" />
-              <span className="sr-only">{button.title}</span>
-            </Button>
-          ),
-        )}
+                  onLinePrefix(button.args[0])
+                }}
+                title={button.title}
+              >
+                <button.icon className="h-4 w-4" />
+                <span className="sr-only">{button.title}</span>
+              </Button>
+            ),
+          )}
+        </div>
       </div>
     </div>
   )

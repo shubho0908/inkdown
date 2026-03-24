@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { QueryProvider } from '@/components/query-provider'
+import 'katex/dist/katex.min.css'
 import './globals.css'
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
