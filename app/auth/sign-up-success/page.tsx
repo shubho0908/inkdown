@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import {
   Card,
   CardContent,
@@ -9,6 +10,12 @@ import { InkdownLogo } from '@/components/inkdown-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Mail, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
+
+export const metadata: Metadata = {
+  title: 'Check Your Email',
+  description: 'We sent you a confirmation link to verify your Inkdown account.',
+  robots: { index: false },
+}
 
 export default function SignUpSuccessPage() {
   return (
