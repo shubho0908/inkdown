@@ -173,7 +173,7 @@ export async function GET(request: NextRequest) {
                   letterSpacing: '0.2px',
                 }}
               >
-                inkdown.app
+                inkdown.shubhojeet.com
               </span>
             </div>
           </div>
