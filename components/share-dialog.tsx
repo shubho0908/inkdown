@@ -49,14 +49,14 @@ export function ShareDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Share &quot;{fileName}&quot;</DialogTitle>
+          <DialogTitle className="break-words pr-8">Share &quot;{fileName}&quot;</DialogTitle>
           <DialogDescription>
             Make this file public to share it with others.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-0.5 pr-2">
               <Label htmlFor="public">Public access</Label>
               <p className="text-sm text-muted-foreground">
                 Anyone with the link can view this file
@@ -72,17 +72,18 @@ export function ShareDialog({
           {isPublic && slug && (
             <div className="grid gap-2">
               <Label>Share link</Label>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Input
                   value={shareUrl}
                   readOnly
-                  className="font-mono text-sm"
+                  className="min-w-0 font-mono text-sm"
                 />
                 <Button
                   type="button"
                   size="icon"
                   variant="outline"
                   onClick={handleCopy}
+                  className="shrink-0"
                 >
                   {copied ? (
                     <Check className="h-4 w-4" />
@@ -96,6 +97,7 @@ export function ShareDialog({
                   size="icon"
                   variant="outline"
                   asChild
+                  className="shrink-0"
                 >
                   <a href={shareUrl} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4" />

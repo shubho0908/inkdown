@@ -1,0 +1,5 @@
+export const QUERY_GC_TIME = 30 * 60_000
+export const DEFAULT_QUERY_STALE_TIME = 60_000
+
+export const WORKSPACE_COLLECTION_STALE_TIME = 5 * 60_000
+export const WORKSPACE_FILE_STALE_TIME = 2 * 60_000

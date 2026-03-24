@@ -101,15 +101,14 @@ export default async function ViewPage({ params }: ViewPageProps) {
 
   return (
     <div className="min-h-svh bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
+        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6">
           <Link href="/">
             <InkdownLogo size="sm" />
           </Link>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Button size="sm" asChild>
+            <Button size="sm" asChild className="shrink-0">
               <Link href="/auth/sign-up">
                 Start writing
                 <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
@@ -119,11 +118,10 @@ export default async function ViewPage({ params }: ViewPageProps) {
         </div>
       </header>
 
-      {/* Content */}
-      <main className="mx-auto max-w-4xl px-4 py-8">
+      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
         <article>
           <header className="mb-8 border-b pb-6">
-            <h1 className="text-balance text-3xl font-bold tracking-tight md:text-4xl">{title}</h1>
+            <h1 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               Last updated on {updatedAt}
             </p>
@@ -132,9 +130,8 @@ export default async function ViewPage({ params }: ViewPageProps) {
         </article>
       </main>
 
-      {/* Footer */}
       <footer className="border-t py-8">
-        <div className="mx-auto max-w-4xl px-4 text-center text-sm text-muted-foreground">
+        <div className="mx-auto max-w-4xl px-4 text-center text-sm text-muted-foreground sm:px-6">
           <p>
             Shared via{' '}
             <Link href="/" className="text-primary underline underline-offset-4 hover:text-primary/80">

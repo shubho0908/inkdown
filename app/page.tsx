@@ -1,3 +1,5 @@
+import { createClient } from '@/lib/supabase/server'
+import { DashboardWorkspace } from '@/components/dashboard-workspace'
 import { Button } from '@/components/ui/button'
 import { InkdownLogo } from '@/components/inkdown-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -12,73 +14,78 @@ import {
   ArrowRight
 } from 'lucide-react'
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (user) {
+    return <DashboardWorkspace />
+  }
+
   return (
     <div className="flex min-h-svh flex-col">
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <InkdownLogo size="md" />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <ThemeToggle />
-            <Button variant="ghost" asChild>
+            <Button variant="ghost" size="sm" asChild>
               <Link href="/auth/login">Sign in</Link>
             </Button>
-            <Button asChild className="hidden sm:inline-flex">
+            <Button size="sm" asChild className="hidden sm:inline-flex">
               <Link href="/auth/sign-up">Get started</Link>
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Hero */}
       <main className="flex-1">
         <section className="relative overflow-hidden">
-          {/* Background decoration */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <div className="absolute -top-1/2 left-1/2 h-[800px] w-[800px] -translate-x-1/2 rounded-full bg-primary/5 blur-3xl" />
             <div className="absolute -bottom-1/2 right-0 h-[600px] w-[600px] rounded-full bg-accent/5 blur-3xl" />
           </div>
           
-          <div className="relative mx-auto max-w-6xl px-4 py-24 text-center md:py-32 lg:py-40">
-            <h1 className="text-balance text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
-              Write beautiful markdown,
-              <br />
-              <span className="text-primary">share it instantly</span>
-            </h1>
+          <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 md:py-32 lg:py-36">
+            <div className="mx-auto max-w-3xl text-center">
+              <h1 className="text-balance text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                Write beautiful markdown,
+                <br />
+                <span className="text-primary">share it instantly</span>
+              </h1>
             
-            <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground md:text-xl">
-              Inkdown is your creative space for markdown. Organize documents in folders, 
-              preview in real-time, and share with a single link.
-            </p>
+              <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg md:text-xl">
+                Inkdown is your creative space for markdown. Organize documents in folders,
+                preview in real time, and share with a single link.
+              </p>
             
-            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Button size="lg" asChild className="w-full sm:w-auto">
-                <Link href="/auth/sign-up">
-                  Start writing free
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild className="w-full sm:w-auto">
-                <Link href="/auth/login">Sign in to your account</Link>
-              </Button>
+              <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <Button size="lg" asChild className="w-full sm:w-auto">
+                  <Link href="/auth/sign-up">
+                    Start writing free
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild className="w-full sm:w-auto">
+                  <Link href="/auth/login">Sign in to your account</Link>
+                </Button>
+              </div>
             </div>
-
-
           </div>
         </section>
 
-        {/* Features */}
-        <section className="border-t bg-muted/30 py-24">
-          <div className="mx-auto max-w-6xl px-4">
+        <section className="border-t bg-muted/30 py-16 sm:py-24">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="text-center">
               <h2 className="text-3xl font-bold md:text-4xl">Everything you need to write</h2>
-              <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
+              <p className="mx-auto mt-4 max-w-2xl text-pretty text-muted-foreground">
                 A complete markdown solution for developers, writers, and teams who value simplicity and elegance.
               </p>
             </div>
             
-            <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-12 grid gap-4 sm:mt-16 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
               <FeatureCard
                 icon={<Edit3 className="h-5 w-5" />}
                 title="Rich Editor"
@@ -113,15 +120,14 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* CTA */}
-        <section className="border-t bg-muted/30 py-24">
-          <div className="mx-auto max-w-6xl px-4 text-center">
+        <section className="border-t bg-muted/30 py-16 sm:py-24">
+          <div className="mx-auto max-w-6xl px-4 text-center sm:px-6">
             <div className="mx-auto max-w-2xl">
               <h2 className="text-3xl font-bold md:text-4xl">Ready to start writing?</h2>
               <p className="mt-4 text-muted-foreground">
                 Create your free account and start organizing your markdown today.
               </p>
-              <Button size="lg" className="mt-8" asChild>
+              <Button size="lg" className="mt-8 w-full sm:w-auto" asChild>
                 <Link href="/auth/sign-up">
                   Create free account
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -132,15 +138,14 @@ export default function HomePage() {
         </section>
       </main>
 
-      {/* Footer */}
       <footer className="border-t py-12">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="flex flex-col items-center justify-between gap-4 text-center md:flex-row md:text-left">
             <InkdownLogo size="sm" />
             <p className="text-sm text-muted-foreground">
               Inkdown - Your markdown, beautifully organized.
             </p>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground md:justify-end">
               <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
               <span className="text-border">•</span>
               <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
@@ -162,7 +167,7 @@ function FeatureCard({
   description: string
 }) {
   return (
-    <div className="group rounded-xl border bg-card p-6 transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5">
+    <div className="group h-full rounded-xl border bg-card p-5 transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 sm:p-6">
       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
         {icon}
       </div>
@@ -171,5 +176,3 @@ function FeatureCard({
     </div>
   )
 }
-
-

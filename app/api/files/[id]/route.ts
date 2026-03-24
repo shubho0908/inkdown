@@ -46,7 +46,22 @@ export async function PATCH(
   const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (name !== undefined) updateData.name = name
   if (content !== undefined) updateData.content = content
-  if (folder_id !== undefined) updateData.folder_id = folder_id
+  if (folder_id !== undefined) {
+    if (folder_id !== null) {
+      const { data: targetFolder, error: folderError } = await supabase
+        .from('folders')
+        .select('id')
+        .eq('id', folder_id)
+        .eq('user_id', user.id)
+        .single()
+
+      if (folderError || !targetFolder) {
+        return NextResponse.json({ error: 'Invalid target folder' }, { status: 400 })
+      }
+    }
+
+    updateData.folder_id = folder_id
+  }
   if (is_public !== undefined) {
     updateData.is_public = is_public
     // Generate or clear slug based on public status

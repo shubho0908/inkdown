@@ -1,48 +1,26 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
-import useSWR, { mutate } from 'swr'
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Skeleton } from '@/components/ui/skeleton'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ShareDialog } from '@/components/share-dialog'
-import {
-  Bold,
-  Italic,
-  Strikethrough,
-  Heading1,
-  Heading2,
-  Heading3,
-  List,
-  ListOrdered,
-  Quote,
-  Code,
-  Link2,
-  Image,
-  CheckSquare,
-  Minus,
-  Share2,
-  Save,
-  Eye,
-  Edit3,
-  Columns2,
-} from 'lucide-react'
-import { File } from '@/lib/types'
+import { MarkdownEditorHeader, type ViewMode } from '@/components/markdown-editor-header'
+import { MarkdownEditorLoading } from '@/components/markdown-editor-loading'
+import { MarkdownEditorToolbar } from '@/components/markdown-editor-toolbar'
 import { MarkdownPreview } from '@/components/markdown-preview'
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+import { useIsMobile } from '@/hooks/use-mobile'
+import {
+  useToggleFilePublicMutation,
+  useUpdateFileMutation,
+} from '@/hooks/workspace/use-file-mutations'
+import { useFileQuery } from '@/hooks/workspace/use-workspace-queries'
+import { cn } from '@/lib/utils'
 
 interface MarkdownEditorProps {
   fileId: string
 }
 
-type ViewMode = 'edit' | 'preview' | 'split'
-
 export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
-  const { data: file, isLoading } = useSWR<File>(
-    fileId ? `/api/files/${fileId}` : null,
-    fetcher
-  )
+  const isMobile = useIsMobile()
+  const { data: file, isLoading } = useFileQuery(fileId)
 
   const [content, setContent] = useState('')
   const [isSaving, setIsSaving] = useState(false)
@@ -51,68 +29,70 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
   const [shareOpen, setShareOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const updateFileMutation = useUpdateFileMutation({
+    onSuccess: () => {
+      setHasChanges(false)
+      setIsSaving(false)
+    },
+  })
+  const toggleFilePublicMutation = useToggleFilePublicMutation()
 
-  // Update content when file changes
   useEffect(() => {
     if (file) {
       setContent(file.content)
       setHasChanges(false)
     }
-  }, [file])
+  }, [file?.id])
 
-  // Auto-save with debounce
-  const saveContent = useCallback(async (newContent: string) => {
-    if (!fileId) return
-    setIsSaving(true)
-    try {
-      await fetch(`/api/files/${fileId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: newContent }),
-      })
-      setHasChanges(false)
-      mutate(`/api/files/${fileId}`)
-    } finally {
-      setIsSaving(false)
+  const saveContent = useCallback(
+    async (newContent: string) => {
+      if (!fileId) return
+      setIsSaving(true)
+
+      try {
+        await updateFileMutation.mutateAsync({
+          fileId,
+          data: { content: newContent },
+        })
+      } catch {
+        setIsSaving(false)
+      }
+    },
+    [fileId, updateFileMutation],
+  )
+
+  const handleSave = useCallback(() => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
     }
-  }, [fileId])
+    saveContent(content)
+  }, [content, saveContent])
 
   const handleContentChange = (newContent: string) => {
     setContent(newContent)
     setHasChanges(true)
 
-    // Clear existing timeout
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current)
     }
 
-    // Set new auto-save timeout (1.5 seconds)
     saveTimeoutRef.current = setTimeout(() => {
       saveContent(newContent)
     }, 1500)
   }
 
-  // Manual save
-  const handleSave = () => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current)
-    }
-    saveContent(content)
-  }
-
-  // Keyboard shortcut for save
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-        e.preventDefault()
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 's') {
+        event.preventDefault()
         handleSave()
       }
     }
+
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [content])
+  }, [handleSave])
 
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) {
@@ -121,14 +101,19 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
     }
   }, [])
 
-  const insertMarkdown = (before: string, after: string = '') => {
+  useEffect(() => {
+    if (isMobile && viewMode === 'split') {
+      setViewMode('edit')
+    }
+  }, [isMobile, viewMode])
+
+  const insertMarkdown = (before: string, after = '') => {
     const textarea = textareaRef.current
     if (!textarea) return
 
     const start = textarea.selectionStart
     const end = textarea.selectionEnd
     const selectedText = content.substring(start, end)
-
     const newContent =
       content.substring(0, start) +
       before +
@@ -138,7 +123,6 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
 
     handleContentChange(newContent)
 
-    // Restore focus and selection
     setTimeout(() => {
       textarea.focus()
       const newCursorPos = start + before.length + selectedText.length
@@ -165,30 +149,11 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
 
   const handleShareToggle = async (isPublic: boolean) => {
     if (!file) return
-    const res = await fetch(`/api/files/${file.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ is_public: isPublic }),
-    })
-    if (res.ok) {
-      mutate(`/api/files/${fileId}`)
-      mutate('/api/files')
-    }
+    await toggleFilePublicMutation.mutateAsync({ file, isPublic })
   }
 
   if (isLoading) {
-    return (
-      <div className="flex h-full flex-col">
-        <div className="flex h-14 items-center gap-2 border-b px-4">
-          <Skeleton className="h-8 w-32" />
-          <div className="flex-1" />
-          <Skeleton className="h-8 w-24" />
-        </div>
-        <div className="flex-1 p-4">
-          <Skeleton className="h-full w-full" />
-        </div>
-      </div>
-    )
+    return <MarkdownEditorLoading />
   }
 
   if (!file) {
@@ -199,114 +164,65 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
     )
   }
 
-  const toolbarButtons = [
-    { icon: Bold, action: () => insertMarkdown('**', '**'), title: 'Bold' },
-    { icon: Italic, action: () => insertMarkdown('*', '*'), title: 'Italic' },
-    { icon: Strikethrough, action: () => insertMarkdown('~~', '~~'), title: 'Strikethrough' },
-    { type: 'divider' as const },
-    { icon: Heading1, action: () => insertAtLineStart('# '), title: 'Heading 1' },
-    { icon: Heading2, action: () => insertAtLineStart('## '), title: 'Heading 2' },
-    { icon: Heading3, action: () => insertAtLineStart('### '), title: 'Heading 3' },
-    { type: 'divider' as const },
-    { icon: List, action: () => insertAtLineStart('- '), title: 'Bullet List' },
-    { icon: ListOrdered, action: () => insertAtLineStart('1. '), title: 'Numbered List' },
-    { icon: CheckSquare, action: () => insertAtLineStart('- [ ] '), title: 'Task List' },
-    { type: 'divider' as const },
-    { icon: Quote, action: () => insertAtLineStart('> '), title: 'Quote' },
-    { icon: Code, action: () => insertMarkdown('`', '`'), title: 'Inline Code' },
-    { icon: Minus, action: () => insertMarkdown('\n---\n'), title: 'Horizontal Rule' },
-    { type: 'divider' as const },
-    { icon: Link2, action: () => insertMarkdown('[', '](url)'), title: 'Link' },
-    { icon: Image, action: () => insertMarkdown('![alt](', ')'), title: 'Image' },
-  ]
-
   return (
-    <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="flex h-14 items-center gap-3 border-b px-4">
-        <h1 className="font-medium">{file.name}</h1>
-        {hasChanges && (
-          <span className="text-xs text-muted-foreground">(unsaved)</span>
-        )}
-        {isSaving && (
-          <span className="text-xs text-muted-foreground">Saving...</span>
-        )}
-        <div className="flex-1" />
-        
-        <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-          <TabsList className="h-8">
-            <TabsTrigger value="edit" className="h-7 px-2">
-              <Edit3 className="mr-1.5 h-3.5 w-3.5" />
-              Edit
-            </TabsTrigger>
-            <TabsTrigger value="split" className="h-7 px-2">
-              <Columns2 className="mr-1.5 h-3.5 w-3.5" />
-              Split
-            </TabsTrigger>
-            <TabsTrigger value="preview" className="h-7 px-2">
-              <Eye className="mr-1.5 h-3.5 w-3.5" />
-              Preview
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+    <div className="flex h-full min-h-0 w-full flex-col">
+      <MarkdownEditorHeader
+        fileName={file.name}
+        isSaving={isSaving}
+        hasChanges={hasChanges}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        onShare={() => setShareOpen(true)}
+        onSave={handleSave}
+      />
 
-        <Button variant="outline" size="sm" onClick={() => setShareOpen(true)}>
-          <Share2 className="mr-1.5 h-4 w-4" />
-          Share
-        </Button>
-        <Button size="sm" onClick={handleSave} disabled={!hasChanges || isSaving}>
-          <Save className="mr-1.5 h-4 w-4" />
-          Save
-        </Button>
-      </div>
-
-      {/* Toolbar */}
       {viewMode !== 'preview' && (
-        <div className="flex flex-wrap items-center gap-1 border-b bg-muted/30 px-2 py-1.5">
-          {toolbarButtons.map((btn, i) =>
-            btn.type === 'divider' ? (
-              <div key={i} className="mx-1 h-6 w-px bg-border" />
-            ) : (
-              <Button
-                key={i}
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={btn.action}
-                title={btn.title}
-              >
-                <btn.icon className="h-4 w-4" />
-                <span className="sr-only">{btn.title}</span>
-              </Button>
-            )
-          )}
-        </div>
+        <MarkdownEditorToolbar
+          onWrap={insertMarkdown}
+          onLinePrefix={insertAtLineStart}
+        />
       )}
 
-      {/* Editor/Preview */}
-      <div className="flex flex-1 overflow-hidden">
+      <div
+        className={cn(
+          'flex min-h-0 flex-1 overflow-hidden',
+          viewMode === 'split' && isMobile ? 'flex-col' : 'flex-row',
+        )}
+      >
         {(viewMode === 'edit' || viewMode === 'split') && (
-          <div className={viewMode === 'split' ? 'w-1/2 border-r' : 'w-full'}>
+          <div
+            className={cn(
+              'min-h-0 min-w-0 bg-background',
+              viewMode === 'split'
+                ? cn('flex-1', isMobile ? 'border-b' : 'border-r')
+                : 'w-full',
+            )}
+          >
             <textarea
               ref={textareaRef}
               value={content}
-              onChange={(e) => handleContentChange(e.target.value)}
-              className="h-full w-full resize-none bg-background p-4 font-mono text-sm focus:outline-none"
+              onChange={(event) => handleContentChange(event.target.value)}
+              className="h-full min-h-[18rem] w-full resize-none bg-background p-4 font-mono text-sm leading-6 focus:outline-none sm:p-6"
               placeholder="Start writing markdown..."
               spellCheck={false}
             />
           </div>
         )}
+
         {(viewMode === 'preview' || viewMode === 'split') && (
-          <div className={viewMode === 'split' ? 'w-1/2' : 'w-full'}>
-            <div className="h-full overflow-auto p-4">
+          <div
+            className={cn(
+              'min-h-0 min-w-0',
+              viewMode === 'split' ? 'flex-1' : 'w-full',
+            )}
+          >
+            <div className="h-full overflow-auto p-4 sm:p-6">
               <MarkdownPreview content={content} />
             </div>
           </div>
         )}
       </div>
 
-      {/* Share Dialog */}
       <ShareDialog
         open={shareOpen}
         onOpenChange={setShareOpen}

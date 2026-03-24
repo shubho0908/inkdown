@@ -5,6 +5,11 @@ export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   })
+  type CookieToSet = {
+    name: string
+    value: string
+    options?: Parameters<typeof supabaseResponse.cookies.set>[2]
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,7 +19,7 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: CookieToSet[]) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           )
@@ -33,17 +38,17 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect dashboard routes
-  if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
+  // The workspace now lives at "/", so keep legacy dashboard URLs canonical.
+  if (request.nextUrl.pathname.startsWith('/dashboard')) {
     const url = request.nextUrl.clone()
-    url.pathname = '/auth/login'
+    url.pathname = '/'
     return NextResponse.redirect(url)
   }
 
-  // Redirect authenticated users away from auth pages to dashboard
+  // Redirect authenticated users away from auth pages to the workspace root.
   if (request.nextUrl.pathname.startsWith('/auth') && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
+    url.pathname = '/'
     return NextResponse.redirect(url)
   }
 

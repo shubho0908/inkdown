@@ -7,30 +7,30 @@ interface MarkdownPreviewProps {
 
 export function MarkdownPreview({ content }: MarkdownPreviewProps) {
   return (
-    <article className="prose prose-neutral dark:prose-invert max-w-none">
+    <article className="prose prose-neutral dark:prose-invert max-w-none break-words text-sm sm:text-base">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           h1: ({ children }) => (
-            <h1 className="text-3xl font-bold tracking-tight border-b pb-2 mb-4">{children}</h1>
+            <h1 className="mb-4 border-b pb-2 text-2xl font-bold tracking-tight sm:text-3xl">{children}</h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-2xl font-semibold tracking-tight border-b pb-2 mt-8 mb-4">{children}</h2>
+            <h2 className="mt-8 mb-4 border-b pb-2 text-xl font-semibold tracking-tight sm:text-2xl">{children}</h2>
           ),
           h3: ({ children }) => (
-            <h3 className="text-xl font-semibold tracking-tight mt-6 mb-3">{children}</h3>
+            <h3 className="mt-6 mb-3 text-lg font-semibold tracking-tight sm:text-xl">{children}</h3>
           ),
           h4: ({ children }) => (
-            <h4 className="text-lg font-semibold tracking-tight mt-4 mb-2">{children}</h4>
+            <h4 className="mt-4 mb-2 text-base font-semibold tracking-tight sm:text-lg">{children}</h4>
           ),
           p: ({ children }) => (
-            <p className="leading-7 [&:not(:first-child)]:mt-4">{children}</p>
+            <p className="leading-7 [overflow-wrap:anywhere] [&:not(:first-child)]:mt-4">{children}</p>
           ),
           ul: ({ children }) => (
-            <ul className="my-4 ml-6 list-disc [&>li]:mt-2">{children}</ul>
+            <ul className="my-4 ml-5 list-disc [overflow-wrap:anywhere] sm:ml-6 [&>li]:mt-2">{children}</ul>
           ),
           ol: ({ children }) => (
-            <ol className="my-4 ml-6 list-decimal [&>li]:mt-2">{children}</ol>
+            <ol className="my-4 ml-5 list-decimal [overflow-wrap:anywhere] sm:ml-6 [&>li]:mt-2">{children}</ol>
           ),
           li: ({ children }) => <li>{children}</li>,
           blockquote: ({ children }) => (
@@ -43,7 +43,7 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
             const isInline = !match
             return isInline ? (
               <code
-                className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm"
+                className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-[0.9em] break-words"
                 {...props}
               >
                 {children}
@@ -73,12 +73,12 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
             </a>
           ),
           img: ({ src, alt }) => (
-            <span className="block my-4">
+            <span className="my-4 block overflow-hidden rounded-lg border">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={src}
                 alt={alt || ''}
-                className="rounded-lg border max-w-full h-auto"
+                className="h-auto max-w-full"
               />
             </span>
           ),

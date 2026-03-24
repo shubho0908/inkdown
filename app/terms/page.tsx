@@ -15,32 +15,30 @@ const LAST_UPDATED = 'March 24, 2025'
 export default function TermsPage() {
   return (
     <div className="flex min-h-svh flex-col">
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4">
+        <div className="mx-auto flex h-16 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6">
           <InkdownLogo size="md" />
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <Button variant="ghost" size="sm" asChild>
               <Link href="/">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
+                <span className="hidden sm:inline">Back</span>
+                <span className="sr-only sm:hidden">Back</span>
               </Link>
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Main */}
       <main className="flex-1">
-        <div className="mx-auto max-w-4xl px-4 py-16">
+        <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-16">
           <div className="mb-8">
-            <h1 className="text-4xl font-bold">Terms of Service</h1>
+            <h1 className="text-3xl font-bold sm:text-4xl">Terms of Service</h1>
             <p className="mt-2 text-muted-foreground">Last updated: {LAST_UPDATED}</p>
           </div>
 
-          <div className="prose prose-sm dark:prose-invert max-w-none space-y-6 text-sm leading-relaxed">
-            {/* Agreement */}
+          <article className="prose prose-neutral dark:prose-invert max-w-none break-words space-y-8 text-sm leading-7 sm:text-base">
             <section>
               <h2 className="text-2xl font-semibold">1. Agreement to Terms</h2>
               <p>
@@ -54,7 +52,7 @@ export default function TermsPage() {
               <p>
                 Permission is granted to temporarily download one copy of the materials (information or software) from Inkdown for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
               </p>
-              <ul className="list-disc list-inside space-y-2 ml-2">
+              <ul className="ml-2 list-inside list-disc space-y-2">
                 <li>Modifying or copying the materials</li>
                 <li>Using the materials for any commercial purpose or for any public display</li>
                 <li>Attempting to decompile or reverse engineer any software contained on Inkdown</li>
@@ -124,7 +122,7 @@ export default function TermsPage() {
               <p>
                 You agree not to engage in any of the following prohibited behavior:
               </p>
-              <ul className="list-disc list-inside space-y-2 ml-2">
+              <ul className="ml-2 list-inside list-disc space-y-2">
                 <li>Harassing or causing distress or inconvenience to any person</li>
                 <li>Obscene or abusive language or otherwise offensive content</li>
                 <li>Disrupting the normal flow of dialogue within our website</li>
@@ -184,7 +182,7 @@ export default function TermsPage() {
               <p>
                 If you have any questions about these Terms of Service, please contact us at:
               </p>
-              <div className="mt-4 p-4 bg-muted rounded-lg">
+              <div className="mt-4 rounded-lg bg-muted p-4">
                 <p className="font-semibold">Inkdown Support</p>
                 <p className="mt-1">Email: <a href="mailto:dev@shubhojeet.com" className="text-primary hover:underline">dev@shubhojeet.com</a></p>
               </div>
@@ -197,13 +195,12 @@ export default function TermsPage() {
                 These Terms of Service and Privacy Policy are governed by and construed in accordance with the laws of the jurisdiction where Inkdown is operated, and you irrevocably submit to the exclusive jurisdiction of the courts in that location.
               </p>
             </section>
-          </div>
+          </article>
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="border-t py-8">
-        <div className="mx-auto max-w-4xl px-4 text-center text-sm text-muted-foreground">
+        <div className="mx-auto max-w-4xl px-4 text-center text-sm text-muted-foreground sm:px-6">
           <p>&copy; 2025 Inkdown. All rights reserved.</p>
         </div>
       </footer>

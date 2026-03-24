@@ -50,7 +50,7 @@ export default function SignUpPage() {
         options: {
           emailRedirectTo:
             process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-            `${window.location.origin}/dashboard`,
+            `${window.location.origin}/`,
         },
       })
       if (error) throw error
@@ -63,26 +63,24 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="relative flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      {/* Background decoration */}
+    <div className="relative flex min-h-svh w-full items-start justify-center px-4 py-16 sm:px-6 sm:py-20 md:items-center md:px-10">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-1/2 right-1/4 h-[600px] w-[600px] rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute -bottom-1/2 left-1/4 h-[500px] w-[500px] rounded-full bg-accent/5 blur-3xl" />
       </div>
 
-      {/* Theme toggle */}
       <div className="absolute right-4 top-4">
         <ThemeToggle />
       </div>
 
-      <div className="relative w-full max-w-sm">
+      <div className="relative w-full max-w-md">
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-center">
             <Link href="/">
               <InkdownLogo size="lg" />
             </Link>
           </div>
-          <Card className="border-border/50 shadow-xl shadow-primary/5">
+          <Card className="border-border/50 py-5 shadow-xl shadow-primary/5 sm:py-6">
             <CardHeader>
               <CardTitle className="text-2xl">Create an account</CardTitle>
               <CardDescription>

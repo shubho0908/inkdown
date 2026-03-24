@@ -37,6 +37,8 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --workspace-sidebar-width: clamp(15.5rem, 18vw, 16.5rem);
+  --workspace-sidebar-width-mobile: 23rem;
 }
 
 .dark {
@@ -116,10 +118,28 @@
 }
 
 @layer base {
+  html {
+    @apply h-full scroll-smooth;
+  }
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply min-h-full bg-background text-foreground antialiased;
+    overflow-x: hidden;
+  }
+  img,
+  svg,
+  video,
+  canvas {
+    display: block;
+    max-width: 100%;
+  }
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
   }
 }

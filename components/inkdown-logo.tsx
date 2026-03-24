@@ -17,7 +17,7 @@ export function InkdownLogo({ size = "md", showText = true, className }: Inkdown
   const { icon, text } = sizes[size]
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div className={cn("flex shrink-0 items-center gap-2", className)}>
       <Image
         src="/favicon.png"
         alt="Inkdown"
@@ -27,7 +27,7 @@ export function InkdownLogo({ size = "md", showText = true, className }: Inkdown
         priority
       />
       {showText && (
-        <span className={cn("font-semibold tracking-tight", text)}>
+        <span className={cn("truncate font-semibold tracking-tight", text)}>
           Inkdown
         </span>
       )}

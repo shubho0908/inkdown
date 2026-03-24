@@ -15,32 +15,30 @@ const LAST_UPDATED = 'March 24, 2025'
 export default function PrivacyPage() {
   return (
     <div className="flex min-h-svh flex-col">
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4">
+        <div className="mx-auto flex h-16 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6">
           <InkdownLogo size="md" />
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <Button variant="ghost" size="sm" asChild>
               <Link href="/">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
+                <span className="hidden sm:inline">Back</span>
+                <span className="sr-only sm:hidden">Back</span>
               </Link>
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Main */}
       <main className="flex-1">
-        <div className="mx-auto max-w-4xl px-4 py-16">
+        <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-16">
           <div className="mb-8">
-            <h1 className="text-4xl font-bold">Privacy Policy</h1>
+            <h1 className="text-3xl font-bold sm:text-4xl">Privacy Policy</h1>
             <p className="mt-2 text-muted-foreground">Last updated: {LAST_UPDATED}</p>
           </div>
 
-          <div className="prose prose-sm dark:prose-invert max-w-none space-y-6 text-sm leading-relaxed">
-            {/* Introduction */}
+          <article className="prose prose-neutral dark:prose-invert max-w-none break-words space-y-8 text-sm leading-7 sm:text-base">
             <section>
               <h2 className="text-2xl font-semibold">1. Introduction</h2>
               <p>
@@ -55,27 +53,27 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-2xl font-semibold">2. Information We Collect</h2>
               
-              <h3 className="text-lg font-semibold mt-4">2.1 Account Information</h3>
+              <h3 className="mt-4 text-lg font-semibold">2.1 Account Information</h3>
               <p>
                 When you create an account, we collect information such as your email address and password. We use email for account management, notifications, and communication purposes.
               </p>
 
-              <h3 className="text-lg font-semibold mt-4">2.2 Document and Content Data</h3>
+              <h3 className="mt-4 text-lg font-semibold">2.2 Document and Content Data</h3>
               <p>
                 We store and process the markdown documents, files, and folders you create within Inkdown. This content is encrypted and stored securely on our servers. You retain all ownership and rights to your content.
               </p>
 
-              <h3 className="text-lg font-semibold mt-4">2.3 Usage Information</h3>
+              <h3 className="mt-4 text-lg font-semibold">2.3 Usage Information</h3>
               <p>
                 We automatically collect information about your interactions with the Service, including device information, IP address, browser type, referring pages, and pages visited. This data helps us improve our Service and understand user behavior patterns.
               </p>
 
-              <h3 className="text-lg font-semibold mt-4">2.4 Cookies and Similar Technologies</h3>
+              <h3 className="mt-4 text-lg font-semibold">2.4 Cookies and Similar Technologies</h3>
               <p>
                 We use cookies and similar tracking technologies to enhance your user experience, remember your preferences, and analyze website traffic. You can control cookie settings through your browser preferences.
               </p>
 
-              <h3 className="text-lg font-semibold mt-4">2.5 Shared Document Metadata</h3>
+              <h3 className="mt-4 text-lg font-semibold">2.5 Shared Document Metadata</h3>
               <p>
                 When you make a document public and share it, we maintain metadata about the shared link including creation date, access count, and document title for analytics and abuse prevention purposes.
               </p>
@@ -85,7 +83,7 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-2xl font-semibold">3. How We Use Your Information</h2>
               <p>We use collected information for the following purposes:</p>
-              <ul className="list-disc list-inside space-y-2 ml-2">
+              <ul className="ml-2 list-inside list-disc space-y-2">
                 <li>Providing, maintaining, and improving the Service</li>
                 <li>Processing transactions and sending related information</li>
                 <li>Sending periodic emails regarding your account or Service updates</li>
@@ -160,18 +158,17 @@ export default function PrivacyPage() {
               <p>
                 If you have questions about this Privacy Policy or our privacy practices, please contact us at:
               </p>
-              <div className="mt-4 p-4 bg-muted rounded-lg">
+              <div className="mt-4 rounded-lg bg-muted p-4">
                 <p className="font-semibold">Inkdown Support</p>
                 <p className="mt-1">Email: <a href="mailto:dev@shubhojeet.com" className="text-primary hover:underline">dev@shubhojeet.com</a></p>
               </div>
             </section>
-          </div>
+          </article>
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="border-t py-8">
-        <div className="mx-auto max-w-4xl px-4 text-center text-sm text-muted-foreground">
+        <div className="mx-auto max-w-4xl px-4 text-center text-sm text-muted-foreground sm:px-6">
           <p>&copy; 2025 Inkdown. All rights reserved.</p>
         </div>
       </footer>

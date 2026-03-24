@@ -1,22 +1,16 @@
 'use client'
 
-import { useState } from 'react'
-import { ChevronRight, ChevronDown, FileText, Folder, FolderOpen, MoreHorizontal, Plus, Pencil, Trash2, Share2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Move } from 'lucide-react'
+import { TreeNode } from '@/components/file-tree-node'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { TreeItem } from '@/lib/types'
+import type { TreeItem } from '@/lib/types'
 
 interface FileTreeProps {
   items: TreeItem[]
   selectedId: string | null
   onSelect: (item: TreeItem) => void
+  onMove: (item: TreeItem, targetFolderId: string | null) => void
   onCreateFile: (folderId: string | null) => void
   onCreateFolder: (parentId: string | null) => void
   onRename: (item: TreeItem) => void
@@ -28,21 +22,124 @@ export function FileTree({
   items,
   selectedId,
   onSelect,
+  onMove,
   onCreateFile,
   onCreateFolder,
   onRename,
   onDelete,
   onTogglePublic,
 }: FileTreeProps) {
+  const [draggedItemId, setDraggedItemId] = useState<string | null>(null)
+  const [dropTargetId, setDropTargetId] = useState<string | 'root' | null>(null)
+
+  const itemIndex = useMemo(() => {
+    const map = new Map<string, TreeItem>()
+
+    const visit = (treeItems: TreeItem[]) => {
+      treeItems.forEach((treeItem) => {
+        map.set(treeItem.id, treeItem)
+        if (treeItem.children?.length) {
+          visit(treeItem.children)
+        }
+      })
+    }
+
+    visit(items)
+
+    return map
+  }, [items])
+
+  const canDropIntoFolder = (
+    draggedItem: TreeItem | undefined,
+    targetFolderId: string | null,
+  ) => {
+    if (!draggedItem) return false
+
+    if (draggedItem.type === 'file') {
+      return draggedItem.parent_id !== targetFolderId
+    }
+
+    if (draggedItem.id === targetFolderId) return false
+    if (draggedItem.parent_id === targetFolderId) return false
+
+    if (targetFolderId === null) return true
+
+    let current = itemIndex.get(targetFolderId)
+    while (current) {
+      if (current.id === draggedItem.id) {
+        return false
+      }
+
+      current = current.parent_id ? itemIndex.get(current.parent_id) : undefined
+    }
+
+    return true
+  }
+
+  const draggedItem = draggedItemId ? itemIndex.get(draggedItemId) : undefined
+
+  const handleRootDrop = () => {
+    if (!draggedItem || !canDropIntoFolder(draggedItem, null)) return
+    onMove(draggedItem, null)
+    setDraggedItemId(null)
+    setDropTargetId(null)
+  }
+
   return (
-    <div className="flex flex-col gap-1">
+    <div
+      className={cn(
+        'flex flex-col gap-1 rounded-2xl',
+        dropTargetId === 'root' && 'bg-accent/30',
+      )}
+      onDragOver={(event) => {
+        if (!draggedItem || !canDropIntoFolder(draggedItem, null)) return
+        event.preventDefault()
+        if (dropTargetId !== 'root') {
+          setDropTargetId('root')
+        }
+      }}
+      onDragLeave={(event) => {
+        if (event.currentTarget.contains(event.relatedTarget as Node | null)) return
+        if (dropTargetId === 'root') {
+          setDropTargetId(null)
+        }
+      }}
+      onDrop={(event) => {
+        event.preventDefault()
+        handleRootDrop()
+      }}
+    >
+      {draggedItem && canDropIntoFolder(draggedItem, null) && (
+        <div
+          className={cn(
+            'mx-1 mb-2 flex items-center gap-2 rounded-xl border border-dashed px-3 py-2 text-xs font-medium text-muted-foreground transition-colors',
+            dropTargetId === 'root'
+              ? 'border-primary/50 bg-primary/10 text-foreground'
+              : 'border-border/70',
+          )}
+        >
+          <Move className="h-3.5 w-3.5" />
+          Drop here to move to root
+        </div>
+      )}
       {items.map((item) => (
         <TreeNode
           key={item.id}
           item={item}
           level={0}
           selectedId={selectedId}
+          draggedItemId={draggedItemId}
+          dropTargetId={dropTargetId}
+          draggedItem={draggedItem}
+          canDropIntoFolder={canDropIntoFolder}
+          onDragStart={setDraggedItemId}
+          onDragEnd={() => {
+            setDraggedItemId(null)
+            setDropTargetId(null)
+          }}
+          onDropTargetChange={setDropTargetId}
           onSelect={onSelect}
+          onMove={onMove}
           onCreateFile={onCreateFile}
           onCreateFolder={onCreateFolder}
           onRename={onRename}
@@ -50,147 +147,6 @@ export function FileTree({
           onTogglePublic={onTogglePublic}
         />
       ))}
-    </div>
-  )
-}
-
-interface TreeNodeProps {
-  item: TreeItem
-  level: number
-  selectedId: string | null
-  onSelect: (item: TreeItem) => void
-  onCreateFile: (folderId: string | null) => void
-  onCreateFolder: (parentId: string | null) => void
-  onRename: (item: TreeItem) => void
-  onDelete: (item: TreeItem) => void
-  onTogglePublic?: (item: TreeItem) => void
-}
-
-function TreeNode({
-  item,
-  level,
-  selectedId,
-  onSelect,
-  onCreateFile,
-  onCreateFolder,
-  onRename,
-  onDelete,
-  onTogglePublic,
-}: TreeNodeProps) {
-  const [isExpanded, setIsExpanded] = useState(true)
-  const isFolder = item.type === 'folder'
-  const isSelected = selectedId === item.id
-
-  return (
-    <div>
-      <div
-        className={cn(
-          'group flex items-center gap-1 rounded-md px-2 py-1.5 text-sm hover:bg-accent',
-          isSelected && 'bg-accent'
-        )}
-        style={{ paddingLeft: `${level * 12 + 8}px` }}
-      >
-        {isFolder ? (
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="flex h-4 w-4 shrink-0 items-center justify-center"
-          >
-            {isExpanded ? (
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-            ) : (
-              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-            )}
-          </button>
-        ) : (
-          <span className="w-4" />
-        )}
-        
-        <button
-          onClick={() => onSelect(item)}
-          className="flex flex-1 items-center gap-2 overflow-hidden"
-        >
-          {isFolder ? (
-            isExpanded ? (
-              <FolderOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
-            ) : (
-              <Folder className="h-4 w-4 shrink-0 text-muted-foreground" />
-            )
-          ) : (
-            <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-          )}
-          <span className="truncate">{item.name}</span>
-          {!isFolder && item.is_public && (
-            <Share2 className="h-3 w-3 shrink-0 text-primary" />
-          )}
-        </button>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100"
-            >
-              <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">More options</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            {isFolder && (
-              <>
-                <DropdownMenuItem onClick={() => onCreateFile(item.id)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  New File
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onCreateFolder(item.id)}>
-                  <Folder className="mr-2 h-4 w-4" />
-                  New Folder
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-              </>
-            )}
-            {!isFolder && onTogglePublic && (
-              <>
-                <DropdownMenuItem onClick={() => onTogglePublic(item)}>
-                  <Share2 className="mr-2 h-4 w-4" />
-                  {item.is_public ? 'Make Private' : 'Make Public'}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-              </>
-            )}
-            <DropdownMenuItem onClick={() => onRename(item)}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Rename
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onDelete(item)}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {isFolder && isExpanded && item.children && item.children.length > 0 && (
-        <div>
-          {item.children.map((child) => (
-            <TreeNode
-              key={child.id}
-              item={child}
-              level={level + 1}
-              selectedId={selectedId}
-              onSelect={onSelect}
-              onCreateFile={onCreateFile}
-              onCreateFolder={onCreateFolder}
-              onRename={onRename}
-              onDelete={onDelete}
-              onTogglePublic={onTogglePublic}
-            />
-          ))}
-        </div>
-      )}
     </div>
   )
 }
