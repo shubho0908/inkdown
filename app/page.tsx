@@ -193,8 +193,11 @@ export default function HomePage() {
               Inkdown - Your markdown, beautifully organized.
             </p>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <Link href="#" className="hover:text-foreground transition-colors">Privacy</Link>
-              <Link href="#" className="hover:text-foreground transition-colors">Terms</Link>
+              <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+              <span className="text-border">•</span>
+              <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+              <span className="text-border">•</span>
+              <a href="mailto:dev@shubhojeet.com" className="hover:text-foreground transition-colors">Contact</a>
             </div>
           </div>
         </div>
