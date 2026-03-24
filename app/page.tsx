@@ -44,7 +44,7 @@ export default function HomePage() {
             <h1 className="text-balance text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
               Write beautiful markdown,
               <br />
-              <span className="inkdown-gradient-text">share it instantly</span>
+              <span className="text-primary">share it instantly</span>
             </h1>
             
             <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground md:text-xl">

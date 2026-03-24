@@ -1,10 +1,16 @@
-'use client'
-
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { InkdownLogo } from '@/components/inkdown-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
+
+export const metadata: Metadata = {
+  title: 'Terms of Service',
+  description: 'The terms and conditions governing your use of Inkdown.',
+}
+
+const LAST_UPDATED = 'March 24, 2025'
 
 export default function TermsPage() {
   return (
@@ -30,7 +36,7 @@ export default function TermsPage() {
         <div className="mx-auto max-w-4xl px-4 py-16">
           <div className="mb-8">
             <h1 className="text-4xl font-bold">Terms of Service</h1>
-            <p className="mt-2 text-muted-foreground">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            <p className="mt-2 text-muted-foreground">Last updated: {LAST_UPDATED}</p>
           </div>
 
           <div className="prose prose-sm dark:prose-invert max-w-none space-y-6 text-sm leading-relaxed">
@@ -198,7 +204,7 @@ export default function TermsPage() {
       {/* Footer */}
       <footer className="border-t py-8">
         <div className="mx-auto max-w-4xl px-4 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Inkdown. All rights reserved.</p>
+          <p>&copy; 2025 Inkdown. All rights reserved.</p>
         </div>
       </footer>
     </div>
