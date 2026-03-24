@@ -144,8 +144,6 @@ export default function HomePage() {
               <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
               <span className="text-border">•</span>
               <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-              <span className="text-border">•</span>
-              <a href="mailto:dev@shubhojeet.com" className="hover:text-foreground transition-colors">Contact</a>
             </div>
           </div>
         </div>
