@@ -1,18 +1,20 @@
+import { requireVerifiedUser } from '@/lib/auth'
+import { createAuthErrorResponse } from '@/lib/auth/server'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
   const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const authState = await requireVerifiedUser(supabase)
+  if (authState.kind !== 'authenticated') {
+    return createAuthErrorResponse(authState)
   }
 
   const { data: folders, error } = await supabase
     .from('folders')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('user_id', authState.user.id)
     .order('name')
 
   if (error) {
@@ -24,10 +26,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const authState = await requireVerifiedUser(supabase)
+  if (authState.kind !== 'authenticated') {
+    return createAuthErrorResponse(authState)
   }
 
   const body = await request.json()
@@ -38,7 +40,7 @@ export async function POST(request: Request) {
     .insert({
       name: name || 'New Folder',
       parent_id: parent_id || null,
-      user_id: user.id,
+      user_id: authState.user.id,
     })
     .select()
     .single()

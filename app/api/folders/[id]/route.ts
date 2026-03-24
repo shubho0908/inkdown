@@ -1,3 +1,5 @@
+import { requireVerifiedUser } from '@/lib/auth'
+import { createAuthErrorResponse } from '@/lib/auth/server'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
@@ -7,10 +9,10 @@ export async function PATCH(
 ) {
   const supabase = await createClient()
   const { id } = await params
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const authState = await requireVerifiedUser(supabase)
+  if (authState.kind !== 'authenticated') {
+    return createAuthErrorResponse(authState)
   }
 
   const body = await request.json()
@@ -27,7 +29,7 @@ export async function PATCH(
       const { data: folders, error: foldersError } = await supabase
         .from('folders')
         .select('id, parent_id')
-        .eq('user_id', user.id)
+        .eq('user_id', authState.user.id)
 
       if (foldersError) {
         return NextResponse.json({ error: foldersError.message }, { status: 500 })
@@ -70,7 +72,7 @@ export async function PATCH(
     .from('folders')
     .update(updateData)
     .eq('id', id)
-    .eq('user_id', user.id)
+    .eq('user_id', authState.user.id)
     .select()
     .single()
 
@@ -87,17 +89,17 @@ export async function DELETE(
 ) {
   const supabase = await createClient()
   const { id } = await params
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const authState = await requireVerifiedUser(supabase)
+  if (authState.kind !== 'authenticated') {
+    return createAuthErrorResponse(authState)
   }
 
   const { error } = await supabase
     .from('folders')
     .delete()
     .eq('id', id)
-    .eq('user_id', user.id)
+    .eq('user_id', authState.user.id)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

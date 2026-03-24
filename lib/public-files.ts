@@ -27,14 +27,12 @@ export const getPublicFileBySlug = cache(async (slug: string): Promise<PublicFil
   }
 
   let username: string | null = null
-  const profileQuery = await supabase
-    .from('profiles')
-    .select('username')
-    .eq('user_id', data.user_id)
-    .maybeSingle()
+  const profileQuery = await supabase.rpc('get_profile_username', {
+    profile_user_id: data.user_id,
+  })
 
   if (!profileQuery.error) {
-    username = profileQuery.data?.username ?? null
+    username = profileQuery.data ?? null
   }
 
   return {

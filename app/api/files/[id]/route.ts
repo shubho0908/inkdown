@@ -1,3 +1,5 @@
+import { requireVerifiedUser } from '@/lib/auth'
+import { createAuthErrorResponse } from '@/lib/auth/server'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { nanoid } from 'nanoid'
@@ -8,17 +10,17 @@ export async function GET(
 ) {
   const supabase = await createClient()
   const { id } = await params
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const authState = await requireVerifiedUser(supabase)
+  if (authState.kind !== 'authenticated') {
+    return createAuthErrorResponse(authState)
   }
 
   const { data: file, error } = await supabase
     .from('files')
     .select('*')
     .eq('id', id)
-    .eq('user_id', user.id)
+    .eq('user_id', authState.user.id)
     .single()
 
   if (error) {
@@ -34,10 +36,10 @@ export async function PATCH(
 ) {
   const supabase = await createClient()
   const { id } = await params
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const authState = await requireVerifiedUser(supabase)
+  if (authState.kind !== 'authenticated') {
+    return createAuthErrorResponse(authState)
   }
 
   const body = await request.json()
@@ -52,7 +54,7 @@ export async function PATCH(
         .from('folders')
         .select('id')
         .eq('id', folder_id)
-        .eq('user_id', user.id)
+        .eq('user_id', authState.user.id)
         .single()
 
       if (folderError || !targetFolder) {
@@ -83,7 +85,7 @@ export async function PATCH(
     .from('files')
     .update(updateData)
     .eq('id', id)
-    .eq('user_id', user.id)
+    .eq('user_id', authState.user.id)
     .select()
     .single()
 
@@ -100,17 +102,17 @@ export async function DELETE(
 ) {
   const supabase = await createClient()
   const { id } = await params
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const authState = await requireVerifiedUser(supabase)
+  if (authState.kind !== 'authenticated') {
+    return createAuthErrorResponse(authState)
   }
 
   const { error } = await supabase
     .from('files')
     .delete()
     .eq('id', id)
-    .eq('user_id', user.id)
+    .eq('user_id', authState.user.id)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

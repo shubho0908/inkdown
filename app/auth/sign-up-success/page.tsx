@@ -17,7 +17,14 @@ export const metadata: Metadata = {
   robots: { index: false },
 }
 
-export default function SignUpSuccessPage() {
+export default async function SignUpSuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ email?: string; reason?: string }>
+}) {
+  const params = await searchParams
+  const isVerificationGate = params.reason === 'verify-email'
+
   return (
     <div className="relative flex min-h-svh w-full items-start justify-center px-4 py-16 sm:px-6 sm:py-20 md:items-center md:px-10">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -40,9 +47,15 @@ export default function SignUpSuccessPage() {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
                 <Mail className="h-8 w-8 text-primary" />
               </div>
-              <CardTitle className="text-2xl">Check your email</CardTitle>
+              <CardTitle className="text-2xl">
+                {isVerificationGate
+                  ? 'Verify your email to continue'
+                  : 'Check your email'}
+              </CardTitle>
               <CardDescription>
-                We&apos;ve sent you a confirmation link
+                {params.email
+                  ? `We sent a confirmation link to ${params.email}`
+                  : "We've sent you a confirmation link"}
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
@@ -50,8 +63,9 @@ export default function SignUpSuccessPage() {
                 <div className="flex items-start gap-3 text-left">
                   <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                   <p className="text-sm text-muted-foreground">
-                    Click the link in your email to confirm your account and start
-                    using Inkdown.
+                    {isVerificationGate
+                      ? 'Your account exists, but sign-in stays blocked until you confirm your email address.'
+                      : 'Click the link in your email to confirm your account and start using Inkdown.'}
                   </p>
                 </div>
               </div>

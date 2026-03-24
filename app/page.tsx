@@ -1,3 +1,7 @@
+import {
+  getEmailVerificationRedirectPath,
+  requireVerifiedUser,
+} from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { DashboardWorkspace } from '@/components/dashboard-workspace'
 import { Button } from '@/components/ui/button'
@@ -6,6 +10,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { getSiteUrl } from '@/lib/site-url'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 import { 
   FileText, 
   FolderTree, 
@@ -24,11 +29,13 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const authState = await requireVerifiedUser(supabase)
 
-  if (user) {
+  if (authState.kind === 'unverified') {
+    redirect(getEmailVerificationRedirectPath(authState.user.email))
+  }
+
+  if (authState.kind === 'authenticated') {
     return <DashboardWorkspace />
   }
 
@@ -63,8 +70,9 @@ export default async function HomePage() {
     <div className="flex min-h-svh flex-col">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
+      >
+        {JSON.stringify(structuredData)}
+      </script>
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <InkdownLogo size="md" />
