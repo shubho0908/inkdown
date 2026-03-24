@@ -33,9 +33,9 @@ export default function PrivacyPage() {
 
       {/* Main */}
       <main className="flex-1">
-        <div className="mx-auto max-w-4xl px-4 py-16">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold">Privacy Policy</h1>
+        <div className="mx-auto max-w-4xl px-4 py-8 sm:py-12 md:py-16">
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl font-bold sm:text-3xl md:text-4xl">Privacy Policy</h1>
             <p className="mt-2 text-muted-foreground">Last updated: {LAST_UPDATED}</p>
           </div>
 

@@ -40,8 +40,8 @@ export default function HomePage() {
             <div className="absolute -bottom-1/2 right-0 h-[600px] w-[600px] rounded-full bg-accent/5 blur-3xl" />
           </div>
           
-          <div className="relative mx-auto max-w-6xl px-4 py-24 text-center md:py-32 lg:py-40">
-            <h1 className="text-balance text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
+          <div className="relative mx-auto max-w-6xl px-4 py-16 text-center sm:py-20 md:py-32 lg:py-40">
+            <h1 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
               Write beautiful markdown,
               <br />
               <span className="text-primary">share it instantly</span>
@@ -69,16 +69,16 @@ export default function HomePage() {
         </section>
 
         {/* Features */}
-        <section className="border-t bg-muted/30 py-24">
+        <section className="border-t bg-muted/30 py-16 md:py-24">
           <div className="mx-auto max-w-6xl px-4">
             <div className="text-center">
-              <h2 className="text-3xl font-bold md:text-4xl">Everything you need to write</h2>
+              <h2 className="text-2xl font-bold sm:text-3xl md:text-4xl">Everything you need to write</h2>
               <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
                 A complete markdown solution for developers, writers, and teams who value simplicity and elegance.
               </p>
             </div>
             
-            <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-10 grid gap-4 sm:mt-12 sm:gap-6 md:mt-16 md:grid-cols-2 lg:grid-cols-3">
               <FeatureCard
                 icon={<Edit3 className="h-5 w-5" />}
                 title="Rich Editor"
@@ -114,10 +114,10 @@ export default function HomePage() {
         </section>
 
         {/* CTA */}
-        <section className="border-t bg-muted/30 py-24">
+        <section className="border-t bg-muted/30 py-16 md:py-24">
           <div className="mx-auto max-w-6xl px-4 text-center">
             <div className="mx-auto max-w-2xl">
-              <h2 className="text-3xl font-bold md:text-4xl">Ready to start writing?</h2>
+              <h2 className="text-2xl font-bold sm:text-3xl md:text-4xl">Ready to start writing?</h2>
               <p className="mt-4 text-muted-foreground">
                 Create your free account and start organizing your markdown today.
               </p>
@@ -133,9 +133,9 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t py-12">
+      <footer className="border-t py-8 sm:py-12">
         <div className="mx-auto max-w-6xl px-4">
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+          <div className="flex flex-col items-center justify-between gap-4 text-center md:flex-row md:text-left">
             <InkdownLogo size="sm" />
             <p className="text-sm text-muted-foreground">
               Inkdown - Your markdown, beautifully organized.
@@ -162,8 +162,8 @@ function FeatureCard({
   description: string
 }) {
   return (
-    <div className="group rounded-xl border bg-card p-6 transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5">
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+    <div className="group rounded-xl border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 sm:p-6">
+      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground sm:h-10 sm:w-10">
         {icon}
       </div>
       <h3 className="mt-4 font-semibold">{title}</h3>

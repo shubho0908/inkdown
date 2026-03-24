@@ -120,10 +120,10 @@ export default async function ViewPage({ params }: ViewPageProps) {
       </header>
 
       {/* Content */}
-      <main className="mx-auto max-w-4xl px-4 py-8">
+      <main className="mx-auto max-w-4xl px-4 py-6 sm:py-8">
         <article>
-          <header className="mb-8 border-b pb-6">
-            <h1 className="text-balance text-3xl font-bold tracking-tight md:text-4xl">{title}</h1>
+          <header className="mb-6 border-b pb-4 sm:mb-8 sm:pb-6">
+            <h1 className="text-balance text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">{title}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               Last updated on {updatedAt}
             </p>

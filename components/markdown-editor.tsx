@@ -47,10 +47,22 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
   const [content, setContent] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
-  const [viewMode, setViewMode] = useState<ViewMode>('split')
+  const [viewMode, setViewMode] = useState<ViewMode>('edit')
   const [shareOpen, setShareOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Set default view mode based on screen size
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setViewMode((prev) => prev === 'edit' ? 'split' : prev)
+      }
+    }
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Update content when file changes
   useEffect(() => {
@@ -180,7 +192,7 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
     return (
       <div className="flex h-full flex-col">
         <div className="flex h-14 items-center gap-2 border-b px-4">
-          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-6 w-32" />
           <div className="flex-1" />
           <Skeleton className="h-8 w-24" />
         </div>
@@ -202,80 +214,82 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
   const toolbarButtons = [
     { icon: Bold, action: () => insertMarkdown('**', '**'), title: 'Bold' },
     { icon: Italic, action: () => insertMarkdown('*', '*'), title: 'Italic' },
-    { icon: Strikethrough, action: () => insertMarkdown('~~', '~~'), title: 'Strikethrough' },
+    { icon: Strikethrough, action: () => insertMarkdown('~~', '~~'), title: 'Strikethrough', hideOnMobile: true },
     { type: 'divider' as const },
     { icon: Heading1, action: () => insertAtLineStart('# '), title: 'Heading 1' },
     { icon: Heading2, action: () => insertAtLineStart('## '), title: 'Heading 2' },
-    { icon: Heading3, action: () => insertAtLineStart('### '), title: 'Heading 3' },
+    { icon: Heading3, action: () => insertAtLineStart('### '), title: 'Heading 3', hideOnMobile: true },
     { type: 'divider' as const },
     { icon: List, action: () => insertAtLineStart('- '), title: 'Bullet List' },
     { icon: ListOrdered, action: () => insertAtLineStart('1. '), title: 'Numbered List' },
-    { icon: CheckSquare, action: () => insertAtLineStart('- [ ] '), title: 'Task List' },
-    { type: 'divider' as const },
-    { icon: Quote, action: () => insertAtLineStart('> '), title: 'Quote' },
+    { icon: CheckSquare, action: () => insertAtLineStart('- [ ] '), title: 'Task List', hideOnMobile: true },
+    { type: 'divider' as const, hideOnMobile: true },
+    { icon: Quote, action: () => insertAtLineStart('> '), title: 'Quote', hideOnMobile: true },
     { icon: Code, action: () => insertMarkdown('`', '`'), title: 'Inline Code' },
-    { icon: Minus, action: () => insertMarkdown('\n---\n'), title: 'Horizontal Rule' },
-    { type: 'divider' as const },
+    { icon: Minus, action: () => insertMarkdown('\n---\n'), title: 'Horizontal Rule', hideOnMobile: true },
+    { type: 'divider' as const, hideOnMobile: true },
     { icon: Link2, action: () => insertMarkdown('[', '](url)'), title: 'Link' },
-    { icon: Image, action: () => insertMarkdown('![alt](', ')'), title: 'Image' },
+    { icon: Image, action: () => insertMarkdown('![alt](', ')'), title: 'Image', hideOnMobile: true },
   ]
 
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex h-14 items-center gap-3 border-b px-4">
-        <h1 className="font-medium">{file.name}</h1>
+      <div className="flex h-14 shrink-0 items-center gap-2 border-b px-3 sm:gap-3 sm:px-4">
+        <h1 className="min-w-0 flex-1 truncate text-sm font-medium sm:text-base">{file.name}</h1>
         {hasChanges && (
-          <span className="text-xs text-muted-foreground">(unsaved)</span>
+          <span className="hidden text-xs text-muted-foreground sm:inline">(unsaved)</span>
         )}
         {isSaving && (
           <span className="text-xs text-muted-foreground">Saving...</span>
         )}
-        <div className="flex-1" />
         
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
           <TabsList className="h-8">
-            <TabsTrigger value="edit" className="h-7 px-2">
-              <Edit3 className="mr-1.5 h-3.5 w-3.5" />
-              Edit
+            <TabsTrigger value="edit" className="h-7 gap-1.5 px-2 text-xs sm:px-3 sm:text-sm">
+              <Edit3 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Edit</span>
             </TabsTrigger>
-            <TabsTrigger value="split" className="h-7 px-2">
-              <Columns2 className="mr-1.5 h-3.5 w-3.5" />
+            <TabsTrigger value="split" className="hidden h-7 gap-1.5 px-3 text-sm md:flex">
+              <Columns2 className="h-3.5 w-3.5" />
               Split
             </TabsTrigger>
-            <TabsTrigger value="preview" className="h-7 px-2">
-              <Eye className="mr-1.5 h-3.5 w-3.5" />
-              Preview
+            <TabsTrigger value="preview" className="h-7 gap-1.5 px-2 text-xs sm:px-3 sm:text-sm">
+              <Eye className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Preview</span>
             </TabsTrigger>
           </TabsList>
         </Tabs>
 
-        <Button variant="outline" size="sm" onClick={() => setShareOpen(true)}>
-          <Share2 className="mr-1.5 h-4 w-4" />
-          Share
+        <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2 sm:px-3" onClick={() => setShareOpen(true)}>
+          <Share2 className="h-4 w-4" />
+          <span className="hidden sm:inline">Share</span>
         </Button>
-        <Button size="sm" onClick={handleSave} disabled={!hasChanges || isSaving}>
-          <Save className="mr-1.5 h-4 w-4" />
-          Save
+        <Button size="sm" className="h-8 gap-1.5 px-2 sm:px-3" onClick={handleSave} disabled={!hasChanges || isSaving}>
+          <Save className="h-4 w-4" />
+          <span className="hidden sm:inline">Save</span>
         </Button>
       </div>
 
       {/* Toolbar */}
       {viewMode !== 'preview' && (
-        <div className="flex flex-wrap items-center gap-1 border-b bg-muted/30 px-2 py-1.5">
+        <div className="flex shrink-0 items-center gap-0.5 overflow-x-auto border-b bg-muted/30 px-2 py-1.5 sm:gap-1">
           {toolbarButtons.map((btn, i) =>
             btn.type === 'divider' ? (
-              <div key={i} className="mx-1 h-6 w-px bg-border" />
+              <div
+                key={i}
+                className={`mx-0.5 h-6 w-px bg-border sm:mx-1 ${btn.hideOnMobile ? 'hidden sm:block' : ''}`}
+              />
             ) : (
               <Button
                 key={i}
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8"
+                className={`h-7 w-7 shrink-0 sm:h-8 sm:w-8 ${btn.hideOnMobile ? 'hidden sm:flex' : ''}`}
                 onClick={btn.action}
                 title={btn.title}
               >
-                <btn.icon className="h-4 w-4" />
+                <btn.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span className="sr-only">{btn.title}</span>
               </Button>
             )
@@ -284,14 +298,14 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
       )}
 
       {/* Editor/Preview */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         {(viewMode === 'edit' || viewMode === 'split') && (
           <div className={viewMode === 'split' ? 'w-1/2 border-r' : 'w-full'}>
             <textarea
               ref={textareaRef}
               value={content}
               onChange={(e) => handleContentChange(e.target.value)}
-              className="h-full w-full resize-none bg-background p-4 font-mono text-sm focus:outline-none"
+              className="h-full w-full resize-none bg-background p-3 font-mono text-sm focus:outline-none sm:p-4"
               placeholder="Start writing markdown..."
               spellCheck={false}
             />
@@ -299,7 +313,7 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
         )}
         {(viewMode === 'preview' || viewMode === 'split') && (
           <div className={viewMode === 'split' ? 'w-1/2' : 'w-full'}>
-            <div className="h-full overflow-auto p-4">
+            <div className="h-full overflow-auto p-3 sm:p-4">
               <MarkdownPreview content={content} />
             </div>
           </div>
