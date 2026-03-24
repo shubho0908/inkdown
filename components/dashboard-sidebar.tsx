@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import useSWR, { mutate } from 'swr'
 import { FileTree } from '@/components/file-tree'
 import { RenameDialog } from '@/components/rename-dialog'
 import { DeleteDialog } from '@/components/delete-dialog'
@@ -16,8 +15,19 @@ import { TreeItem, File, Folder } from '@/lib/types'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+import {
+  useFiles,
+  useCreateFile,
+  useUpdateFile,
+  useDeleteFile,
+  useMoveFile,
+} from '@/hooks/use-files'
+import {
+  useFolders,
+  useCreateFolder,
+  useUpdateFolder,
+  useDeleteFolder,
+} from '@/hooks/use-folders'
 
 function buildTree(folders: Folder[], files: File[]): TreeItem[] {
   const folderMap = new Map<string, TreeItem>()
@@ -83,9 +93,20 @@ interface DashboardSidebarProps {
 
 export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSidebarProps) {
   const router = useRouter()
-  const { data: folders = [], isLoading: foldersLoading } = useSWR<Folder[]>('/api/folders', fetcher)
-  const { data: files = [], isLoading: filesLoading } = useSWR<File[]>('/api/files', fetcher)
-  
+
+  // TanStack Query hooks
+  const { data: folders = [], isLoading: foldersLoading } = useFolders()
+  const { data: files = [], isLoading: filesLoading } = useFiles()
+
+  // Mutations
+  const createFile = useCreateFile()
+  const updateFile = useUpdateFile()
+  const deleteFileMutation = useDeleteFile()
+  const moveFile = useMoveFile()
+  const createFolder = useCreateFolder()
+  const updateFolder = useUpdateFolder()
+  const deleteFolderMutation = useDeleteFolder()
+
   const [renameItem, setRenameItem] = useState<TreeItem | null>(null)
   const [deleteItem, setDeleteItem] = useState<TreeItem | null>(null)
   const [shareItem, setShareItem] = useState<TreeItem | null>(null)
@@ -95,51 +116,33 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
   const treeItems = buildTree(folders, files)
 
   const handleCreateFile = async (folderId: string | null) => {
-    const res = await fetch('/api/files', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ folder_id: folderId }),
-    })
-    if (res.ok) {
-      const newFile = await res.json()
-      mutate('/api/files')
-      onFileSelect(newFile.id)
+    const result = await createFile.mutateAsync({ folder_id: folderId })
+    if (result) {
+      onFileSelect(result.id)
     }
   }
 
   const handleCreateFolder = async (parentId: string | null) => {
-    const res = await fetch('/api/folders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ parent_id: parentId }),
-    })
-    if (res.ok) {
-      mutate('/api/folders')
-    }
+    await createFolder.mutateAsync({ parent_id: parentId })
   }
 
   const handleRename = async (newName: string) => {
     if (!renameItem) return
-    const endpoint = renameItem.type === 'folder' ? '/api/folders' : '/api/files'
-    const res = await fetch(`${endpoint}/${renameItem.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newName }),
-    })
-    if (res.ok) {
-      mutate(endpoint)
+    if (renameItem.type === 'folder') {
+      await updateFolder.mutateAsync({ id: renameItem.id, data: { name: newName } })
+    } else {
+      await updateFile.mutateAsync({ id: renameItem.id, data: { name: newName } })
     }
+    setRenameItem(null)
   }
 
   const handleDelete = async () => {
     if (!deleteItem) return
-    const endpoint = deleteItem.type === 'folder' ? '/api/folders' : '/api/files'
-    const res = await fetch(`${endpoint}/${deleteItem.id}`, {
-      method: 'DELETE',
-    })
-    if (res.ok) {
-      mutate(endpoint)
-      if (deleteItem.type === 'file' && selectedFileId === deleteItem.id) {
+    if (deleteItem.type === 'folder') {
+      await deleteFolderMutation.mutateAsync(deleteItem.id)
+    } else {
+      await deleteFileMutation.mutateAsync(deleteItem.id)
+      if (selectedFileId === deleteItem.id) {
         onFileSelect('')
       }
     }
@@ -156,21 +159,27 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
 
   const handleShareToggle = async (isPublic: boolean) => {
     if (!shareFile) return
-    const res = await fetch(`/api/files/${shareFile.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ is_public: isPublic }),
+    const result = await updateFile.mutateAsync({
+      id: shareFile.id,
+      data: { is_public: isPublic },
     })
-    if (res.ok) {
-      const updated = await res.json()
-      mutate('/api/files')
-      setShareFile(updated)
+    if (result) {
+      setShareFile(result)
     }
   }
 
   const handleSelect = (item: TreeItem) => {
     if (item.type === 'file') {
       onFileSelect(item.id)
+    }
+  }
+
+  // Drag and drop handler
+  const handleDrop = async (draggedId: string, targetFolderId: string | null) => {
+    // Check if it's a file being dropped
+    const file = files.find((f) => f.id === draggedId)
+    if (file) {
+      await moveFile.mutateAsync({ id: draggedId, folderId: targetFolderId })
     }
   }
 
@@ -197,6 +206,7 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
           size="sm"
           className="flex-1"
           onClick={() => handleCreateFile(null)}
+          disabled={createFile.isPending}
         >
           <FilePlus className="mr-1.5 h-4 w-4" />
           File
@@ -206,6 +216,7 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
           size="sm"
           className="flex-1"
           onClick={() => handleCreateFolder(null)}
+          disabled={createFolder.isPending}
         >
           <FolderPlus className="mr-1.5 h-4 w-4" />
           Folder
@@ -214,7 +225,24 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
 
       {/* File Tree */}
       <ScrollArea className="flex-1">
-        <div className="p-2">
+        <div
+          className="min-h-full p-2"
+          onDragOver={(e) => {
+            e.preventDefault()
+            e.currentTarget.classList.add('bg-accent/50')
+          }}
+          onDragLeave={(e) => {
+            e.currentTarget.classList.remove('bg-accent/50')
+          }}
+          onDrop={(e) => {
+            e.preventDefault()
+            e.currentTarget.classList.remove('bg-accent/50')
+            const draggedId = e.dataTransfer.getData('text/plain')
+            if (draggedId) {
+              handleDrop(draggedId, null) // Drop to root
+            }
+          }}
+        >
           {isLoading ? (
             <div className="space-y-2 p-2">
               <Skeleton className="h-6 w-full" />
@@ -235,6 +263,7 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
               onRename={setRenameItem}
               onDelete={setDeleteItem}
               onTogglePublic={handleTogglePublic}
+              onDrop={handleDrop}
             />
           )}
         </div>

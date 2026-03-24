@@ -1,7 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronRight, ChevronDown, FileText, Folder, FolderOpen, MoreHorizontal, Plus, Pencil, Trash2, Share2 } from 'lucide-react'
+import {
+  ChevronRight,
+  ChevronDown,
+  FileText,
+  Folder,
+  FolderOpen,
+  MoreHorizontal,
+  Plus,
+  Pencil,
+  Trash2,
+  Share2,
+  GripVertical,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,6 +34,7 @@ interface FileTreeProps {
   onRename: (item: TreeItem) => void
   onDelete: (item: TreeItem) => void
   onTogglePublic?: (item: TreeItem) => void
+  onDrop?: (draggedId: string, targetFolderId: string | null) => void
 }
 
 export function FileTree({
@@ -33,9 +46,10 @@ export function FileTree({
   onRename,
   onDelete,
   onTogglePublic,
+  onDrop,
 }: FileTreeProps) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-0.5">
       {items.map((item) => (
         <TreeNode
           key={item.id}
@@ -48,6 +62,7 @@ export function FileTree({
           onRename={onRename}
           onDelete={onDelete}
           onTogglePublic={onTogglePublic}
+          onDrop={onDrop}
         />
       ))}
     </div>
@@ -64,6 +79,7 @@ interface TreeNodeProps {
   onRename: (item: TreeItem) => void
   onDelete: (item: TreeItem) => void
   onTogglePublic?: (item: TreeItem) => void
+  onDrop?: (draggedId: string, targetFolderId: string | null) => void
 }
 
 function TreeNode({
@@ -76,20 +92,70 @@ function TreeNode({
   onRename,
   onDelete,
   onTogglePublic,
+  onDrop,
 }: TreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(true)
+  const [isDragOver, setIsDragOver] = useState(false)
   const isFolder = item.type === 'folder'
   const isSelected = selectedId === item.id
+
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('text/plain', item.id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (isFolder) {
+      setIsDragOver(true)
+      e.dataTransfer.dropEffect = 'move'
+    }
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+
+    if (!isFolder || !onDrop) return
+
+    const draggedId = e.dataTransfer.getData('text/plain')
+    if (draggedId && draggedId !== item.id) {
+      onDrop(draggedId, item.id)
+      // Auto-expand folder when something is dropped
+      setIsExpanded(true)
+    }
+  }
 
   return (
     <div>
       <div
+        draggable={item.type === 'file'}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         className={cn(
-          'group flex items-center gap-1 rounded-md px-2 py-1.5 text-sm hover:bg-accent',
-          isSelected && 'bg-accent'
+          'group flex items-center gap-1 rounded-md px-2 py-1.5 text-sm transition-colors',
+          'hover:bg-accent',
+          isSelected && 'bg-accent',
+          isDragOver && isFolder && 'bg-primary/20 ring-2 ring-primary/50'
         )}
         style={{ paddingLeft: `${level * 12 + 8}px` }}
       >
+        {/* Drag handle for files */}
+        {item.type === 'file' && (
+          <GripVertical className="h-3.5 w-3.5 shrink-0 cursor-grab text-muted-foreground/50 opacity-0 group-hover:opacity-100 active:cursor-grabbing" />
+        )}
+
+        {/* Folder expand/collapse */}
         {isFolder ? (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
@@ -104,7 +170,8 @@ function TreeNode({
         ) : (
           <span className="w-4" />
         )}
-        
+
+        {/* Item content */}
         <button
           onClick={() => onSelect(item)}
           className="flex flex-1 items-center gap-2 overflow-hidden"
@@ -124,6 +191,7 @@ function TreeNode({
           )}
         </button>
 
+        {/* Context menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -153,7 +221,7 @@ function TreeNode({
               <>
                 <DropdownMenuItem onClick={() => onTogglePublic(item)}>
                   <Share2 className="mr-2 h-4 w-4" />
-                  {item.is_public ? 'Make Private' : 'Make Public'}
+                  {item.is_public ? 'Sharing Settings' : 'Share'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
               </>
@@ -173,6 +241,7 @@ function TreeNode({
         </DropdownMenu>
       </div>
 
+      {/* Children */}
       {isFolder && isExpanded && item.children && item.children.length > 0 && (
         <div>
           {item.children.map((child) => (
@@ -187,6 +256,7 @@ function TreeNode({
               onRename={onRename}
               onDelete={onDelete}
               onTogglePublic={onTogglePublic}
+              onDrop={onDrop}
             />
           ))}
         </div>
