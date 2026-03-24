@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type DragEvent,
   useCallback,
   useDeferredValue,
   useEffect,
@@ -22,10 +23,27 @@ import {
 } from "@/hooks/workspace/use-file-mutations";
 import { useFileQuery } from "@/hooks/workspace/use-workspace-queries";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface MarkdownEditorProps {
   fileId: string;
 }
+
+const hasDraggedFiles = (dataTransfer: DataTransfer) =>
+  Array.from(dataTransfer.items).some((item) => item.kind === "file");
+
+const getDroppedMarkdownFile = (files: FileList) => {
+  if (files.length !== 1) {
+    return { error: "Drop a single .md file into the editor." } as const;
+  }
+
+  const [file] = Array.from(files);
+  if (!file.name.toLowerCase().endsWith(".md")) {
+    return { error: "Only .md files can be dropped into the editor." } as const;
+  }
+
+  return { file } as const;
+};
 
 export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
   const isMobile = useIsMobile();
@@ -34,11 +52,13 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
   const [content, setContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [isFileDropActive, setIsFileDropActive] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("split");
   const [shareOpen, setShareOpen] = useState(false);
   const [prevFileId, setPrevFileId] = useState<string | undefined>(undefined);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const fileDragDepthRef = useRef(0);
   const deferredPreviewContent = useDeferredValue(content);
   const updateFileMutation = useUpdateFileMutation({
     onSuccess: () => {
@@ -85,18 +105,96 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
     saveContent(content);
   }, [content, saveContent]);
 
-  const handleContentChange = (newContent: string) => {
-    setContent(newContent);
-    setHasChanges(true);
+  const handleContentChange = useCallback(
+    (newContent: string) => {
+      setContent(newContent);
+      setHasChanges(true);
 
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+
+      saveTimeoutRef.current = setTimeout(() => {
+        saveContent(newContent);
+      }, 1500);
+    },
+    [saveContent],
+  );
+
+  const resetFileDropState = useCallback(() => {
+    fileDragDepthRef.current = 0;
+    setIsFileDropActive(false);
+  }, []);
+
+  const handleFileDragEnter = useCallback((event: DragEvent<HTMLDivElement>) => {
+    if (!hasDraggedFiles(event.dataTransfer)) {
+      return;
     }
 
-    saveTimeoutRef.current = setTimeout(() => {
-      saveContent(newContent);
-    }, 1500);
-  };
+    event.preventDefault();
+    fileDragDepthRef.current += 1;
+    setIsFileDropActive(true);
+  }, []);
+
+  const handleFileDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
+    if (!hasDraggedFiles(event.dataTransfer)) {
+      return;
+    }
+
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    setIsFileDropActive(true);
+  }, []);
+
+  const handleFileDragLeave = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (!hasDraggedFiles(event.dataTransfer)) {
+        return;
+      }
+
+      event.preventDefault();
+      fileDragDepthRef.current = Math.max(fileDragDepthRef.current - 1, 0);
+      if (fileDragDepthRef.current === 0) {
+        setIsFileDropActive(false);
+      }
+    },
+    [],
+  );
+
+  const handleFileDrop = useCallback(
+    async (event: DragEvent<HTMLDivElement>) => {
+      if (!hasDraggedFiles(event.dataTransfer)) {
+        return;
+      }
+
+      event.preventDefault();
+      resetFileDropState();
+
+      const result = getDroppedMarkdownFile(event.dataTransfer.files);
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+
+      try {
+        const droppedContent = await result.file.text();
+        handleContentChange(droppedContent);
+        toast.success(`Loaded "${result.file.name}" into the editor`);
+
+        requestAnimationFrame(() => {
+          const textarea = textareaRef.current;
+          if (!textarea) return;
+
+          textarea.focus();
+          const cursorPosition = droppedContent.length;
+          textarea.setSelectionRange(cursorPosition, cursorPosition);
+        });
+      } catch {
+        toast.error("Could not read the dropped markdown file");
+      }
+    },
+    [handleContentChange, resetFileDropState],
+  );
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -196,10 +294,20 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
 
       <div
         className={cn(
-          "flex min-h-0 min-w-0 flex-1 overflow-hidden",
+          "relative flex min-h-0 min-w-0 flex-1 overflow-hidden",
           viewMode === "split" && isMobile ? "flex-col" : "flex-row",
         )}
+        onDragEnter={handleFileDragEnter}
+        onDragOver={handleFileDragOver}
+        onDragLeave={handleFileDragLeave}
+        onDrop={handleFileDrop}
       >
+        {isFileDropActive && (
+          <div className="pointer-events-none absolute inset-4 z-10 flex items-center justify-center rounded-xl border border-dashed border-primary/40 bg-background/95 px-6 text-center text-sm font-medium text-foreground shadow-sm">
+            Drop a single .md file to replace the current editor content
+          </div>
+        )}
+
         {(viewMode === "edit" || viewMode === "split") && (
           <div
             className={cn(
