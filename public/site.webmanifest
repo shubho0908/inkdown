@@ -1,17 +1,22 @@
 {
   "name": "Inkdown",
   "short_name": "Inkdown",
-  "description": "Create, organize, and share beautiful markdown documents",
+  "description": "Create, organize, and share beautiful markdown documents with live preview and instant publishing.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f0a1a",
-  "theme_color": "#7c3aed",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
   "icons": [
     {
       "src": "/favicon.png",
-      "sizes": "512x512",
+      "sizes": "1104x1104",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
     }
   ]
 }

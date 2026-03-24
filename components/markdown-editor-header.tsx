@@ -71,21 +71,27 @@ export function MarkdownEditorHeader({
             value="edit"
             className="h-9 min-w-0 rounded-xl px-2.5 md:h-8 md:px-3"
           >
-            <Edit3 className="mr-1.5 h-3.5 w-3.5" />
+            <span className="flex h-4 w-4 items-center justify-center">
+              <Edit3 className="h-3.5 w-3.5" />
+            </span>
             Edit
           </TabsTrigger>
           <TabsTrigger
             value="split"
             className="h-9 min-w-0 rounded-xl px-2.5 md:h-8 md:px-3"
           >
-            <Columns2 className="mr-1.5 h-3.5 w-3.5" />
+            <span className="flex h-4 w-4 items-center justify-center">
+              <Columns2 className="h-3.5 w-3.5" />
+            </span>
             Split
           </TabsTrigger>
           <TabsTrigger
             value="preview"
             className="h-9 min-w-0 rounded-xl px-2.5 md:h-8 md:px-3"
           >
-            <Eye className="mr-1.5 h-3.5 w-3.5" />
+            <span className="flex h-4 w-4 items-center justify-center">
+              <Eye className="h-3.5 w-3.5" />
+            </span>
             Preview
           </TabsTrigger>
         </TabsList>

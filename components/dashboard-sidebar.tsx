@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
 import { DashboardMobileHeader } from '@/components/dashboard-mobile-header'
 import { DashboardSidebarContent } from '@/components/dashboard-sidebar-content'
 import { DashboardSidebarDialogs } from '@/components/dashboard-sidebar-dialogs'
@@ -149,6 +149,9 @@ export function DashboardSidebar({
           className="w-full max-w-full border-r border-sidebar-border/80 p-0 sm:w-[var(--workspace-sidebar-width-mobile)] sm:max-w-[var(--workspace-sidebar-width-mobile)] md:hidden"
         >
           <SheetTitle className="sr-only">Workspace navigation</SheetTitle>
+          <SheetDescription className="sr-only">
+            Browse folders and files, then select an item to edit.
+          </SheetDescription>
           <DashboardSidebarContent
             isLoading={isLoading}
             treeItems={treeItems}

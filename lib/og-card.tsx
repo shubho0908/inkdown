@@ -6,6 +6,7 @@ import { clampText, getHostLabel, getOgBaseUrl } from '@/lib/og-shared'
 interface OgCardProps {
   title: string
   preview?: string
+  username?: string | null
   isDoc?: boolean
   baseUrl?: string
 }
@@ -13,6 +14,7 @@ interface OgCardProps {
 export function OgCard({
   title,
   preview = '',
+  username,
   isDoc = false,
   baseUrl,
 }: OgCardProps): ReactElement {
@@ -20,7 +22,7 @@ export function OgCard({
   const logoUrl = `${safeBaseUrl}/favicon.png`
   const hostLabel = getHostLabel(safeBaseUrl)
   const displayTitle = clampText(title || 'Untitled', isDoc ? 84 : 54)
-  const displayPreview = clampText(preview, isDoc ? 260 : 160)
+  const displayPreview = clampText(preview, isDoc ? 150 : 160)
 
   return (
     <div
@@ -33,38 +35,9 @@ export function OgCard({
         background:
           'radial-gradient(circle at top right, rgba(62, 78, 255, 0.15), transparent 30%), linear-gradient(180deg, #0b1220 0%, #09090b 100%)',
         color: '#f8fafc',
-        fontFamily: 'Manrope',
+        fontFamily: 'Geist',
       }}
     >
-      {isDoc && (
-        <>
-          <div
-            style={{
-              position: 'absolute',
-              top: '-120px',
-              right: '-80px',
-              height: '360px',
-              width: '360px',
-              borderRadius: '999px',
-              background: 'rgba(96,165,250,0.18)',
-              filter: 'blur(80px)',
-            }}
-          />
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '-140px',
-              left: '140px',
-              height: '300px',
-              width: '300px',
-              borderRadius: '999px',
-              background: 'rgba(251,191,36,0.08)',
-              filter: 'blur(100px)',
-            }}
-          />
-        </>
-      )}
-
       <div
         style={{
           position: 'absolute',
@@ -90,12 +63,13 @@ export function OgCard({
       <div
         style={{
           position: 'relative',
-          zIndex: 1,
           display: 'flex',
           flexDirection: 'column',
           width: '100%',
-          padding: '56px 64px',
-          gap: '34px',
+          height: '100%',
+          boxSizing: 'border-box',
+          padding: '46px 60px 38px',
+          gap: '24px',
         }}
       >
         <div
@@ -104,10 +78,10 @@ export function OgCard({
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: '20px',
+            width: '100%',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={logoUrl}
               width={56}
@@ -146,9 +120,10 @@ export function OgCard({
             style={{
               display: 'flex',
               alignItems: 'center',
+              flexShrink: 0,
               borderRadius: '999px',
               border: '1px solid rgba(255,255,255,0.12)',
-              padding: '10px 16px',
+              padding: '10px 18px',
               background: 'rgba(255,255,255,0.05)',
               fontSize: '14px',
               fontWeight: 700,
@@ -160,20 +135,32 @@ export function OgCard({
           </div>
         </div>
 
-        {isDoc ? (
-          <DocumentContent
-            title={displayTitle}
-            preview={displayPreview}
-            hostLabel={hostLabel}
-            logoUrl={logoUrl}
-          />
-        ) : (
-          <MarketingContent
-            title={displayTitle}
-            hostLabel={hostLabel}
-            logoUrl={logoUrl}
-          />
-        )}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            minHeight: 0,
+            width: '100%',
+            marginTop: '-38px',
+          }}
+        >
+          {isDoc ? (
+            <DocumentContent
+              title={displayTitle}
+              preview={displayPreview}
+              username={username}
+              hostLabel={hostLabel}
+              logoUrl={logoUrl}
+            />
+          ) : (
+            <MarketingContent
+              title={displayTitle}
+              hostLabel={hostLabel}
+              logoUrl={logoUrl}
+            />
+          )}
+        </div>
       </div>
     </div>
   )

@@ -4,6 +4,15 @@ import { InkdownLogo } from '@/components/inkdown-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { AlertCircle } from 'lucide-react'
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Authentication Error',
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 export default async function AuthErrorPage({
   searchParams,

@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { emailTemplateStyles as styles } from '@/components/email-template-styles'
+import { getSiteUrl } from '@/lib/site-url'
 
 interface EmailTemplateProps {
   type: 'confirmation' | 'welcome' | 'password-reset'
@@ -20,7 +21,7 @@ export function EmailTemplate({
   confirmationUrl = '#',
   resetUrl = '#',
 }: EmailTemplateProps) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://inkdown.app'
+  const baseUrl = getSiteUrl()
 
   const templates = {
     confirmation: {

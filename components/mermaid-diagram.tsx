@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useId, useState } from 'react'
-import { useTheme } from 'next-themes'
+import { useTheme } from '@/components/theme-provider'
 
 interface MermaidDiagramProps {
   chart: string
@@ -23,7 +23,6 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
         mermaid.initialize({
           startOnLoad: false,
           securityLevel: 'strict',
-          suppressErrorRendering: true,
           theme: resolvedTheme === 'dark' ? 'dark' : 'default',
           flowchart: {
             useMaxWidth: true,

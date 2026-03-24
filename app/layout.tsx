@@ -1,8 +1,17 @@
 import type { Metadata, Viewport } from 'next'
+import { cookies } from 'next/headers'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { QueryProvider } from '@/components/query-provider'
+import { Toaster } from '@/components/ui/sonner'
+import { getSiteUrlObject } from '@/lib/site-url'
+import {
+  isResolvedTheme,
+  isTheme,
+  type ResolvedTheme,
+  type Theme,
+} from '@/lib/theme'
 import 'katex/dist/katex.min.css'
 import './globals.css'
 
@@ -14,11 +23,17 @@ export const metadata: Metadata = {
     default: 'Inkdown - Beautiful Markdown Editor & Sharing Platform',
     template: '%s | Inkdown',
   },
+  applicationName: 'Inkdown',
   description: 'Create, organize, and share beautiful markdown documents. Inkdown provides a seamless writing experience with live preview, folder organization, and instant sharing.',
   keywords: ['markdown', 'editor', 'writing', 'documentation', 'notes', 'sharing', 'collaboration'],
   authors: [{ name: 'Inkdown' }],
   creator: 'Inkdown',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://inkdown.app'),
+  publisher: 'Inkdown',
+  metadataBase: getSiteUrlObject(),
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -26,26 +41,17 @@ export const metadata: Metadata = {
     title: 'Inkdown - Beautiful Markdown Editor & Sharing Platform',
     description: 'Create, organize, and share beautiful markdown documents with live preview and instant sharing.',
     siteName: 'Inkdown',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'Inkdown - Markdown Editor',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Inkdown - Beautiful Markdown Editor',
     description: 'Create, organize, and share beautiful markdown documents.',
-    images: ['/og-image.png'],
   },
   icons: {
     icon: [
       { url: '/favicon.png', type: 'image/png' },
     ],
-    apple: '/favicon.png',
+    apple: '/apple-icon.png',
   },
   manifest: '/site.webmanifest',
 }
@@ -59,22 +65,45 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
-export default function RootLayout({
+function getInitialThemeFromCookies(cookieStore: Awaited<ReturnType<typeof cookies>>) {
+  const themeCookie = cookieStore.get('theme')?.value
+  const resolvedThemeCookie = cookieStore.get('resolved-theme')?.value
+
+  const initialTheme: Theme = isTheme(themeCookie) ? themeCookie : 'system'
+  const initialResolvedTheme: ResolvedTheme = isResolvedTheme(resolvedThemeCookie)
+    ? resolvedThemeCookie
+    : initialTheme === 'dark'
+      ? 'dark'
+      : 'light'
+
+  return {
+    initialTheme,
+    initialResolvedTheme,
+  }
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const cookieStore = await cookies()
+  const { initialTheme, initialResolvedTheme } = getInitialThemeFromCookies(cookieStore)
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={initialResolvedTheme === 'dark' ? 'dark' : undefined}
+      style={{ colorScheme: initialResolvedTheme }}
+    >
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         <QueryProvider>
           <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
+            initialTheme={initialTheme}
+            initialResolvedTheme={initialResolvedTheme}
           >
             {children}
+            <Toaster />
           </ThemeProvider>
         </QueryProvider>
         <Analytics />

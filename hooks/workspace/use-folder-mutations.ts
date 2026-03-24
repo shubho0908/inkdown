@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchJson } from '@/lib/api'
 import { workspaceKeys } from '@/lib/query-keys'
 import type { Folder } from '@/lib/types'
+import { toast } from 'sonner'
 import {
   MutationCallbacks,
   optimisticFolder,
@@ -40,12 +41,14 @@ export function useCreateFolderMutation(options?: MutationCallbacks<Folder>) {
 
       return { previousFolders, optimisticId }
     },
-    onError: (_error, _variables, context) => {
+    onError: (error, _variables, context) => {
       if (!context) return
       queryClient.setQueryData(workspaceKeys.folders(), context.previousFolders)
+      toast.error(error.message || 'Could not create folder')
     },
     onSuccess: (folder, _variables, context) => {
       syncFolder(queryClient, folder, context?.optimisticId)
+      toast.success(`Created "${folder.name}"`)
       options?.onSuccess?.(folder)
     },
   })

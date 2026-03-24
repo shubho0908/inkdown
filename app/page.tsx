@@ -3,7 +3,9 @@ import { DashboardWorkspace } from '@/components/dashboard-workspace'
 import { Button } from '@/components/ui/button'
 import { InkdownLogo } from '@/components/inkdown-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { getSiteUrl } from '@/lib/site-url'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { 
   FileText, 
   FolderTree, 
@@ -13,6 +15,12 @@ import {
   Lock,
   ArrowRight
 } from 'lucide-react'
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: '/',
+  },
+}
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -24,8 +32,39 @@ export default async function HomePage() {
     return <DashboardWorkspace />
   }
 
+  const siteUrl = getSiteUrl()
+  const structuredData = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'Inkdown',
+      url: siteUrl,
+      description:
+        'Create, organize, and share beautiful markdown documents with live preview and instant sharing.',
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: 'Inkdown',
+      applicationCategory: 'BusinessApplication',
+      operatingSystem: 'Web',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+      },
+      url: siteUrl,
+      description:
+        'A markdown editor and sharing platform with live preview, folder organization, and public publishing.',
+    },
+  ]
+
   return (
     <div className="flex min-h-svh flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <InkdownLogo size="md" />

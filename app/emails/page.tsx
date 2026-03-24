@@ -10,6 +10,10 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Email Templates',
   description: 'Preview Inkdown email templates',
+  robots: {
+    index: false,
+    follow: false,
+  },
 }
 
 export default function EmailPreviewPage() {

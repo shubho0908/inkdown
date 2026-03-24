@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchJson } from '@/lib/api'
 import { workspaceKeys } from '@/lib/query-keys'
 import type { File } from '@/lib/types'
+import { toast } from 'sonner'
 import {
   cancelWorkspaceQueries,
   MutationCallbacks,
@@ -50,16 +51,18 @@ export function useCreateFileMutation(options?: MutationCallbacks<File>) {
 
       return { previousFiles, optimisticId }
     },
-    onError: (_error, _variables, context) => {
+    onError: (error, _variables, context) => {
       if (!context) return
       queryClient.setQueryData(workspaceKeys.files(), context.previousFiles)
       queryClient.removeQueries({ queryKey: workspaceKeys.file(context.optimisticId) })
+      toast.error(error.message || 'Could not create file')
     },
     onSuccess: (file, _variables, context) => {
       syncFile(queryClient, file, context?.optimisticId)
       if (context?.optimisticId) {
         queryClient.removeQueries({ queryKey: workspaceKeys.file(context.optimisticId) })
       }
+      toast.success(`Created "${file.name}"`)
       options?.onSuccess?.(file)
     },
   })
@@ -90,15 +93,21 @@ export function useToggleFilePublicMutation() {
 
       return { previousFiles, previousFile }
     },
-    onError: (_error, variables, context) => {
+    onError: (error, variables, context) => {
       if (!context) return
       queryClient.setQueryData(workspaceKeys.files(), context.previousFiles)
       if (context.previousFile) {
         queryClient.setQueryData(workspaceKeys.file(variables.file.id), context.previousFile)
       }
+      toast.error(error.message || 'Could not update sharing settings')
     },
     onSuccess: (file) => {
       syncFile(queryClient, file)
+      toast.success(
+        file.is_public
+          ? `"${file.name}" is now public`
+          : `"${file.name}" is now private`,
+      )
     },
   })
 }

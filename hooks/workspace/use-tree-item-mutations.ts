@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchJson } from '@/lib/api'
 import { workspaceKeys } from '@/lib/query-keys'
 import type { File, Folder, TreeItem } from '@/lib/types'
+import { toast } from 'sonner'
 import {
   cancelWorkspaceQueries,
   collectDescendantFolderIds,
@@ -30,6 +31,10 @@ interface DeleteTreeItemInput {
 interface MoveTreeItemInput {
   item: TreeItem
   targetFolderId: string | null
+}
+
+function getItemLabel(item: TreeItem) {
+  return item.type === 'folder' ? 'folder' : 'file'
 }
 
 export function useRenameTreeItemMutation() {
@@ -78,7 +83,7 @@ export function useRenameTreeItemMutation() {
 
       return snapshot
     },
-    onError: (_error, variables, context) => {
+    onError: (error, variables, context) => {
       if (!context) return
       restoreWorkspaceSnapshot(queryClient, context)
 
@@ -88,14 +93,15 @@ export function useRenameTreeItemMutation() {
           queryClient.setQueryData(workspaceKeys.file(variables.item.id), previousFile)
         }
       }
+      toast.error(error.message || `Could not rename ${getItemLabel(variables.item)}`)
     },
     onSuccess: (result, variables) => {
       if (variables.item.type === 'file') {
         syncFile(queryClient, result as File)
-        return
+      } else {
+        syncFolder(queryClient, result as Folder)
       }
-
-      syncFolder(queryClient, result as Folder)
+      toast.success(`Renamed "${result.name}"`)
     },
   })
 }
@@ -139,7 +145,7 @@ export function useDeleteTreeItemMutation(
 
       return snapshot
     },
-    onError: (_error, variables, context) => {
+    onError: (error, variables, context) => {
       if (!context) return
       restoreWorkspaceSnapshot(queryClient, context)
 
@@ -149,8 +155,10 @@ export function useDeleteTreeItemMutation(
           queryClient.setQueryData(workspaceKeys.file(variables.item.id), previousFile)
         }
       }
+      toast.error(error.message || `Could not delete ${getItemLabel(variables.item)}`)
     },
     onSuccess: (_result, variables) => {
+      toast.success(`Deleted "${variables.item.name}"`)
       options?.onSuccess?.({ item: variables.item })
     },
   })
@@ -201,7 +209,7 @@ export function useMoveTreeItemMutation() {
 
       return snapshot
     },
-    onError: (_error, variables, context) => {
+    onError: (error, variables, context) => {
       if (!context) return
       restoreWorkspaceSnapshot(queryClient, context)
 
@@ -211,6 +219,7 @@ export function useMoveTreeItemMutation() {
           queryClient.setQueryData(workspaceKeys.file(variables.item.id), previousFile)
         }
       }
+      toast.error(error.message || `Could not move ${getItemLabel(variables.item)}`)
     },
     onSuccess: (result, variables) => {
       if (variables.item.type === 'file') {

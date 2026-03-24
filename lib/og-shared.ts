@@ -1,10 +1,7 @@
-const DEFAULT_BASE_URL =
-  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ||
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ||
-  'https://inkdown.app'
+import { getSiteUrl } from '@/lib/site-url'
 
 export function getOgBaseUrl(origin?: string) {
-  return origin ? new URL('/', origin).toString().replace(/\/$/, '') : DEFAULT_BASE_URL
+  return getSiteUrl(origin)
 }
 
 export function getHostLabel(baseUrl: string) {
@@ -12,5 +9,18 @@ export function getHostLabel(baseUrl: string) {
 }
 
 export function clampText(text: string, limit: number) {
-  return text.length > limit ? `${text.slice(0, limit - 3)}...` : text
+  const normalized = text.trim()
+
+  if (normalized.length <= limit) {
+    return normalized
+  }
+
+  const clipped = normalized.slice(0, limit + 1)
+  const wordBoundary = clipped.lastIndexOf(' ')
+
+  if (wordBoundary >= Math.floor(limit * 0.6)) {
+    return `${clipped.slice(0, wordBoundary).trim()}...`
+  }
+
+  return `${normalized.slice(0, limit - 3).trim()}...`
 }
