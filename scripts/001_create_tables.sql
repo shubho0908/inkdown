@@ -33,6 +33,17 @@ CREATE INDEX IF NOT EXISTS idx_files_is_public ON files(is_public);
 ALTER TABLE folders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE files ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies first to avoid conflicts
+DROP POLICY IF EXISTS "Users can view their own folders" ON folders;
+DROP POLICY IF EXISTS "Users can create their own folders" ON folders;
+DROP POLICY IF EXISTS "Users can update their own folders" ON folders;
+DROP POLICY IF EXISTS "Users can delete their own folders" ON folders;
+DROP POLICY IF EXISTS "Users can view their own files" ON files;
+DROP POLICY IF EXISTS "Users can create their own files" ON files;
+DROP POLICY IF EXISTS "Users can update their own files" ON files;
+DROP POLICY IF EXISTS "Users can delete their own files" ON files;
+DROP POLICY IF EXISTS "Anyone can view public files" ON files;
+
 -- RLS policies for folders
 CREATE POLICY "Users can view their own folders" ON folders
   FOR SELECT USING (auth.uid() = user_id);
