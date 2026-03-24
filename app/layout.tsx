@@ -7,8 +7,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
+  title: 'MarkdownHub - Create, Organize & Share Markdown',
+  description: 'A powerful markdown editor to create, organize, and share your documents. Write in markdown, preview in real-time, and share with anyone.',
   generator: 'v0.app',
   icons: {
     icon: [
