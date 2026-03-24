@@ -14,8 +14,8 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/apple-icon.png",
-      "sizes": "180x180",
+      "src": "/favicon.png",
+      "sizes": "1104x1104",
       "type": "image/png"
     }
   ]
