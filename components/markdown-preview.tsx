@@ -1,13 +1,40 @@
 import { memo } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
+import { CodeBlock } from "@/components/code-block";
 import { MermaidDiagram } from "@/components/mermaid-diagram";
+import { extractLanguageFromClassName } from "@/lib/code-block";
+import { normalizeMarkdownContent } from "@/lib/markdown-normalization";
 
 interface MarkdownPreviewProps {
   content: string;
 }
+
+const defaultSchemaAttributes = defaultSchema.attributes ?? {};
+
+const markdownSanitizeSchema = {
+  ...defaultSchema,
+  attributes: {
+    ...defaultSchemaAttributes,
+    code: [...(defaultSchemaAttributes.code || []), "className"],
+    pre: [...(defaultSchemaAttributes.pre || []), "className"],
+    div: [...(defaultSchemaAttributes.div || []), "className"],
+    span: [...(defaultSchemaAttributes.span || []), "className"],
+    p: [...(defaultSchemaAttributes.p || []), "className"],
+    section: [...(defaultSchemaAttributes.section || []), "className"],
+    article: [...(defaultSchemaAttributes.article || []), "className"],
+    table: [...(defaultSchemaAttributes.table || []), "className"],
+    thead: [...(defaultSchemaAttributes.thead || []), "className"],
+    tbody: [...(defaultSchemaAttributes.tbody || []), "className"],
+    tr: [...(defaultSchemaAttributes.tr || []), "className"],
+    th: [...(defaultSchemaAttributes.th || []), "className"],
+    td: [...(defaultSchemaAttributes.td || []), "className"],
+  },
+};
 
 function normalizeUrl(value?: string) {
   const trimmed = value?.trim();
@@ -57,14 +84,50 @@ function normalizeImageSrc(value?: string) {
   return normalized;
 }
 
+function getCodeBlockDataFromNode(node?: {
+  children?: Array<{
+    type?: string;
+    tagName?: string;
+    properties?: { className?: string | string[] };
+    children?: Array<{ type?: string; value?: string }>;
+  }>;
+}) {
+  const codeNode = node?.children?.[0];
+
+  if (!codeNode || codeNode.type !== "element" || codeNode.tagName !== "code") {
+    return null;
+  }
+
+  const className = Array.isArray(codeNode.properties?.className)
+    ? codeNode.properties?.className.join(" ")
+    : codeNode.properties?.className;
+
+  const code = (codeNode.children || [])
+    .filter((child) => child.type === "text")
+    .map((child) => child.value || "")
+    .join("")
+    .replace(/\n$/, "");
+
+  return {
+    code,
+    language: extractLanguageFromClassName(className),
+  };
+}
+
 export const MarkdownPreview = memo(function MarkdownPreview({
   content,
 }: MarkdownPreviewProps) {
+  const normalizedContent = normalizeMarkdownContent(content);
+
   return (
     <article className="prose prose-neutral dark:prose-invert min-w-0 w-full max-w-full break-words text-sm sm:text-base">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex]}
+        rehypePlugins={[
+          rehypeRaw,
+          [rehypeSanitize, markdownSanitizeSchema],
+          rehypeKatex,
+        ]}
         components={{
           h1: ({ children }) => (
             <h1 className="mb-4 border-b pb-2 text-2xl font-bold tracking-tight sm:text-3xl">
@@ -107,32 +170,40 @@ export const MarkdownPreview = memo(function MarkdownPreview({
               {children}
             </blockquote>
           ),
-          code: ({ className, children, ...props }) => {
-            const match = /language-(\w+)/.exec(className || "");
-            const value = String(children).replace(/\n$/, "");
+          code: ({ node: _node, className, children, ...props }) => (
+            <code
+              className={
+                className
+                  ? `relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-[0.9em] break-words ${className}`
+                  : "relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-[0.9em] break-words"
+              }
+              {...props}
+            >
+              {children}
+            </code>
+          ),
+          pre: ({ node, children }) => {
+            const codeBlock = getCodeBlockDataFromNode(node);
 
-            if (match?.[1] === "mermaid") {
-              return <MermaidDiagram chart={value} />;
+            if (!codeBlock) {
+              return (
+                <pre className="overflow-x-auto rounded-lg bg-muted p-4">
+                  {children}
+                </pre>
+              );
             }
 
-            const isInline = !match;
-            return isInline ? (
-              <code
-                className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-[0.9em] break-words"
-                {...props}
-              >
-                {children}
-              </code>
-            ) : (
-              <code
-                className={`block overflow-x-auto rounded-lg bg-muted p-4 font-mono text-sm ${className}`}
-                {...props}
-              >
-                {value}
-              </code>
+            if (codeBlock.language === "mermaid") {
+              return <MermaidDiagram chart={codeBlock.code} />;
+            }
+
+            return (
+              <CodeBlock
+                code={codeBlock.code}
+                language={codeBlock.language}
+              />
             );
           },
-          pre: ({ children }) => <>{children}</>,
           a: ({ href, children }) => {
             const safeHref = normalizeUrl(href);
 
@@ -205,7 +276,7 @@ export const MarkdownPreview = memo(function MarkdownPreview({
           td: ({ children }) => (
             <td className="border border-border px-4 py-2">{children}</td>
           ),
-          input: ({ type, checked, ...props }) => {
+          input: ({ node: _node, type, checked, ...props }) => {
             if (type === "checkbox") {
               return (
                 <input
@@ -221,7 +292,7 @@ export const MarkdownPreview = memo(function MarkdownPreview({
           },
         }}
       >
-        {content}
+        {normalizedContent}
       </ReactMarkdown>
     </article>
   );

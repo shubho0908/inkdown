@@ -159,3 +159,60 @@
   height: auto;
   max-width: 100%;
 }
+
+.inkdown-code-block .hljs {
+  color: oklch(0.26 0.02 260);
+}
+
+.dark .inkdown-code-block .hljs {
+  color: oklch(0.92 0.01 260);
+}
+
+.inkdown-code-block .hljs-comment,
+.inkdown-code-block .hljs-quote {
+  color: oklch(0.56 0.02 250);
+  font-style: italic;
+}
+
+.inkdown-code-block .hljs-keyword,
+.inkdown-code-block .hljs-selector-tag,
+.inkdown-code-block .hljs-literal,
+.inkdown-code-block .hljs-section,
+.inkdown-code-block .hljs-link {
+  color: oklch(0.57 0.16 255);
+}
+
+.inkdown-code-block .hljs-title,
+.inkdown-code-block .hljs-title.class_,
+.inkdown-code-block .hljs-title.function_,
+.inkdown-code-block .hljs-type,
+.inkdown-code-block .hljs-built_in {
+  color: oklch(0.52 0.14 225);
+}
+
+.inkdown-code-block .hljs-string,
+.inkdown-code-block .hljs-regexp,
+.inkdown-code-block .hljs-bullet,
+.inkdown-code-block .hljs-symbol {
+  color: oklch(0.6 0.17 145);
+}
+
+.inkdown-code-block .hljs-number,
+.inkdown-code-block .hljs-meta,
+.inkdown-code-block .hljs-attribute,
+.inkdown-code-block .hljs-variable,
+.inkdown-code-block .hljs-template-variable {
+  color: oklch(0.64 0.17 55);
+}
+
+.inkdown-code-block .hljs-subst {
+  color: inherit;
+}
+
+.inkdown-code-block .hljs-emphasis {
+  font-style: italic;
+}
+
+.inkdown-code-block .hljs-strong {
+  font-weight: 700;
+}
