@@ -146,7 +146,7 @@ export function DashboardSidebar({
         <SheetContent
           side="left"
           showCloseButton={false}
-          className="w-full max-w-full border-r border-sidebar-border/80 p-0 sm:w-[var(--workspace-sidebar-width-mobile)] sm:max-w-[var(--workspace-sidebar-width-mobile)] md:hidden"
+          className="inset-y-0 left-0 right-0 h-full w-auto max-w-none border-r border-sidebar-border/80 p-0 md:hidden"
         >
           <SheetTitle className="sr-only">Workspace navigation</SheetTitle>
           <SheetDescription className="sr-only">

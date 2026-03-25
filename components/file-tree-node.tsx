@@ -142,6 +142,7 @@ export function TreeNode({
         <button
           onClick={() => onSelect(item)}
           className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden text-left"
+          title={item.name}
         >
           {isFolder ? (
             isExpanded ? (
@@ -152,7 +153,7 @@ export function TreeNode({
           ) : (
             <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
           )}
-          <span className="truncate">{item.name}</span>
+          <span className="min-w-0 flex-1 truncate">{item.name}</span>
           {!isFolder && item.is_public && (
             <Share2 className="h-3 w-3 shrink-0 text-primary" />
           )}

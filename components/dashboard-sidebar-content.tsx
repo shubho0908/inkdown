@@ -6,7 +6,6 @@ import { FileTree } from '@/components/file-tree'
 import { InkdownLogo } from '@/components/inkdown-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { TreeItem } from '@/lib/types'
 
@@ -85,7 +84,7 @@ export function DashboardSidebarContent({
         </Button>
       </div>
 
-      <ScrollArea className="min-h-0 flex-1">
+      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
         <div className="space-y-3 px-3 py-4">
           {isLoading ? (
             <div className="space-y-2 px-1">
@@ -122,7 +121,7 @@ export function DashboardSidebarContent({
             </div>
           )}
         </div>
-      </ScrollArea>
+      </div>
 
       <div className="border-t px-3 py-3">
         <Button
