@@ -11,6 +11,7 @@ export const alt = 'Inkdown shared markdown document'
 export const size = OG_IMAGE_SIZE
 export const contentType = 'image/png'
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export default async function Image({ params }: ViewDocumentImageProps) {
   const { slug } = await params

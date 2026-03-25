@@ -7,6 +7,15 @@ import {
 } from '@/lib/auth'
 
 export async function updateSession(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+  const isPublicShareRoute = pathname === '/view' || pathname.startsWith('/view/')
+
+  if (isPublicShareRoute) {
+    return NextResponse.next({
+      request,
+    })
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -44,7 +53,6 @@ export async function updateSession(request: NextRequest) {
     authState.kind === 'authenticated' || authState.kind === 'unverified'
       ? authState.user
       : null
-  const pathname = request.nextUrl.pathname
   const isApiRoute = pathname.startsWith('/api/')
   const isAuthRoute = pathname.startsWith('/auth')
   const isAuthCallbackRoute = pathname.startsWith('/auth/callback')

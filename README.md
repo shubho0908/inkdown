@@ -33,6 +33,7 @@ Create a `.env.local` file with:
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
 
 # Optional but recommended in production
 NEXT_PUBLIC_APP_URL=https://inkdown.example.com
@@ -117,7 +118,7 @@ Before deploying:
 
 - apply the database scripts
 - configure Supabase auth URLs and email template
-- set production environment variables
+- set production environment variables, including `SUPABASE_SERVICE_ROLE_KEY` for reliable public share lookups
 
 ## Notes
 

@@ -14,6 +14,8 @@ interface ViewPageProps {
   params: Promise<{ slug: string }>
 }
 
+export const dynamic = 'force-dynamic'
+
 export async function generateMetadata({ params }: ViewPageProps): Promise<Metadata> {
   const { slug } = await params
   const file = await getPublicFileBySlug(slug)
