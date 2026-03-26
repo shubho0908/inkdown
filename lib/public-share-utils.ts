@@ -10,18 +10,22 @@ function getSupabaseRestUrl(path: string) {
   return new URL(path, `${baseUrl}/`)
 }
 
-function getSupabaseServiceRoleKey() {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+function getSupabaseRestKey() {
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!key) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY is required for public share lookups')
+    throw new Error(
+      'A Supabase REST key is required for public share lookups. Set SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY.',
+    )
   }
 
   return key
 }
 
 export function getSupabaseRestHeaders() {
-  const key = getSupabaseServiceRoleKey()
+  const key = getSupabaseRestKey()
 
   return {
     apikey: key,

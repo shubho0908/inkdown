@@ -127,7 +127,9 @@ Before deploying:
 
 - apply the database scripts
 - configure Supabase auth URLs and email template
-- set production environment variables, including `SUPABASE_SERVICE_ROLE_KEY` for reliable public share lookups
+- set production environment variables
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` is enough for public share lookups because the public share RPCs and RLS policies allow anon access
+- `SUPABASE_SERVICE_ROLE_KEY` is optional and can still be provided for server-side lookups
 
 ## Notes
 
