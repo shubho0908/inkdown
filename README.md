@@ -16,6 +16,7 @@ Private markdown workspace with folders, sharing, and Supabase auth.
 - Markdown editing with live preview
 - Folder and file management
 - Public document sharing by slug
+- Public folder sharing with recursive browsing
 - Email sign-up and sign-in
 - Email verification enforcement
 - Light and dark theme support
@@ -50,6 +51,14 @@ Run these SQL scripts in Supabase, in this order:
 1. `scripts/001_create_tables.sql`
 2. `scripts/003_create_profiles.sql`
 3. `scripts/004_harden_auth_email_verification.sql`
+4. `scripts/005_add_public_folder_sharing.sql`
+
+`005_add_public_folder_sharing.sql` is additive and non-destructive:
+
+- existing folders are preserved and start with `is_public = false`
+- existing file share slugs are preserved
+- `files.slug` is relaxed to nullable so private drafts can exist without forced share slugs
+- the script runs in a transaction so it will roll back instead of leaving a partial schema change set
 
 `scripts/002_create_folders.sql` is not required if you already ran `001`.
 

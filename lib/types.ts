@@ -3,6 +3,8 @@ export interface Folder {
   user_id: string
   name: string
   parent_id: string | null
+  slug: string | null
+  is_public: boolean
   created_at: string
   updated_at: string
 }

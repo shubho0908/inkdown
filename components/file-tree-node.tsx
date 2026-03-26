@@ -80,6 +80,7 @@ export function TreeNode({
   return (
     <div>
       <div
+        data-tree-node-id={item.id}
         className={cn(
           'group flex min-w-0 items-center gap-1 rounded-xl border border-transparent px-2 py-2 text-sm transition-colors hover:bg-accent/70',
           isSelected && 'border-border bg-accent/80 shadow-xs',
@@ -91,6 +92,7 @@ export function TreeNode({
         style={{ paddingLeft: `${level * 12 + 8}px` }}
         onDragOver={(event) => {
           if (!canDropOnThisFolder) return
+          event.stopPropagation()
           event.preventDefault()
           if (!isExpanded) {
             setIsExpanded(true)
@@ -100,12 +102,16 @@ export function TreeNode({
           }
         }}
         onDragLeave={(event) => {
+          if (!canDropOnThisFolder) return
+          event.stopPropagation()
           if (event.currentTarget.contains(event.relatedTarget as Node | null)) return
           if (dropTargetId === item.id) {
             onDropTargetChange(null)
           }
         }}
         onDrop={(event) => {
+          if (!canDropOnThisFolder) return
+          event.stopPropagation()
           event.preventDefault()
           handleDrop()
         }}
@@ -154,7 +160,7 @@ export function TreeNode({
             <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
           )}
           <span className="min-w-0 flex-1 truncate">{item.name}</span>
-          {!isFolder && item.is_public && (
+          {item.is_public && (
             <Share2 className="h-3 w-3 shrink-0 text-primary" />
           )}
         </button>
@@ -184,7 +190,7 @@ export function TreeNode({
                 <DropdownMenuSeparator />
               </>
             )}
-            {!isFolder && onTogglePublic && (
+            {onTogglePublic && (
               <>
                 <DropdownMenuItem onClick={() => onTogglePublic(item)}>
                   <Share2 className="mr-2 h-4 w-4" />

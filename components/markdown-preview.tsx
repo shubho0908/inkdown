@@ -120,7 +120,7 @@ export const MarkdownPreview = memo(function MarkdownPreview({
   const normalizedContent = normalizeMarkdownContent(content);
 
   return (
-    <article className="prose prose-neutral dark:prose-invert min-w-0 w-full max-w-full break-words text-sm sm:text-base">
+    <article className="prose prose-neutral dark:prose-invert min-w-0 w-full max-w-full overflow-x-hidden break-words text-sm sm:text-base">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[
@@ -259,8 +259,8 @@ export const MarkdownPreview = memo(function MarkdownPreview({
           },
           hr: () => <hr className="my-6 border-border" />,
           table: ({ children }) => (
-            <div className="my-4 overflow-x-auto">
-              <table className="w-full border-collapse border border-border">
+            <div className="my-4 max-w-full overflow-x-auto">
+              <table className="min-w-[640px] border-collapse border border-border text-xs sm:w-full sm:min-w-0 sm:text-sm">
                 {children}
               </table>
             </div>
@@ -269,12 +269,12 @@ export const MarkdownPreview = memo(function MarkdownPreview({
             <thead className="bg-muted">{children}</thead>
           ),
           th: ({ children }) => (
-            <th className="border border-border px-4 py-2 text-left font-semibold">
+            <th className="border border-border px-3 py-2 text-left font-semibold sm:px-4">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="border border-border px-4 py-2">{children}</td>
+            <td className="border border-border px-3 py-2 align-top sm:px-4">{children}</td>
           ),
           input: ({ node: _node, type, checked, ...props }) => {
             if (type === "checkbox") {

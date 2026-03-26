@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { cookies } from 'next/headers'
-import { Inter, JetBrains_Mono } from 'next/font/google'
+import localFont from 'next/font/local'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { QueryProvider } from '@/components/query-provider'
@@ -15,8 +15,11 @@ import {
 import 'katex/dist/katex.min.css'
 import './globals.css'
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
-const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" })
+const geist = localFont({
+  src: '../public/fonts/Geist-Regular.ttf',
+  variable: '--app-font-sans',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: {
@@ -96,7 +99,7 @@ export default async function RootLayout({
       className={initialResolvedTheme === 'dark' ? 'dark' : undefined}
       style={{ colorScheme: initialResolvedTheme }}
     >
-      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+      <body className={`${geist.variable} font-sans antialiased`}>
         <QueryProvider>
           <ThemeProvider
             initialTheme={initialTheme}

@@ -1,13 +1,16 @@
 'use client'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchJson } from '@/lib/api'
+import {
+  canMoveTreeItem,
+  collectDescendantFolderIds,
+} from '@/lib/folder-tree'
+import { ApiError, fetchJson } from '@/lib/api'
 import { workspaceKeys } from '@/lib/query-keys'
 import type { File, Folder, TreeItem } from '@/lib/types'
 import { toast } from 'sonner'
 import {
   cancelWorkspaceQueries,
-  collectDescendantFolderIds,
   getWorkspaceSnapshot,
   replaceFile,
   replaceFolder,
@@ -33,8 +36,51 @@ interface MoveTreeItemInput {
   targetFolderId: string | null
 }
 
+interface MoveTreeItemContext {
+  snapshot: ReturnType<typeof getWorkspaceSnapshot>
+  skipped: boolean
+}
+
 function getItemLabel(item: TreeItem) {
   return item.type === 'folder' ? 'folder' : 'file'
+}
+
+function getCurrentTreeItemForMove(
+  snapshot: ReturnType<typeof getWorkspaceSnapshot>,
+  item: TreeItem,
+): Pick<TreeItem, 'id' | 'type' | 'parent_id'> {
+  if (item.type === 'file') {
+    const file = snapshot.files.find((candidate) => candidate.id === item.id)
+
+    return file
+      ? {
+          id: file.id,
+          type: 'file',
+          parent_id: file.folder_id,
+        }
+      : item
+  }
+
+  const folder = snapshot.folders.find((candidate) => candidate.id === item.id)
+
+  return folder
+    ? {
+        id: folder.id,
+        type: 'folder',
+        parent_id: folder.parent_id,
+      }
+    : item
+}
+
+function getCurrentTreeItem(
+  snapshot: ReturnType<typeof getWorkspaceSnapshot>,
+  item: TreeItem,
+) {
+  if (item.type === 'file') {
+    return snapshot.files.find((file) => file.id === item.id) ?? item
+  }
+
+  return snapshot.folders.find((folder) => folder.id === item.id) ?? item
 }
 
 export function useRenameTreeItemMutation() {
@@ -168,8 +214,20 @@ export function useMoveTreeItemMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ item, targetFolderId }: MoveTreeItemInput) =>
-      fetchJson<File | Folder>(
+    mutationFn: async ({ item, targetFolderId }: MoveTreeItemInput) => {
+      const snapshot = getWorkspaceSnapshot(queryClient)
+      const currentItem = getCurrentTreeItem(snapshot, item)
+      const currentItemForMove = getCurrentTreeItemForMove(snapshot, item)
+
+      if (!canMoveTreeItem(snapshot.folders, currentItemForMove, targetFolderId)) {
+        if (currentItem) {
+          return currentItem
+        }
+
+        throw new ApiError(`Could not move ${getItemLabel(item)}`, 400)
+      }
+
+      return fetchJson<File | Folder>(
         `/api/${item.type === 'folder' ? 'folders' : 'files'}/${item.id}`,
         {
           method: 'PATCH',
@@ -180,11 +238,18 @@ export function useMoveTreeItemMutation() {
               : { folder_id: targetFolderId },
           ),
         },
-      ),
+      )
+    },
     onMutate: async ({ item, targetFolderId }) => {
       await cancelWorkspaceQueries(queryClient, item.type === 'file' ? item.id : undefined)
 
       const snapshot = getWorkspaceSnapshot(queryClient)
+      const currentItem = getCurrentTreeItemForMove(snapshot, item)
+      const canMove = canMoveTreeItem(snapshot.folders, currentItem, targetFolderId)
+
+      if (!canMove) {
+        return { snapshot, skipped: true } satisfies MoveTreeItemContext
+      }
 
       if (item.type === 'file') {
         queryClient.setQueryData<File[]>(
@@ -207,21 +272,27 @@ export function useMoveTreeItemMutation() {
         )
       }
 
-      return snapshot
+      return { snapshot, skipped: false } satisfies MoveTreeItemContext
     },
     onError: (error, variables, context) => {
       if (!context) return
-      restoreWorkspaceSnapshot(queryClient, context)
+      restoreWorkspaceSnapshot(queryClient, context.snapshot)
 
       if (variables.item.type === 'file') {
-        const previousFile = context.files.find((file) => file.id === variables.item.id)
+        const previousFile = context.snapshot.files.find(
+          (file) => file.id === variables.item.id,
+        )
         if (previousFile) {
           queryClient.setQueryData(workspaceKeys.file(variables.item.id), previousFile)
         }
       }
       toast.error(error.message || `Could not move ${getItemLabel(variables.item)}`)
     },
-    onSuccess: (result, variables) => {
+    onSuccess: (result, variables, context) => {
+      if (context?.skipped) {
+        return
+      }
+
       if (variables.item.type === 'file') {
         syncFile(queryClient, result as File)
         return

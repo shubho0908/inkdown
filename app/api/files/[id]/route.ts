@@ -1,8 +1,8 @@
 import { requireVerifiedUser } from '@/lib/auth'
 import { createAuthErrorResponse } from '@/lib/auth/server'
+import { generateUniqueShareSlug } from '@/lib/share-slug'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { nanoid } from 'nanoid'
 
 export async function GET(
   request: Request,
@@ -66,17 +66,27 @@ export async function PATCH(
   }
   if (is_public !== undefined) {
     updateData.is_public = is_public
-    // Generate or clear slug based on public status
     if (is_public) {
-      // Check if slug already exists
       const { data: existing } = await supabase
         .from('files')
         .select('slug')
         .eq('id', id)
         .single()
-      
+
       if (!existing?.slug) {
-        updateData.slug = nanoid(10)
+        updateData.slug = await generateUniqueShareSlug(async (slug) => {
+          const { data, error } = await supabase
+            .from('files')
+            .select('id')
+            .eq('slug', slug)
+            .maybeSingle()
+
+          if (error) {
+            throw error
+          }
+
+          return Boolean(data)
+        })
       }
     }
   }

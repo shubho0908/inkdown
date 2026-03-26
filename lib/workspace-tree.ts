@@ -10,6 +10,8 @@ export function buildTree(folders: Folder[], files: File[]): TreeItem[] {
       name: folder.name,
       type: 'folder',
       parent_id: folder.parent_id,
+      is_public: folder.is_public,
+      slug: folder.slug,
       children: [],
     })
   })

@@ -346,7 +346,8 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
       <ShareDialog
         open={shareOpen}
         onOpenChange={setShareOpen}
-        fileName={file.name}
+        itemName={file.name}
+        itemType="file"
         isPublic={file.is_public}
         slug={file.slug}
         onTogglePublic={handleShareToggle}

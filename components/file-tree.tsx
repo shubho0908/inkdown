@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type DragEvent } from 'react'
 import { Move } from 'lucide-react'
 import { TreeNode } from '@/components/file-tree-node'
+import { canMoveTreeItem } from '@/lib/folder-tree'
 import { cn } from '@/lib/utils'
 import type { TreeItem } from '@/lib/types'
 
@@ -16,6 +17,37 @@ interface FileTreeProps {
   onRename: (item: TreeItem) => void
   onDelete: (item: TreeItem) => void
   onTogglePublic?: (item: TreeItem) => void
+}
+
+interface RootDropZoneProps {
+  active: boolean
+  onDragOver: (event: DragEvent<HTMLDivElement>) => void
+  onDragLeave: (event: DragEvent<HTMLDivElement>) => void
+  onDrop: (event: DragEvent<HTMLDivElement>) => void
+}
+
+function RootDropZone({
+  active,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+}: RootDropZoneProps) {
+  return (
+    <div
+      className={cn(
+        'mx-1 flex min-h-9 items-center gap-2 rounded-xl border border-dashed px-3 py-2 text-xs font-medium text-muted-foreground transition-colors',
+        active
+          ? 'border-primary/50 bg-primary/10 text-foreground'
+          : 'border-border/70 bg-background/40',
+      )}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+    >
+      <Move className="h-3.5 w-3.5" />
+      Drop to move to workspace root
+    </div>
+  )
 }
 
 export function FileTree({
@@ -49,40 +81,58 @@ export function FileTree({
     return map
   }, [items])
 
+  const folderIndex = useMemo(
+    () =>
+      Array.from(itemIndex.values())
+        .filter((item): item is TreeItem & { type: 'folder' } => item.type === 'folder')
+        .map(({ id, parent_id }) => ({ id, parent_id })),
+    [itemIndex],
+  )
+
+  const isTreeBackgroundDragEvent = (event: DragEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement | null
+
+    return !target?.closest('[data-tree-node-id]')
+  }
+
   const canDropIntoFolder = (
     draggedItem: TreeItem | undefined,
     targetFolderId: string | null,
   ) => {
     if (!draggedItem) return false
-
-    if (draggedItem.type === 'file') {
-      return draggedItem.parent_id !== targetFolderId
-    }
-
-    if (draggedItem.id === targetFolderId) return false
-    if (draggedItem.parent_id === targetFolderId) return false
-
-    if (targetFolderId === null) return true
-
-    let current = itemIndex.get(targetFolderId)
-    while (current) {
-      if (current.id === draggedItem.id) {
-        return false
-      }
-
-      current = current.parent_id ? itemIndex.get(current.parent_id) : undefined
-    }
-
-    return true
+    return canMoveTreeItem(folderIndex, draggedItem, targetFolderId)
   }
 
   const draggedItem = draggedItemId ? itemIndex.get(draggedItemId) : undefined
+  const canDropToRoot = canDropIntoFolder(draggedItem, null)
 
   const handleRootDrop = () => {
-    if (!draggedItem || !canDropIntoFolder(draggedItem, null)) return
+    if (!draggedItem || !canDropToRoot) return
     onMove(draggedItem, null)
     setDraggedItemId(null)
     setDropTargetId(null)
+  }
+
+  const handleRootZoneDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.stopPropagation()
+    event.preventDefault()
+    if (dropTargetId !== 'root') {
+      setDropTargetId('root')
+    }
+  }
+
+  const handleRootZoneDragLeave = (event: DragEvent<HTMLDivElement>) => {
+    event.stopPropagation()
+    if (event.currentTarget.contains(event.relatedTarget as Node | null)) return
+    if (dropTargetId === 'root') {
+      setDropTargetId(null)
+    }
+  }
+
+  const handleRootZoneDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.stopPropagation()
+    event.preventDefault()
+    handleRootDrop()
   }
 
   return (
@@ -92,7 +142,8 @@ export function FileTree({
         dropTargetId === 'root' && 'bg-accent/30',
       )}
       onDragOver={(event) => {
-        if (!draggedItem || !canDropIntoFolder(draggedItem, null)) return
+        if (!isTreeBackgroundDragEvent(event)) return
+        if (!canDropToRoot) return
         event.preventDefault()
         if (dropTargetId !== 'root') {
           setDropTargetId('root')
@@ -105,22 +156,19 @@ export function FileTree({
         }
       }}
       onDrop={(event) => {
+        if (!isTreeBackgroundDragEvent(event)) return
+        if (!canDropToRoot) return
         event.preventDefault()
         handleRootDrop()
       }}
     >
-      {draggedItem && canDropIntoFolder(draggedItem, null) && (
-        <div
-          className={cn(
-            'mx-1 mb-2 flex items-center gap-2 rounded-xl border border-dashed px-3 py-2 text-xs font-medium text-muted-foreground transition-colors',
-            dropTargetId === 'root'
-              ? 'border-primary/50 bg-primary/10 text-foreground'
-              : 'border-border/70',
-          )}
-        >
-          <Move className="h-3.5 w-3.5" />
-          Drop here to move to root
-        </div>
+      {draggedItem && canDropToRoot && (
+        <RootDropZone
+          active={dropTargetId === 'root'}
+          onDragOver={handleRootZoneDragOver}
+          onDragLeave={handleRootZoneDragLeave}
+          onDrop={handleRootZoneDrop}
+        />
       )}
       {items.map((item) => (
         <TreeNode
@@ -147,6 +195,14 @@ export function FileTree({
           onTogglePublic={onTogglePublic}
         />
       ))}
+      {draggedItem && canDropToRoot && items.length > 0 && (
+        <RootDropZone
+          active={dropTargetId === 'root'}
+          onDragOver={handleRootZoneDragOver}
+          onDragLeave={handleRootZoneDragLeave}
+          onDrop={handleRootZoneDrop}
+        />
+      )}
     </div>
   )
 }

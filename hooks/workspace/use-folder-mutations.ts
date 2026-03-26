@@ -6,6 +6,7 @@ import { workspaceKeys } from '@/lib/query-keys'
 import type { Folder } from '@/lib/types'
 import { toast } from 'sonner'
 import {
+  cancelWorkspaceQueries,
   MutationCallbacks,
   optimisticFolder,
   replaceFolder,
@@ -14,6 +15,11 @@ import {
 
 interface CreateFolderInput {
   parentId: string | null
+}
+
+interface ToggleFolderPublicInput {
+  folder: Folder
+  isPublic: boolean
 }
 
 export function useCreateFolderMutation(options?: MutationCallbacks<Folder>) {
@@ -50,6 +56,46 @@ export function useCreateFolderMutation(options?: MutationCallbacks<Folder>) {
       syncFolder(queryClient, folder, context?.optimisticId)
       toast.success(`Created "${folder.name}"`)
       options?.onSuccess?.(folder)
+    },
+  })
+}
+
+export function useToggleFolderPublicMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ folder, isPublic }: ToggleFolderPublicInput) =>
+      fetchJson<Folder>(`/api/folders/${folder.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_public: isPublic }),
+      }),
+    onMutate: async ({ folder, isPublic }) => {
+      await cancelWorkspaceQueries(queryClient)
+
+      const previousFolders =
+        queryClient.getQueryData<Folder[]>(workspaceKeys.folders()) ?? []
+      const optimistic = { ...folder, is_public: isPublic }
+
+      queryClient.setQueryData<Folder[]>(
+        workspaceKeys.folders(),
+        replaceFolder(previousFolders, optimistic),
+      )
+
+      return { previousFolders }
+    },
+    onError: (error, _variables, context) => {
+      if (!context) return
+      queryClient.setQueryData(workspaceKeys.folders(), context.previousFolders)
+      toast.error(error.message || 'Could not update folder sharing settings')
+    },
+    onSuccess: (folder) => {
+      syncFolder(queryClient, folder)
+      toast.success(
+        folder.is_public
+          ? `"${folder.name}" is now public`
+          : `"${folder.name}" is now private`,
+      )
     },
   })
 }

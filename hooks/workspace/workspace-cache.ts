@@ -37,23 +37,6 @@ export function replaceFolder(
   return sortByName([...withoutPrevious, updatedFolder])
 }
 
-export function collectDescendantFolderIds(folders: Folder[], folderId: string) {
-  const ids = new Set<string>([folderId])
-  let found = true
-
-  while (found) {
-    found = false
-    for (const folder of folders) {
-      if (folder.parent_id && ids.has(folder.parent_id) && !ids.has(folder.id)) {
-        ids.add(folder.id)
-        found = true
-      }
-    }
-  }
-
-  return ids
-}
-
 export function optimisticFile(input: {
   id: string
   folderId: string | null
@@ -87,6 +70,8 @@ export function optimisticFolder(input: {
     user_id: 'optimistic',
     parent_id: input.parentId,
     name: input.name || 'New Folder',
+    slug: null,
+    is_public: false,
     created_at: now,
     updated_at: now,
   }

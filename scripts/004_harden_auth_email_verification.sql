@@ -133,6 +133,7 @@ DROP POLICY IF EXISTS "Users can view their own folders" ON public.folders;
 DROP POLICY IF EXISTS "Users can create their own folders" ON public.folders;
 DROP POLICY IF EXISTS "Users can update their own folders" ON public.folders;
 DROP POLICY IF EXISTS "Users can delete their own folders" ON public.folders;
+DROP POLICY IF EXISTS "Anyone can view public folders" ON public.folders;
 DROP POLICY IF EXISTS "Users can view their own files" ON public.files;
 DROP POLICY IF EXISTS "Users can create their own files" ON public.files;
 DROP POLICY IF EXISTS "Users can update their own files" ON public.files;
@@ -161,6 +162,9 @@ CREATE POLICY "Users can delete their own folders" ON public.folders
     auth.uid() = user_id
     AND public.is_current_user_email_verified()
   );
+
+CREATE POLICY "Anyone can view public folders" ON public.folders
+  FOR SELECT USING (is_public = TRUE);
 
 CREATE POLICY "Users can view their own files" ON public.files
   FOR SELECT USING (

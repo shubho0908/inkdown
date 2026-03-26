@@ -10,7 +10,10 @@ import {
   useCreateFileMutation,
   useToggleFilePublicMutation,
 } from '@/hooks/workspace/use-file-mutations'
-import { useCreateFolderMutation } from '@/hooks/workspace/use-folder-mutations'
+import {
+  useCreateFolderMutation,
+  useToggleFolderPublicMutation,
+} from '@/hooks/workspace/use-folder-mutations'
 import {
   useDeleteTreeItemMutation,
   useMoveTreeItemMutation,
@@ -21,7 +24,7 @@ import {
   useFoldersQuery,
 } from '@/hooks/workspace/use-workspace-queries'
 import { createClient } from '@/lib/supabase/client'
-import type { File, TreeItem } from '@/lib/types'
+import type { File, Folder, TreeItem } from '@/lib/types'
 import { buildTree } from '@/lib/workspace-tree'
 import { useRouter } from 'next/navigation'
 
@@ -43,6 +46,7 @@ export function DashboardSidebar({
   const [deleteItem, setDeleteItem] = useState<TreeItem | null>(null)
   const [shareItem, setShareItem] = useState<TreeItem | null>(null)
   const [shareFile, setShareFile] = useState<File | null>(null)
+  const [shareFolder, setShareFolder] = useState<Folder | null>(null)
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const createFileMutation = useCreateFileMutation({
@@ -64,6 +68,7 @@ export function DashboardSidebar({
     },
   })
   const toggleFilePublicMutation = useToggleFilePublicMutation()
+  const toggleFolderPublicMutation = useToggleFolderPublicMutation()
 
   const isLoading = foldersLoading || filesLoading
   const treeItems = useMemo(() => buildTree(folders, files), [folders, files])
@@ -90,14 +95,28 @@ export function DashboardSidebar({
   }
 
   const handleTogglePublic = (item: TreeItem) => {
-    const file = files.find((candidate) => candidate.id === item.id)
+    setShareItem(item)
 
-    if (!file) {
+    if (item.type === 'file') {
+      const file = files.find((candidate) => candidate.id === item.id)
+      if (!file) {
+        setShareItem(null)
+        return
+      }
+
+      setShareFile(file)
+      setShareFolder(null)
       return
     }
 
-    setShareItem(item)
-    setShareFile(file)
+    const folder = folders.find((candidate) => candidate.id === item.id)
+    if (!folder) {
+      setShareItem(null)
+      return
+    }
+
+    setShareFile(null)
+    setShareFolder(folder)
   }
 
   const handleMove = (item: TreeItem, targetFolderId: string | null) => {
@@ -105,13 +124,25 @@ export function DashboardSidebar({
   }
 
   const handleShareToggle = (isPublic: boolean) => {
-    if (!shareFile) return
+    if (shareFile) {
+      toggleFilePublicMutation.mutate(
+        { file: shareFile, isPublic },
+        {
+          onSuccess: (updated) => {
+            setShareFile(updated)
+          },
+        },
+      )
+      return
+    }
 
-    toggleFilePublicMutation.mutate(
-      { file: shareFile, isPublic },
+    if (!shareFolder) return
+
+    toggleFolderPublicMutation.mutate(
+      { folder: shareFolder, isPublic },
       {
         onSuccess: (updated) => {
-          setShareFile(updated)
+          setShareFolder(updated)
         },
       },
     )
@@ -193,11 +224,13 @@ export function DashboardSidebar({
         deleteItem={deleteItem}
         shareItem={shareItem}
         shareFile={shareFile}
+        shareFolder={shareFolder}
         onRenameItemChange={setRenameItem}
         onDeleteItemChange={setDeleteItem}
-        onShareStateChange={(item, file) => {
+        onShareStateChange={(item, file, folder) => {
           setShareItem(item)
           setShareFile(file)
+          setShareFolder(folder)
         }}
         onRename={handleRename}
         onDelete={handleDelete}

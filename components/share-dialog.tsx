@@ -18,7 +18,8 @@ import { toast } from 'sonner'
 interface ShareDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  fileName: string
+  itemName: string
+  itemType: 'file' | 'folder'
   isPublic: boolean
   slug: string | null
   onTogglePublic: (isPublic: boolean) => void
@@ -27,15 +28,19 @@ interface ShareDialogProps {
 export function ShareDialog({
   open,
   onOpenChange,
-  fileName,
+  itemName,
+  itemType,
   isPublic,
   slug,
   onTogglePublic,
 }: ShareDialogProps) {
   const [copied, setCopied] = useState(false)
 
+  const sharePath =
+    itemType === 'folder' ? `/view/folder/${slug}` : `/view/${slug}`
+
   const shareUrl = slug
-    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/view/${slug}`
+    ? `${typeof window !== 'undefined' ? window.location.origin : ''}${sharePath}`
     : ''
 
   const handleCopy = async () => {
@@ -64,10 +69,12 @@ export function ShareDialog({
       <DialogContent className="w-[calc(100%-1rem)] max-w-md p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="pr-8 text-left break-words">
-            Share &quot;{fileName}&quot;
+            Share &quot;{itemName}&quot;
           </DialogTitle>
           <DialogDescription className="text-left">
-            Make this file public to share it with others.
+            {itemType === 'folder'
+              ? 'Make this folder public to share its full nested workspace.'
+              : 'Make this file public to share it with others.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -78,7 +85,9 @@ export function ShareDialog({
                 Public access
               </Label>
               <p className="text-sm text-muted-foreground">
-                Anyone with the link can view this file
+                {itemType === 'folder'
+                  ? 'Anyone with the link can browse this folder and all nested files and folders'
+                  : 'Anyone with the link can view this file'}
               </p>
             </div>
             <Switch
@@ -94,7 +103,9 @@ export function ShareDialog({
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Share link</Label>
                 <p className="text-sm text-muted-foreground">
-                  Copy or open the public URL for this file.
+                  {itemType === 'folder'
+                    ? 'Copy or open the public URL for this shared folder.'
+                    : 'Copy or open the public URL for this file.'}
                 </p>
               </div>
 

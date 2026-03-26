@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { listPublicFoldersForSitemap } from '@/lib/public-folders'
 import { listPublicFilesForSitemap } from '@/lib/public-files'
 import { createSiteUrl } from '@/lib/site-url'
 
@@ -35,5 +36,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
-  return [...staticRoutes, ...documentRoutes]
+  const publicFolders = await listPublicFoldersForSitemap()
+  const folderRoutes = publicFolders.map((folder) => ({
+    url: createSiteUrl(`/view/folder/${folder.slug}`).toString(),
+    lastModified: new Date(folder.updated_at || folder.created_at),
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }))
+
+  return [...staticRoutes, ...documentRoutes, ...folderRoutes]
 }
