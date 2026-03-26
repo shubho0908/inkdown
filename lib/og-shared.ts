@@ -1,7 +1,22 @@
 import { getSiteUrl } from '@/lib/site-url'
 
+let ogLogoUrlPromise: Promise<string> | null = null
+
 export function getOgBaseUrl(origin?: string) {
   return getSiteUrl(origin)
+}
+
+export function getOgLogoUrl() {
+  if (!ogLogoUrlPromise) {
+    ogLogoUrlPromise = (async () => {
+      const { readFile } = await import('node:fs/promises')
+      const icon = await readFile(new URL('../public/favicon.png', import.meta.url))
+
+      return `data:image/png;base64,${icon.toString('base64')}`
+    })()
+  }
+
+  return ogLogoUrlPromise
 }
 
 export function getHostLabel(baseUrl: string) {

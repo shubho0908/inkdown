@@ -11,6 +11,10 @@ export function DocumentCopy({
   preview: _preview,
   username,
 }: DocumentCopyProps): ReactElement {
+  const titleLength = title.replace(/\s+/g, ' ').trim().length
+  const fontSize =
+    titleLength <= 18 ? '102px' : titleLength <= 30 ? '90px' : titleLength <= 42 ? '78px' : '66px'
+
   return (
     <div
       style={{
@@ -20,8 +24,7 @@ export function DocumentCopy({
         justifyContent: 'center',
         width: '100%',
         minWidth: 0,
-        padding: '0 40px',
-        textAlign: 'center',
+        padding: '0 24px',
       }}
     >
       <div
@@ -31,24 +34,35 @@ export function DocumentCopy({
           gap: '0',
           alignItems: 'center',
           justifyContent: 'center',
+          width: '100%',
         }}
       >
-        <h1
+        <div
           style={{
-            margin: 0,
+            display: 'flex',
             width: '100%',
-            maxWidth: '860px',
-            fontSize: '112px',
-            lineHeight: 0.88,
-            letterSpacing: '-0.1em',
-            fontWeight: 800,
-            color: '#f8fafc',
-            fontFamily: '"Playfair Display"',
-            whiteSpace: 'pre-wrap',
+            maxWidth: '940px',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          {title}
-        </h1>
+          <h1
+            style={{
+              margin: 0,
+              maxWidth: '100%',
+              fontSize,
+              lineHeight: 0.92,
+              letterSpacing: '-0.08em',
+              fontWeight: 800,
+              color: '#f8fafc',
+              fontFamily: '"Playfair Display"',
+              whiteSpace: 'pre-wrap',
+              textAlign: 'center',
+            }}
+          >
+            {title}
+          </h1>
+        </div>
 
         {username && (
           <p

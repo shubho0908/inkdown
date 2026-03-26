@@ -11,6 +11,10 @@ export function MarketingContent({
   hostLabel: _hostLabel,
   logoUrl: _logoUrl,
 }: MarketingContentProps): ReactElement {
+  const titleLength = title.replace(/\s+/g, ' ').trim().length
+  const fontSize =
+    titleLength <= 14 ? '96px' : titleLength <= 24 ? '84px' : titleLength <= 36 ? '72px' : '62px'
+
   return (
     <div
       style={{
@@ -25,31 +29,38 @@ export function MarketingContent({
       <div
         style={{
           display: 'flex',
-          flexDirection: 'column',
-          gap: '0',
           alignItems: 'center',
           justifyContent: 'center',
           width: '100%',
-          padding: '0 40px',
-          textAlign: 'center',
+          padding: '0 24px',
         }}
       >
-        <h1
+        <div
           style={{
-            margin: 0,
+            display: 'flex',
             width: '100%',
-            maxWidth: '860px',
-            fontSize: '92px',
-            lineHeight: 0.9,
-            letterSpacing: '-0.07em',
-            fontWeight: 800,
-            color: '#f8fafc',
-            fontFamily: 'Geist',
-            whiteSpace: 'pre-wrap',
+            maxWidth: '940px',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          {title}
-        </h1>
+          <h1
+            style={{
+              margin: 0,
+              maxWidth: '100%',
+              fontSize,
+              lineHeight: 0.94,
+              letterSpacing: '-0.06em',
+              fontWeight: 800,
+              color: '#f8fafc',
+              fontFamily: 'Geist',
+              whiteSpace: 'pre-wrap',
+              textAlign: 'center',
+            }}
+          >
+            {title}
+          </h1>
+        </div>
       </div>
     </div>
   )

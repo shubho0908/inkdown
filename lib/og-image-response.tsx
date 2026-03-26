@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og'
 import { OgCard } from '@/lib/og-card'
 import { getOgFonts } from '@/lib/og-fonts'
+import { getOgLogoUrl } from '@/lib/og-shared'
 import { getSiteUrl } from '@/lib/site-url'
 
 export const OG_IMAGE_SIZE = {
@@ -23,7 +24,10 @@ export async function createOgImageResponse({
   isDoc = false,
   baseUrl = getSiteUrl(),
 }: CreateOgImageResponseOptions) {
-  const fonts = await getOgFonts()
+  const [fonts, logoUrl] = await Promise.all([
+    getOgFonts(),
+    getOgLogoUrl(),
+  ])
 
   return new ImageResponse(
     <OgCard
@@ -32,6 +36,7 @@ export async function createOgImageResponse({
       username={username}
       isDoc={isDoc}
       baseUrl={baseUrl}
+      logoUrl={logoUrl}
     />,
     {
       ...OG_IMAGE_SIZE,

@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { extractMarkdownSummary } from '@/lib/markdown-summary'
 import { getPublicFileBySlug } from '@/lib/public-files'
+import { createSocialImageSet } from '@/lib/social-metadata'
 import { createSiteUrl, getSiteUrl } from '@/lib/site-url'
 
 interface ViewPageProps {
@@ -29,10 +30,16 @@ export async function generateMetadata({ params }: ViewPageProps): Promise<Metad
     fallback: `Read "${title}" on Inkdown`,
   })
   const documentUrl = createSiteUrl(`/view/${slug}`).toString()
+  const socialImageAlt = `Preview of "${title}" shared on Inkdown`
+  const socialImages = createSocialImageSet(
+    `/view/${slug}`,
+    socialImageAlt,
+  )
 
   return {
     title,
     description,
+    authors: file.username ? [{ name: file.username }] : undefined,
     alternates: {
       canonical: documentUrl,
     },
@@ -40,15 +47,19 @@ export async function generateMetadata({ params }: ViewPageProps): Promise<Metad
       title,
       description,
       type: 'article',
+      locale: 'en_US',
       siteName: 'Inkdown',
       url: documentUrl,
       publishedTime: file.created_at,
       modifiedTime: file.updated_at,
+      authors: file.username ? [file.username] : undefined,
+      images: socialImages.openGraph,
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
+      images: socialImages.twitter,
     },
   }
 }

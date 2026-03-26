@@ -9,6 +9,7 @@ interface OgCardProps {
   username?: string | null
   isDoc?: boolean
   baseUrl?: string
+  logoUrl: string
 }
 
 export function OgCard({
@@ -17,9 +18,9 @@ export function OgCard({
   username,
   isDoc = false,
   baseUrl,
+  logoUrl,
 }: OgCardProps): ReactElement {
   const safeBaseUrl = getOgBaseUrl(baseUrl)
-  const logoUrl = `${safeBaseUrl}/favicon.png`
   const hostLabel = getHostLabel(safeBaseUrl)
   const displayTitle = clampText(title || 'Untitled', isDoc ? 84 : 54)
   const displayPreview = clampText(preview, isDoc ? 150 : 160)
@@ -76,9 +77,9 @@ export function OgCard({
           style={{
             display: 'flex',
             alignItems: 'center',
+            width: '100%',
             justifyContent: 'space-between',
             gap: '20px',
-            width: '100%',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -138,11 +139,12 @@ export function OgCard({
         <div
           style={{
             display: 'flex',
-            flexDirection: 'column',
             flex: 1,
             minHeight: 0,
+            alignItems: 'center',
+            justifyContent: 'center',
             width: '100%',
-            marginTop: '-38px',
+            padding: '0 28px 18px',
           }}
         >
           {isDoc ? (

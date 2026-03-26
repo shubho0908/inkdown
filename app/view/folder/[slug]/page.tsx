@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { InkdownLogo } from '@/components/inkdown-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { getPublicFolderBySlug, getPublicFolderFileById, getPublicFolderTreeBySlug } from '@/lib/public-folders'
+import { createSocialImageSet } from '@/lib/social-metadata'
 import { createSiteUrl, getSiteUrl } from '@/lib/site-url'
 import type { TreeItem } from '@/lib/types'
 import { notFound } from 'next/navigation'
@@ -45,6 +46,11 @@ export async function generateMetadata({
 
   const documentUrl = createSiteUrl(`/view/folder/${slug}`).toString()
   const description = `Browse the shared folder "${folder.name}" on Inkdown.`
+  const socialImageAlt = `Preview of the shared folder "${folder.name}" on Inkdown`
+  const socialImages = createSocialImageSet(
+    `/view/folder/${slug}`,
+    socialImageAlt,
+  )
 
   return {
     title: folder.name,
@@ -56,13 +62,16 @@ export async function generateMetadata({
       title: folder.name,
       description,
       type: 'website',
+      locale: 'en_US',
       siteName: 'Inkdown',
       url: documentUrl,
+      images: socialImages.openGraph,
     },
     twitter: {
       card: 'summary_large_image',
       title: folder.name,
       description,
+      images: socialImages.twitter,
     },
   }
 }

@@ -5,6 +5,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { QueryProvider } from '@/components/query-provider'
 import { Toaster } from '@/components/ui/sonner'
+import { createSocialImageSet } from '@/lib/social-metadata'
 import { getSiteUrlObject } from '@/lib/site-url'
 import {
   isResolvedTheme,
@@ -20,6 +21,11 @@ const geist = localFont({
   variable: '--app-font-sans',
   display: 'swap',
 })
+
+const rootSocialImages = createSocialImageSet(
+  '/',
+  'Inkdown homepage preview - create, organize, and share markdown documents',
+)
 
 export const metadata: Metadata = {
   title: {
@@ -44,11 +50,13 @@ export const metadata: Metadata = {
     title: 'Inkdown - Beautiful Markdown Editor & Sharing Platform',
     description: 'Create, organize, and share beautiful markdown documents with live preview and instant sharing.',
     siteName: 'Inkdown',
+    images: rootSocialImages.openGraph,
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Inkdown - Beautiful Markdown Editor',
     description: 'Create, organize, and share beautiful markdown documents.',
+    images: rootSocialImages.twitter,
   },
   icons: {
     icon: [
