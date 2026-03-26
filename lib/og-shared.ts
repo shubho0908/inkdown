@@ -2,6 +2,17 @@ import { getSiteUrl } from '@/lib/site-url'
 
 let ogLogoUrlPromise: Promise<string> | null = null
 
+function createFallbackLogoUrl() {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="112" height="112" viewBox="0 0 112 112" fill="none">
+      <rect width="112" height="112" rx="26" fill="#2563eb"/>
+      <path d="M34 26h16v60H34zM56 26h22c8.837 0 16 7.163 16 16s-7.163 16-16 16H56V26zm0 44h16.5L89 86H71.5L56 70z" fill="#f8fafc"/>
+    </svg>
+  `.trim()
+
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}
+
 export function getOgBaseUrl(origin?: string) {
   return getSiteUrl(origin)
 }
@@ -9,10 +20,15 @@ export function getOgBaseUrl(origin?: string) {
 export function getOgLogoUrl() {
   if (!ogLogoUrlPromise) {
     ogLogoUrlPromise = (async () => {
-      const { readFile } = await import('node:fs/promises')
-      const icon = await readFile(new URL('../public/favicon.png', import.meta.url))
+      try {
+        const { readFile } = await import('node:fs/promises')
+        const icon = await readFile(new URL('../public/favicon.png', import.meta.url))
 
-      return `data:image/png;base64,${icon.toString('base64')}`
+        return `data:image/png;base64,${icon.toString('base64')}`
+      } catch (error) {
+        console.warn('OG logo loading failed, falling back to inline logo.', error)
+        return createFallbackLogoUrl()
+      }
     })()
   }
 
