@@ -1,10 +1,11 @@
 'use client'
-
-import { useState } from 'react'
+import { type DragEvent } from 'react'
 import {
   ChevronDown,
   ChevronRight,
+  Download,
   FileText,
+  FileUp,
   Folder,
   FolderOpen,
   GripVertical,
@@ -29,13 +30,21 @@ interface TreeNodeProps {
   item: TreeItem
   level: number
   selectedId: string | null
+  isExpanded: boolean
   draggedItemId: string | null
   dropTargetId: string | 'root' | null
+  externalDropTargetId: string | 'root' | null
   draggedItem?: TreeItem
   canDropIntoFolder: (draggedItem: TreeItem | undefined, targetFolderId: string | null) => boolean
   onDragStart: (itemId: string) => void
   onDragEnd: () => void
   onDropTargetChange: (targetId: string | 'root' | null) => void
+  onExternalDropTargetChange: (targetId: string | 'root' | null) => void
+  onExternalDragActiveChange: (active: boolean) => void
+  onImportFiles: (files: globalThis.File[], folderId: string | null) => void
+  isFolderExpanded: (itemId: string) => boolean
+  onToggleExpanded: (itemId: string) => void
+  onExpand: (itemId: string) => void
   onSelect: (item: TreeItem) => void
   onMove: (item: TreeItem, targetFolderId: string | null) => void
   onCreateFile: (folderId: string | null) => void
@@ -43,19 +52,28 @@ interface TreeNodeProps {
   onRename: (item: TreeItem) => void
   onDelete: (item: TreeItem) => void
   onTogglePublic?: (item: TreeItem) => void
+  onDownloadFile?: (item: TreeItem) => void
 }
 
 export function TreeNode({
   item,
   level,
   selectedId,
+  isExpanded,
   draggedItemId,
   dropTargetId,
+  externalDropTargetId,
   draggedItem,
   canDropIntoFolder,
   onDragStart,
   onDragEnd,
   onDropTargetChange,
+  onExternalDropTargetChange,
+  onExternalDragActiveChange,
+  onImportFiles,
+  isFolderExpanded,
+  onToggleExpanded,
+  onExpand,
   onSelect,
   onMove,
   onCreateFile,
@@ -63,18 +81,23 @@ export function TreeNode({
   onRename,
   onDelete,
   onTogglePublic,
+  onDownloadFile,
 }: TreeNodeProps) {
-  const [isExpanded, setIsExpanded] = useState(true)
   const isFolder = item.type === 'folder'
   const isSelected = selectedId === item.id
   const isDragging = draggedItemId === item.id
   const isDropTarget = dropTargetId === item.id
+  const isExternalDropTarget = externalDropTargetId === item.id
   const canDropOnThisFolder = isFolder && canDropIntoFolder(draggedItem, item.id)
 
   const handleDrop = () => {
     if (!canDropOnThisFolder || !draggedItem) return
     onMove(draggedItem, item.id)
     onDragEnd()
+  }
+
+  const isExternalFileDragEvent = (event: DragEvent<HTMLElement>) => {
+    return Array.from(event.dataTransfer.types).includes('Files')
   }
 
   return (
@@ -88,20 +111,42 @@ export function TreeNode({
           isDropTarget &&
             canDropOnThisFolder &&
             'border-primary/60 bg-primary/10 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]',
+          isExternalDropTarget &&
+            'border-primary/60 bg-primary/10 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]',
         )}
         style={{ paddingLeft: `${level * 12 + 8}px` }}
         onDragOver={(event) => {
+          if (isFolder && isExternalFileDragEvent(event)) {
+            event.stopPropagation()
+            event.preventDefault()
+            onExternalDragActiveChange(true)
+            if (!isExpanded) {
+              onExpand(item.id)
+            }
+            if (externalDropTargetId !== item.id) {
+              onExternalDropTargetChange(item.id)
+            }
+            return
+          }
+
           if (!canDropOnThisFolder) return
           event.stopPropagation()
           event.preventDefault()
           if (!isExpanded) {
-            setIsExpanded(true)
+            onExpand(item.id)
           }
           if (dropTargetId !== item.id) {
             onDropTargetChange(item.id)
           }
         }}
         onDragLeave={(event) => {
+          if (isExternalDropTarget) {
+            event.stopPropagation()
+            if (event.currentTarget.contains(event.relatedTarget as Node | null)) return
+            onExternalDropTargetChange(null)
+            return
+          }
+
           if (!canDropOnThisFolder) return
           event.stopPropagation()
           if (event.currentTarget.contains(event.relatedTarget as Node | null)) return
@@ -110,6 +155,19 @@ export function TreeNode({
           }
         }}
         onDrop={(event) => {
+          if (isFolder && isExternalFileDragEvent(event)) {
+            event.stopPropagation()
+            event.preventDefault()
+            onExternalDragActiveChange(false)
+            onExternalDropTargetChange(null)
+
+            const files = Array.from(event.dataTransfer.files)
+            if (files.length > 0) {
+              onImportFiles(files, item.id)
+            }
+            return
+          }
+
           if (!canDropOnThisFolder) return
           event.stopPropagation()
           event.preventDefault()
@@ -132,8 +190,10 @@ export function TreeNode({
 
         {isFolder ? (
           <button
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={() => onToggleExpanded(item.id)}
             className="flex h-4 w-4 shrink-0 items-center justify-center"
+            aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${item.name}`}
+            aria-expanded={isExpanded}
           >
             {isExpanded ? (
               <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
@@ -146,9 +206,17 @@ export function TreeNode({
         )}
 
         <button
-          onClick={() => onSelect(item)}
+          onClick={() => {
+            if (isFolder) {
+              onToggleExpanded(item.id)
+              return
+            }
+
+            onSelect(item)
+          }}
           className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden text-left"
           title={item.name}
+          aria-expanded={isFolder ? isExpanded : undefined}
         >
           {isFolder ? (
             isExpanded ? (
@@ -160,6 +228,9 @@ export function TreeNode({
             <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
           )}
           <span className="min-w-0 flex-1 truncate">{item.name}</span>
+          {isFolder && isExternalDropTarget && (
+            <FileUp className="h-3.5 w-3.5 shrink-0 text-primary" />
+          )}
           {item.is_public && (
             <Share2 className="h-3 w-3 shrink-0 text-primary" />
           )}
@@ -199,6 +270,15 @@ export function TreeNode({
                 <DropdownMenuSeparator />
               </>
             )}
+            {!isFolder && onDownloadFile ? (
+              <DropdownMenuItem onClick={() => onDownloadFile(item)}>
+                <Download className="mr-2 h-4 w-4" />
+                Download .md
+              </DropdownMenuItem>
+            ) : null}
+            {!isFolder && onDownloadFile ? (
+              <DropdownMenuSeparator />
+            ) : null}
             <DropdownMenuItem onClick={() => onRename(item)}>
               <Pencil className="mr-2 h-4 w-4" />
               Rename
@@ -223,13 +303,21 @@ export function TreeNode({
               item={child}
               level={level + 1}
               selectedId={selectedId}
+              isExpanded={isFolderExpanded(child.id)}
               draggedItemId={draggedItemId}
               dropTargetId={dropTargetId}
+              externalDropTargetId={externalDropTargetId}
               draggedItem={draggedItem}
               canDropIntoFolder={canDropIntoFolder}
               onDragStart={onDragStart}
               onDragEnd={onDragEnd}
               onDropTargetChange={onDropTargetChange}
+              onExternalDropTargetChange={onExternalDropTargetChange}
+              onExternalDragActiveChange={onExternalDragActiveChange}
+              onImportFiles={onImportFiles}
+              isFolderExpanded={isFolderExpanded}
+              onToggleExpanded={onToggleExpanded}
+              onExpand={onExpand}
               onSelect={onSelect}
               onMove={onMove}
               onCreateFile={onCreateFile}
@@ -237,6 +325,7 @@ export function TreeNode({
               onRename={onRename}
               onDelete={onDelete}
               onTogglePublic={onTogglePublic}
+              onDownloadFile={onDownloadFile}
             />
           ))}
         </div>

@@ -6,10 +6,11 @@ import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { extractMarkdownSummary } from '@/lib/markdown-summary'
 import { getPublicFileBySlug } from '@/lib/public-files'
 import { createSocialImageSet } from '@/lib/social-metadata'
-import { createSiteUrl, getSiteUrl } from '@/lib/site-url'
+import { createSiteUrl, getRequestOrigin, getSiteUrl, getSiteUrlObject } from '@/lib/site-url'
 
 interface ViewPageProps {
   params: Promise<{ slug: string }>
@@ -25,20 +26,24 @@ export async function generateMetadata({ params }: ViewPageProps): Promise<Metad
     return { title: 'Not Found' }
   }
 
+  const requestHeaders = await headers()
+  const requestOrigin = getRequestOrigin(requestHeaders)
   const title = file.name.replace(/\.md$/, '')
   const description = extractMarkdownSummary(file.content, {
     fallback: `Read "${title}" on Inkdown`,
   })
-  const documentUrl = createSiteUrl(`/view/${slug}`).toString()
+  const documentUrl = createSiteUrl(`/view/${slug}`, requestOrigin).toString()
   const socialImageAlt = `Preview of "${title}" shared on Inkdown`
   const socialImages = createSocialImageSet(
     `/view/${slug}`,
     socialImageAlt,
+    requestOrigin,
   )
 
   return {
     title,
     description,
+    metadataBase: getSiteUrlObject(requestOrigin),
     authors: file.username ? [{ name: file.username }] : undefined,
     alternates: {
       canonical: documentUrl,
@@ -72,6 +77,8 @@ export default async function ViewPage({ params }: ViewPageProps) {
     notFound()
   }
 
+  const requestHeaders = await headers()
+  const requestOrigin = getRequestOrigin(requestHeaders)
   const title = file.name.replace(/\.md$/, '')
   const description = extractMarkdownSummary(file.content, {
     fallback: `Read "${title}" on Inkdown`,
@@ -81,8 +88,8 @@ export default async function ViewPage({ params }: ViewPageProps) {
     month: 'long',
     day: 'numeric',
   })
-  const siteUrl = getSiteUrl()
-  const documentUrl = createSiteUrl(`/view/${slug}`).toString()
+  const siteUrl = getSiteUrl(requestOrigin)
+  const documentUrl = createSiteUrl(`/view/${slug}`, requestOrigin).toString()
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'CreativeWork',
@@ -97,7 +104,7 @@ export default async function ViewPage({ params }: ViewPageProps) {
       url: siteUrl,
       logo: {
         '@type': 'ImageObject',
-        url: createSiteUrl('/favicon.png').toString(),
+        url: createSiteUrl('/favicon.png', requestOrigin).toString(),
       },
     },
   }

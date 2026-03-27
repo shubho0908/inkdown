@@ -1,6 +1,10 @@
 const FALLBACK_SITE_URL = 'https://inkdown.app'
 const LOCALHOST_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1'])
 
+interface HeaderLookup {
+  get(name: string): string | null
+}
+
 function normalizeSiteUrl(url: string) {
   return url.replace(/\/$/, '')
 }
@@ -19,6 +23,23 @@ export function getSiteUrl(origin?: string) {
       process.env.NEXT_PUBLIC_SITE_URL ||
       FALLBACK_SITE_URL,
   )
+}
+
+export function getRequestOrigin(headers: HeaderLookup) {
+  const forwardedHost = headers.get('x-forwarded-host')
+  const host = forwardedHost || headers.get('host')
+
+  if (!host) {
+    return undefined
+  }
+
+  const forwardedProto = headers.get('x-forwarded-proto')
+  const proto =
+    forwardedProto && forwardedProto.length > 0
+      ? forwardedProto.split(',')[0]?.trim()
+      : 'https'
+
+  return normalizeSiteUrl(`${proto}://${host}`)
 }
 
 export function getSiteUrlObject(origin?: string) {

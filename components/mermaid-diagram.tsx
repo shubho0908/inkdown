@@ -5,13 +5,15 @@ import { useTheme } from '@/components/theme-provider'
 
 interface MermaidDiagramProps {
   chart: string
+  theme?: 'light' | 'dark'
 }
 
-export function MermaidDiagram({ chart }: MermaidDiagramProps) {
+export function MermaidDiagram({ chart, theme }: MermaidDiagramProps) {
   const { resolvedTheme } = useTheme()
   const diagramId = useId().replace(/:/g, '')
   const [svg, setSvg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const mermaidTheme = theme ?? (resolvedTheme === 'dark' ? 'dark' : 'light')
 
   useEffect(() => {
     let isCancelled = false
@@ -23,7 +25,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
         mermaid.initialize({
           startOnLoad: false,
           securityLevel: 'strict',
-          theme: resolvedTheme === 'dark' ? 'dark' : 'default',
+          theme: mermaidTheme === 'dark' ? 'dark' : 'default',
           flowchart: {
             useMaxWidth: true,
             htmlLabels: true,
@@ -63,7 +65,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
     return () => {
       isCancelled = true
     }
-  }, [chart, diagramId, resolvedTheme])
+  }, [chart, diagramId, mermaidTheme])
 
   if (error) {
     return (

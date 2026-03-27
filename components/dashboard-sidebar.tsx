@@ -8,6 +8,7 @@ import { DashboardSidebarDialogs } from '@/components/dashboard-sidebar-dialogs'
 import { useIsMobile } from '@/hooks/use-mobile'
 import {
   useCreateFileMutation,
+  useImportMarkdownFilesMutation,
   useToggleFilePublicMutation,
 } from '@/hooks/workspace/use-file-mutations'
 import {
@@ -23,10 +24,12 @@ import {
   useFilesQuery,
   useFoldersQuery,
 } from '@/hooks/workspace/use-workspace-queries'
+import { downloadMarkdownFile } from '@/lib/file-export'
 import { createClient } from '@/lib/supabase/client'
 import type { File, Folder, TreeItem } from '@/lib/types'
 import { buildTree } from '@/lib/workspace-tree'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface DashboardSidebarProps {
   selectedFileId: string | null
@@ -58,6 +61,18 @@ export function DashboardSidebar({
     },
   })
   const createFolderMutation = useCreateFolderMutation()
+  const importMarkdownFilesMutation = useImportMarkdownFilesMutation({
+    onSuccess: (importedFiles) => {
+      if (importedFiles.length !== 1) {
+        return
+      }
+
+      onFileSelect(importedFiles[0].id)
+      if (isMobile) {
+        setMobileOpen(false)
+      }
+    },
+  })
   const moveTreeItemMutation = useMoveTreeItemMutation()
   const renameTreeItemMutation = useRenameTreeItemMutation()
   const deleteTreeItemMutation = useDeleteTreeItemMutation({
@@ -74,12 +89,32 @@ export function DashboardSidebar({
   const treeItems = useMemo(() => buildTree(folders, files), [folders, files])
   const selectedFile = files.find((file) => file.id === selectedFileId) ?? null
 
+  const getFileFromTreeItem = (item: TreeItem) => {
+    if (item.type !== 'file') {
+      return null
+    }
+
+    return files.find((candidate) => candidate.id === item.id) ?? null
+  }
+
   const handleCreateFile = (folderId: string | null) => {
     createFileMutation.mutate({ folderId })
   }
 
   const handleCreateFolder = (parentId: string | null) => {
     createFolderMutation.mutate({ parentId })
+  }
+
+  const handleImportMarkdownFiles = (
+    importedFiles: globalThis.File[],
+    folderId: string | null,
+  ) => {
+    if (importMarkdownFilesMutation.isPending) {
+      toast.error('Markdown import already in progress')
+      return
+    }
+
+    importMarkdownFilesMutation.mutate({ files: importedFiles, folderId })
   }
 
   const handleRename = (newName: string) => {
@@ -98,7 +133,7 @@ export function DashboardSidebar({
     setShareItem(item)
 
     if (item.type === 'file') {
-      const file = files.find((candidate) => candidate.id === item.id)
+      const file = getFileFromTreeItem(item)
       if (!file) {
         setShareItem(null)
         return
@@ -117,6 +152,21 @@ export function DashboardSidebar({
 
     setShareFile(null)
     setShareFolder(folder)
+  }
+
+  const handleDownloadFile = (item: TreeItem) => {
+    const file = getFileFromTreeItem(item)
+    if (!file) {
+      toast.error('File not found')
+      return
+    }
+
+    try {
+      downloadMarkdownFile(file.name, file.content)
+      toast.success(`Downloaded "${file.name}"`)
+    } catch {
+      toast.error('Could not download the markdown file')
+    }
   }
 
   const handleMove = (item: TreeItem, targetFolderId: string | null) => {
@@ -192,11 +242,14 @@ export function DashboardSidebar({
             onClose={() => setMobileOpen(false)}
             onCreateFile={handleCreateFile}
             onCreateFolder={handleCreateFolder}
+            onImportFiles={handleImportMarkdownFiles}
+            isImportingFiles={importMarkdownFilesMutation.isPending}
             onSelect={handleSelect}
             onMove={handleMove}
             onRename={setRenameItem}
             onDelete={setDeleteItem}
             onTogglePublic={handleTogglePublic}
+            onDownloadFile={handleDownloadFile}
             onSignOut={handleSignOut}
           />
         </SheetContent>
@@ -210,11 +263,14 @@ export function DashboardSidebar({
           filesCount={files.length}
           onCreateFile={handleCreateFile}
           onCreateFolder={handleCreateFolder}
+          onImportFiles={handleImportMarkdownFiles}
+          isImportingFiles={importMarkdownFilesMutation.isPending}
           onSelect={handleSelect}
           onMove={handleMove}
           onRename={setRenameItem}
           onDelete={setDeleteItem}
           onTogglePublic={handleTogglePublic}
+          onDownloadFile={handleDownloadFile}
           onSignOut={handleSignOut}
         />
       </aside>

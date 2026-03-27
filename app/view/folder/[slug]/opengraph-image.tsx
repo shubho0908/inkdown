@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 import { createOgImageResponse, OG_IMAGE_SIZE } from '@/lib/og-image-response'
 import { getPublicFolderTreeBySlug } from '@/lib/public-folders'
+import { getRequestOrigin } from '@/lib/site-url'
 
 interface ViewFolderImageProps {
   params: Promise<{ slug: string }>
@@ -20,6 +22,8 @@ export default async function Image({ params }: ViewFolderImageProps) {
     notFound()
   }
 
+  const requestHeaders = await headers()
+  const requestOrigin = getRequestOrigin(requestHeaders)
   const subfolderCount = Math.max(folder.folders.length - 1, 0)
   const preview = `${folder.files.length} ${folder.files.length === 1 ? 'file' : 'files'} · ${subfolderCount} ${subfolderCount === 1 ? 'subfolder' : 'subfolders'}`
 
@@ -27,5 +31,6 @@ export default async function Image({ params }: ViewFolderImageProps) {
     title: folder.folder.name,
     preview,
     username: folder.folder.username,
+    baseUrl: requestOrigin,
   })
 }

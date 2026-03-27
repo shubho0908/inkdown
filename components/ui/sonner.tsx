@@ -9,7 +9,7 @@ export function Toaster(props: ToasterProps) {
   return (
     <Sonner
       theme={resolvedTheme}
-      position="top-right"
+      position="bottom-right"
       richColors
       closeButton
       {...props}

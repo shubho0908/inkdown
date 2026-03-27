@@ -1,7 +1,7 @@
 'use client'
 
-import { useMemo, useState, type DragEvent } from 'react'
-import { Move } from 'lucide-react'
+import { useEffect, useMemo, useState, type DragEvent, type ReactNode } from 'react'
+import { FileUp, Move } from 'lucide-react'
 import { TreeNode } from '@/components/file-tree-node'
 import { canMoveTreeItem } from '@/lib/folder-tree'
 import { cn } from '@/lib/utils'
@@ -10,6 +10,8 @@ import type { TreeItem } from '@/lib/types'
 interface FileTreeProps {
   items: TreeItem[]
   selectedId: string | null
+  emptyState?: ReactNode
+  onImportFiles: (files: globalThis.File[], folderId: string | null) => void
   onSelect: (item: TreeItem) => void
   onMove: (item: TreeItem, targetFolderId: string | null) => void
   onCreateFile: (folderId: string | null) => void
@@ -17,10 +19,12 @@ interface FileTreeProps {
   onRename: (item: TreeItem) => void
   onDelete: (item: TreeItem) => void
   onTogglePublic?: (item: TreeItem) => void
+  onDownloadFile?: (item: TreeItem) => void
 }
 
 interface RootDropZoneProps {
   active: boolean
+  mode: 'move' | 'import'
   onDragOver: (event: DragEvent<HTMLDivElement>) => void
   onDragLeave: (event: DragEvent<HTMLDivElement>) => void
   onDrop: (event: DragEvent<HTMLDivElement>) => void
@@ -28,6 +32,7 @@ interface RootDropZoneProps {
 
 function RootDropZone({
   active,
+  mode,
   onDragOver,
   onDragLeave,
   onDrop,
@@ -44,15 +49,44 @@ function RootDropZone({
       onDragLeave={onDragLeave}
       onDrop={onDrop}
     >
-      <Move className="h-3.5 w-3.5" />
-      Drop to move to workspace root
+      {mode === 'import' ? (
+        <FileUp className="h-3.5 w-3.5" />
+      ) : (
+        <Move className="h-3.5 w-3.5" />
+      )}
+      {mode === 'import'
+        ? 'Drop .md files to import to workspace root'
+        : 'Drop to move to workspace root'}
     </div>
   )
+}
+
+function isEditableElement(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) {
+    return false
+  }
+
+  if (target.isContentEditable) {
+    return true
+  }
+
+  const tagName = target.tagName.toLowerCase()
+  return tagName === 'input' || tagName === 'textarea' || tagName === 'select'
+}
+
+function isExternalFileDragEvent(event: DragEvent<HTMLElement>) {
+  return Array.from(event.dataTransfer.types).includes('Files')
+}
+
+function getDroppedFiles(event: DragEvent<HTMLElement>) {
+  return Array.from(event.dataTransfer.files)
 }
 
 export function FileTree({
   items,
   selectedId,
+  emptyState,
+  onImportFiles,
   onSelect,
   onMove,
   onCreateFile,
@@ -60,9 +94,13 @@ export function FileTree({
   onRename,
   onDelete,
   onTogglePublic,
+  onDownloadFile,
 }: FileTreeProps) {
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | 'root' | null>(null)
+  const [externalDropTargetId, setExternalDropTargetId] = useState<string | 'root' | null>(null)
+  const [isExternalDragging, setIsExternalDragging] = useState(false)
+  const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(() => new Set())
 
   const itemIndex = useMemo(() => {
     const map = new Map<string, TreeItem>()
@@ -106,6 +144,19 @@ export function FileTree({
   const draggedItem = draggedItemId ? itemIndex.get(draggedItemId) : undefined
   const canDropToRoot = canDropIntoFolder(draggedItem, null)
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!event.metaKey || event.key.toLowerCase() !== 'x') return
+      if (isEditableElement(event.target)) return
+
+      event.preventDefault()
+      setExpandedFolderIds(new Set())
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   const handleRootDrop = () => {
     if (!draggedItem || !canDropToRoot) return
     onMove(draggedItem, null)
@@ -113,7 +164,22 @@ export function FileTree({
     setDropTargetId(null)
   }
 
+  const resetExternalDragState = () => {
+    setExternalDropTargetId(null)
+    setIsExternalDragging(false)
+  }
+
   const handleRootZoneDragOver = (event: DragEvent<HTMLDivElement>) => {
+    if (isExternalFileDragEvent(event)) {
+      event.stopPropagation()
+      event.preventDefault()
+      setIsExternalDragging(true)
+      if (externalDropTargetId !== 'root') {
+        setExternalDropTargetId('root')
+      }
+      return
+    }
+
     event.stopPropagation()
     event.preventDefault()
     if (dropTargetId !== 'root') {
@@ -124,24 +190,80 @@ export function FileTree({
   const handleRootZoneDragLeave = (event: DragEvent<HTMLDivElement>) => {
     event.stopPropagation()
     if (event.currentTarget.contains(event.relatedTarget as Node | null)) return
+    if (externalDropTargetId === 'root') {
+      setExternalDropTargetId(null)
+    }
     if (dropTargetId === 'root') {
       setDropTargetId(null)
     }
   }
 
   const handleRootZoneDrop = (event: DragEvent<HTMLDivElement>) => {
+    if (isExternalFileDragEvent(event)) {
+      event.stopPropagation()
+      event.preventDefault()
+      const files = getDroppedFiles(event)
+
+      resetExternalDragState()
+      if (files.length === 0) return
+      onImportFiles(files, null)
+      return
+    }
+
     event.stopPropagation()
     event.preventDefault()
     handleRootDrop()
   }
 
+  const handleToggleFolder = (itemId: string) => {
+    setExpandedFolderIds((current) => {
+      const next = new Set(current)
+
+      if (next.has(itemId)) {
+        next.delete(itemId)
+      } else {
+        next.add(itemId)
+      }
+
+      return next
+    })
+  }
+
+  const handleExpandFolder = (itemId: string) => {
+    setExpandedFolderIds((current) => {
+      if (current.has(itemId)) {
+        return current
+      }
+
+      const next = new Set(current)
+      next.add(itemId)
+      return next
+    })
+  }
+
+  const isFolderExpanded = (itemId: string) => expandedFolderIds.has(itemId)
+  const isRootDropTargetActive = dropTargetId === 'root' || externalDropTargetId === 'root'
+  const shouldShowRootDropZone = (draggedItem && canDropToRoot) || isExternalDragging
+  const shouldShowBottomRootDropZone =
+    shouldShowRootDropZone && items.length > 0 && !isExternalDragging
+
   return (
     <div
       className={cn(
         'flex flex-col gap-1 rounded-2xl',
-        dropTargetId === 'root' && 'bg-accent/30',
+        isRootDropTargetActive && 'bg-accent/30',
       )}
       onDragOver={(event) => {
+        if (isExternalFileDragEvent(event)) {
+          setIsExternalDragging(true)
+          if (!isTreeBackgroundDragEvent(event)) return
+          event.preventDefault()
+          if (externalDropTargetId !== 'root') {
+            setExternalDropTargetId('root')
+          }
+          return
+        }
+
         if (!isTreeBackgroundDragEvent(event)) return
         if (!canDropToRoot) return
         event.preventDefault()
@@ -151,41 +273,75 @@ export function FileTree({
       }}
       onDragLeave={(event) => {
         if (event.currentTarget.contains(event.relatedTarget as Node | null)) return
+        resetExternalDragState()
         if (dropTargetId === 'root') {
           setDropTargetId(null)
         }
       }}
       onDrop={(event) => {
+        if (isExternalFileDragEvent(event)) {
+          if (!isTreeBackgroundDragEvent(event)) return
+          event.preventDefault()
+          const files = getDroppedFiles(event)
+
+          resetExternalDragState()
+          if (files.length === 0) return
+          onImportFiles(files, null)
+          return
+        }
+
         if (!isTreeBackgroundDragEvent(event)) return
         if (!canDropToRoot) return
         event.preventDefault()
         handleRootDrop()
       }}
     >
-      {draggedItem && canDropToRoot && (
+      {shouldShowRootDropZone && (
         <RootDropZone
-          active={dropTargetId === 'root'}
+          active={isRootDropTargetActive}
+          mode={isExternalDragging ? 'import' : 'move'}
           onDragOver={handleRootZoneDragOver}
           onDragLeave={handleRootZoneDragLeave}
           onDrop={handleRootZoneDrop}
         />
       )}
+      {items.length === 0 && emptyState ? (
+        <div
+          className={cn(
+            'mx-1 min-h-36 rounded-2xl border border-dashed p-4 transition-colors',
+            externalDropTargetId === 'root'
+              ? 'border-primary/50 bg-primary/10'
+              : 'border-border/70 bg-background/40',
+          )}
+        >
+          {emptyState}
+        </div>
+      ) : null}
       {items.map((item) => (
         <TreeNode
           key={item.id}
           item={item}
           level={0}
           selectedId={selectedId}
+          isExpanded={expandedFolderIds.has(item.id)}
           draggedItemId={draggedItemId}
           dropTargetId={dropTargetId}
+          externalDropTargetId={externalDropTargetId}
           draggedItem={draggedItem}
           canDropIntoFolder={canDropIntoFolder}
           onDragStart={setDraggedItemId}
           onDragEnd={() => {
             setDraggedItemId(null)
             setDropTargetId(null)
+            resetExternalDragState()
           }}
           onDropTargetChange={setDropTargetId}
+          onExternalDropTargetChange={setExternalDropTargetId}
+          onExternalDragActiveChange={setIsExternalDragging}
+          onImportFiles={onImportFiles}
+          isFolderExpanded={isFolderExpanded}
+          onToggleExpanded={handleToggleFolder}
+          onExpand={handleExpandFolder}
           onSelect={onSelect}
           onMove={onMove}
           onCreateFile={onCreateFile}
@@ -193,11 +349,13 @@ export function FileTree({
           onRename={onRename}
           onDelete={onDelete}
           onTogglePublic={onTogglePublic}
+          onDownloadFile={onDownloadFile}
         />
       ))}
-      {draggedItem && canDropToRoot && items.length > 0 && (
+      {shouldShowBottomRootDropZone && (
         <RootDropZone
-          active={dropTargetId === 'root'}
+          active={isRootDropTargetActive}
+          mode={isExternalDragging ? 'import' : 'move'}
           onDragOver={handleRootZoneDragOver}
           onDragLeave={handleRootZoneDragLeave}
           onDrop={handleRootZoneDrop}

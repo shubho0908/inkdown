@@ -18,11 +18,14 @@ interface DashboardSidebarContentProps {
   onClose?: () => void
   onCreateFile: (folderId: string | null) => void
   onCreateFolder: (parentId: string | null) => void
+  onImportFiles: (files: globalThis.File[], folderId: string | null) => void
+  isImportingFiles?: boolean
   onSelect: (item: TreeItem) => void
   onMove: (item: TreeItem, targetFolderId: string | null) => void
   onRename: (item: TreeItem) => void
   onDelete: (item: TreeItem) => void
   onTogglePublic: (item: TreeItem) => void
+  onDownloadFile: (item: TreeItem) => void
   onSignOut: () => void
 }
 
@@ -35,11 +38,14 @@ export function DashboardSidebarContent({
   onClose,
   onCreateFile,
   onCreateFolder,
+  onImportFiles,
+  isImportingFiles = false,
   onSelect,
   onMove,
   onRename,
   onDelete,
   onTogglePublic,
+  onDownloadFile,
   onSignOut,
 }: DashboardSidebarContentProps) {
   return (
@@ -68,6 +74,7 @@ export function DashboardSidebarContent({
           variant="outline"
           size="sm"
           className="h-9 w-full justify-center rounded-lg"
+          disabled={isImportingFiles}
           onClick={() => onCreateFile(null)}
         >
           <FilePlus className="mr-1.5 h-4 w-4" />
@@ -77,6 +84,7 @@ export function DashboardSidebarContent({
           variant="outline"
           size="sm"
           className="h-9 w-full justify-center rounded-lg"
+          disabled={isImportingFiles}
           onClick={() => onCreateFolder(null)}
         >
           <FolderPlus className="mr-1.5 h-4 w-4" />
@@ -93,10 +101,6 @@ export function DashboardSidebarContent({
               <Skeleton className="h-10 w-[86%] rounded-xl" />
               <Skeleton className="h-10 w-[72%] rounded-xl" />
             </div>
-          ) : treeItems.length === 0 ? (
-            <div className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
-              No files yet. Create your first file!
-            </div>
           ) : (
             <div className="space-y-2">
               <div className="flex items-center justify-between px-2">
@@ -110,6 +114,12 @@ export function DashboardSidebarContent({
               <FileTree
                 items={treeItems}
                 selectedId={selectedFileId}
+                emptyState={
+                  <div className="flex min-h-28 items-center justify-center text-center text-sm text-muted-foreground">
+                    No files yet. Drop `.md` files here or create your first file.
+                  </div>
+                }
+                onImportFiles={onImportFiles}
                 onSelect={onSelect}
                 onMove={onMove}
                 onCreateFile={onCreateFile}
@@ -117,6 +127,7 @@ export function DashboardSidebarContent({
                 onRename={onRename}
                 onDelete={onDelete}
                 onTogglePublic={onTogglePublic}
+                onDownloadFile={onDownloadFile}
               />
             </div>
           )}

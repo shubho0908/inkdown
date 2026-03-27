@@ -1,6 +1,13 @@
 'use client'
 
-import { Columns2, Edit3, Eye, Save, Share2 } from 'lucide-react'
+import {
+  Columns2,
+  Download,
+  Edit3,
+  Eye,
+  Save,
+  Share2,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
@@ -13,6 +20,7 @@ interface MarkdownEditorHeaderProps {
   viewMode: ViewMode
   onViewModeChange: (mode: ViewMode) => void
   onShare: () => void
+  onDownload: () => void
   onSave: () => void
 }
 
@@ -23,6 +31,7 @@ export function MarkdownEditorHeader({
   viewMode,
   onViewModeChange,
   onShare,
+  onDownload,
   onSave,
 }: MarkdownEditorHeaderProps) {
   return (
@@ -40,7 +49,7 @@ export function MarkdownEditorHeader({
         </div>
       </div>
 
-      <div className="grid w-full grid-cols-2 gap-2 md:order-3 md:w-auto md:flex-none">
+      <div className="grid w-full grid-cols-3 gap-2 md:order-3 md:w-auto md:flex-none">
         <Button
           variant="outline"
           size="sm"
@@ -49,6 +58,15 @@ export function MarkdownEditorHeader({
         >
           <Share2 className="mr-1.5 h-4 w-4" />
           Share
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="min-w-0 w-full md:w-auto"
+          onClick={onDownload}
+        >
+          <Download className="mr-1.5 h-4 w-4" />
+          Download
         </Button>
         <Button
           size="sm"

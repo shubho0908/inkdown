@@ -8,9 +8,10 @@ import { InkdownLogo } from '@/components/inkdown-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { getPublicFolderBySlug, getPublicFolderFileById, getPublicFolderTreeBySlug } from '@/lib/public-folders'
 import { createSocialImageSet } from '@/lib/social-metadata'
-import { createSiteUrl, getSiteUrl } from '@/lib/site-url'
+import { createSiteUrl, getRequestOrigin, getSiteUrl, getSiteUrlObject } from '@/lib/site-url'
 import type { TreeItem } from '@/lib/types'
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 
 interface SharedFolderPageProps {
   params: Promise<{ slug: string }>
@@ -44,17 +45,21 @@ export async function generateMetadata({
     return { title: 'Not Found' }
   }
 
-  const documentUrl = createSiteUrl(`/view/folder/${slug}`).toString()
+  const requestHeaders = await headers()
+  const requestOrigin = getRequestOrigin(requestHeaders)
+  const documentUrl = createSiteUrl(`/view/folder/${slug}`, requestOrigin).toString()
   const description = `Browse the shared folder "${folder.name}" on Inkdown.`
   const socialImageAlt = `Preview of the shared folder "${folder.name}" on Inkdown`
   const socialImages = createSocialImageSet(
     `/view/folder/${slug}`,
     socialImageAlt,
+    requestOrigin,
   )
 
   return {
     title: folder.name,
     description,
+    metadataBase: getSiteUrlObject(requestOrigin),
     alternates: {
       canonical: documentUrl,
     },
@@ -82,6 +87,8 @@ export default async function SharedFolderPage({
 }: SharedFolderPageProps) {
   const { slug } = await params
   const { file: requestedFileId } = await searchParams
+  const requestHeaders = await headers()
+  const requestOrigin = getRequestOrigin(requestHeaders)
 
   const sharedFolder = await getPublicFolderTreeBySlug(slug)
 
@@ -99,8 +106,8 @@ export default async function SharedFolderPage({
     selectedFile = await getPublicFolderFileById(slug, fallbackFileId)
   }
 
-  const siteUrl = getSiteUrl()
-  const folderUrl = createSiteUrl(`/view/folder/${slug}`).toString()
+  const siteUrl = getSiteUrl(requestOrigin)
+  const folderUrl = createSiteUrl(`/view/folder/${slug}`, requestOrigin).toString()
   const subfolderCount = Math.max(sharedFolder.folders.length - 1, 0)
   const structuredData = {
     '@context': 'https://schema.org',
@@ -116,7 +123,7 @@ export default async function SharedFolderPage({
       url: siteUrl,
       logo: {
         '@type': 'ImageObject',
-        url: createSiteUrl('/favicon.png').toString(),
+        url: createSiteUrl('/favicon.png', requestOrigin).toString(),
       },
     },
   }

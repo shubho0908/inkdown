@@ -12,6 +12,7 @@ import { normalizeMarkdownContent } from "@/lib/markdown-normalization";
 
 interface MarkdownPreviewProps {
   content: string;
+  mode?: "interactive" | "print";
 }
 
 const defaultSchemaAttributes = defaultSchema.attributes ?? {};
@@ -116,11 +117,19 @@ function getCodeBlockDataFromNode(node?: {
 
 export const MarkdownPreview = memo(function MarkdownPreview({
   content,
+  mode = "interactive",
 }: MarkdownPreviewProps) {
   const normalizedContent = normalizeMarkdownContent(content);
+  const isPrintMode = mode === "print";
 
   return (
-    <article className="prose prose-neutral dark:prose-invert min-w-0 w-full max-w-full overflow-x-hidden break-words text-sm sm:text-base">
+    <article
+      className={
+        isPrintMode
+          ? "prose prose-neutral min-w-0 w-full max-w-none overflow-x-visible break-words text-[13px] leading-7 sm:text-[15px]"
+          : "prose prose-neutral dark:prose-invert min-w-0 w-full max-w-full overflow-x-hidden break-words text-sm sm:text-base"
+      }
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[
@@ -194,13 +203,19 @@ export const MarkdownPreview = memo(function MarkdownPreview({
             }
 
             if (codeBlock.language === "mermaid") {
-              return <MermaidDiagram chart={codeBlock.code} />;
+              return (
+                <MermaidDiagram
+                  chart={codeBlock.code}
+                  theme={isPrintMode ? "light" : undefined}
+                />
+              );
             }
 
             return (
               <CodeBlock
                 code={codeBlock.code}
                 language={codeBlock.language}
+                showCopyButton={!isPrintMode}
               />
             );
           },

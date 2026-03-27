@@ -13,6 +13,7 @@ import {
 interface CodeBlockProps {
   code: string;
   language?: string;
+  showCopyButton?: boolean;
 }
 
 function highlightCode(code: string, language?: string) {
@@ -42,7 +43,11 @@ async function copyText(text: string) {
   document.body.removeChild(textarea);
 }
 
-export function CodeBlock({ code, language }: CodeBlockProps) {
+export function CodeBlock({
+  code,
+  language,
+  showCopyButton = true,
+}: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
   const highlightedCode = useMemo(
     () => highlightCode(code, language),
@@ -74,21 +79,23 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
         <span className="truncate text-xs font-medium tracking-[0.08em] text-foreground/72">
           {label}
         </span>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-8 gap-1.5 px-2 text-xs font-medium text-muted-foreground hover:text-foreground"
-          onClick={handleCopy}
-          aria-label={copied ? "Code copied" : "Copy code"}
-        >
-          {copied ? (
-            <Check className="h-3.5 w-3.5" />
-          ) : (
-            <Copy className="h-3.5 w-3.5" />
-          )}
-          {copied ? "Copied" : "Copy"}
-        </Button>
+        {showCopyButton ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5 px-2 text-xs font-medium text-muted-foreground hover:text-foreground"
+            onClick={handleCopy}
+            aria-label={copied ? "Code copied" : "Copy code"}
+          >
+            {copied ? (
+              <Check className="h-3.5 w-3.5" />
+            ) : (
+              <Copy className="h-3.5 w-3.5" />
+            )}
+            {copied ? "Copied" : "Copy"}
+          </Button>
+        ) : null}
       </div>
       <pre className="overflow-x-auto p-4 text-sm leading-6">
         <code

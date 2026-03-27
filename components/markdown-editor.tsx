@@ -22,6 +22,7 @@ import {
   useUpdateFileMutation,
 } from "@/hooks/workspace/use-file-mutations";
 import { useFileQuery } from "@/hooks/workspace/use-workspace-queries";
+import { downloadMarkdownFile } from "@/lib/file-export";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -261,6 +262,20 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
     await toggleFilePublicMutation.mutateAsync({ file, isPublic });
   };
 
+  const handleDownloadMarkdown = useCallback(() => {
+    if (!file) {
+      toast.error("File not found");
+      return;
+    }
+
+    try {
+      downloadMarkdownFile(file.name, content);
+      toast.success(`Downloaded "${file.name}"`);
+    } catch {
+      toast.error("Could not download the markdown file");
+    }
+  }, [content, file]);
+
   if (isLoading) {
     return <MarkdownEditorLoading />;
   }
@@ -282,6 +297,7 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onShare={() => setShareOpen(true)}
+        onDownload={handleDownloadMarkdown}
         onSave={handleSave}
       />
 

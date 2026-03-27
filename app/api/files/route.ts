@@ -1,6 +1,7 @@
 import { requireVerifiedUser } from '@/lib/auth'
 import { createAuthErrorResponse } from '@/lib/auth/server'
 import { createClient } from '@/lib/supabase/server'
+import { getOwnedFolderById } from '@/lib/workspace-folder-access'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
@@ -34,6 +35,19 @@ export async function POST(request: Request) {
 
   const body = await request.json()
   const { name, folder_id, content } = body
+
+  try {
+    const folder = await getOwnedFolderById(supabase, authState.user.id, folder_id)
+
+    if (folder_id && !folder) {
+      return NextResponse.json({ error: 'Invalid target folder' }, { status: 400 })
+    }
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Could not validate target folder' },
+      { status: 500 },
+    )
+  }
 
   const { data: file, error } = await supabase
     .from('files')
