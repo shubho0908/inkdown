@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next'
-import { cookies } from 'next/headers'
 import localFont from 'next/font/local'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -7,12 +6,6 @@ import { QueryProvider } from '@/components/query-provider'
 import { Toaster } from '@/components/ui/sonner'
 import { createSocialImageSet } from '@/lib/social-metadata'
 import { getSiteUrlObject } from '@/lib/site-url'
-import {
-  isResolvedTheme,
-  isTheme,
-  type ResolvedTheme,
-  type Theme,
-} from '@/lib/theme'
 import 'katex/dist/katex.min.css'
 import './globals.css'
 
@@ -76,43 +69,35 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
-function getInitialThemeFromCookies(cookieStore: Awaited<ReturnType<typeof cookies>>) {
-  const themeCookie = cookieStore.get('theme')?.value
-  const resolvedThemeCookie = cookieStore.get('resolved-theme')?.value
+const themeBootstrapScript = `
+(() => {
+  const storageKey = 'inkdown-theme';
+  const storedTheme = window.localStorage.getItem(storageKey);
+  const theme = storedTheme === 'light' || storedTheme === 'dark' || storedTheme === 'system'
+    ? storedTheme
+    : 'system';
+  const resolvedTheme = theme === 'system'
+    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : theme;
 
-  const initialTheme: Theme = isTheme(themeCookie) ? themeCookie : 'system'
-  const initialResolvedTheme: ResolvedTheme = isResolvedTheme(resolvedThemeCookie)
-    ? resolvedThemeCookie
-    : initialTheme === 'dark'
-      ? 'dark'
-      : 'light'
+  document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
+  document.documentElement.style.colorScheme = resolvedTheme;
+})();
+`
 
-  return {
-    initialTheme,
-    initialResolvedTheme,
-  }
-}
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const cookieStore = await cookies()
-  const { initialTheme, initialResolvedTheme } = getInitialThemeFromCookies(cookieStore)
-
   return (
-    <html
-      lang="en"
-      className={initialResolvedTheme === 'dark' ? 'dark' : undefined}
-      style={{ colorScheme: initialResolvedTheme }}
-    >
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geist.variable} font-sans antialiased`}>
+        <script
+          dangerouslySetInnerHTML={{ __html: themeBootstrapScript }}
+        />
         <QueryProvider>
-          <ThemeProvider
-            initialTheme={initialTheme}
-            initialResolvedTheme={initialResolvedTheme}
-          >
+          <ThemeProvider>
             {children}
             <Toaster />
           </ThemeProvider>

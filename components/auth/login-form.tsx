@@ -88,7 +88,7 @@ export function LoginForm() {
         return
       }
 
-      router.replace('/')
+      router.replace('/workspace')
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An error occurred')
     } finally {

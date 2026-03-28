@@ -9,7 +9,7 @@ type SupportedEmailOtpType = 'email' | 'recovery' | 'invite' | 'email_change'
 
 function getSafeNextPath(next: string | null) {
   if (!next || !next.startsWith('/') || next.startsWith('//')) {
-    return '/'
+    return '/workspace'
   }
 
   return next

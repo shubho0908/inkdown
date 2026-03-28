@@ -1,5 +1,7 @@
 import 'server-only'
 
+const PUBLIC_SHARE_REVALIDATE_SECONDS = 60
+
 function getSupabaseRestUrl(path: string) {
   const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 
@@ -45,7 +47,7 @@ export async function fetchRestRows<T>(
 
   const response = await fetch(url, {
     headers: getSupabaseRestHeaders(),
-    cache: 'no-store',
+    next: { revalidate: PUBLIC_SHARE_REVALIDATE_SECONDS },
   })
 
   if (!response.ok) {
@@ -61,7 +63,7 @@ export async function postRestRpc<T>(functionName: string, body: Record<string, 
     method: 'POST',
     headers: getSupabaseRestHeaders(),
     body: JSON.stringify(body),
-    cache: 'no-store',
+    next: { revalidate: PUBLIC_SHARE_REVALIDATE_SECONDS },
   })
 
   if (!response.ok) {
@@ -78,7 +80,7 @@ export async function fetchProfileUsername(userId: string) {
     method: 'POST',
     headers: getSupabaseRestHeaders(),
     body: JSON.stringify({ profile_user_id: userId }),
-    cache: 'no-store',
+    next: { revalidate: PUBLIC_SHARE_REVALIDATE_SECONDS },
   })
 
   if (!response.ok) {

@@ -1,16 +1,9 @@
-import {
-  getEmailVerificationRedirectPath,
-  requireVerifiedUser,
-} from '@/lib/auth'
-import { createClient } from '@/lib/supabase/server'
-import { DashboardWorkspace } from '@/components/dashboard-workspace'
 import { Button } from '@/components/ui/button'
 import { InkdownLogo } from '@/components/inkdown-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { getSiteUrl } from '@/lib/site-url'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { redirect } from 'next/navigation'
 import { 
   FileText, 
   FolderTree, 
@@ -27,44 +20,34 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function HomePage() {
-  const supabase = await createClient()
-  const authState = await requireVerifiedUser(supabase)
-
-  if (authState.kind === 'unverified') {
-    redirect(getEmailVerificationRedirectPath(authState.user.email))
-  }
-
-  if (authState.kind === 'authenticated') {
-    return <DashboardWorkspace />
-  }
-
+export default function HomePage() {
   const siteUrl = getSiteUrl()
-  const structuredData = [
-    {
-      '@context': 'https://schema.org',
-      '@type': 'WebSite',
-      name: 'Inkdown',
-      url: siteUrl,
-      description:
-        'Create, organize, and share beautiful markdown documents with live preview and instant sharing.',
-    },
-    {
-      '@context': 'https://schema.org',
-      '@type': 'SoftwareApplication',
-      name: 'Inkdown',
-      applicationCategory: 'BusinessApplication',
-      operatingSystem: 'Web',
-      offers: {
-        '@type': 'Offer',
-        price: '0',
-        priceCurrency: 'USD',
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        name: 'Inkdown',
+        url: siteUrl,
+        description:
+          'Create, organize, and share beautiful markdown documents with live preview and instant sharing.',
       },
-      url: siteUrl,
-      description:
-        'A markdown editor and sharing platform with live preview, folder organization, and public publishing.',
-    },
-  ]
+      {
+        '@type': 'SoftwareApplication',
+        name: 'Inkdown',
+        applicationCategory: 'BusinessApplication',
+        operatingSystem: 'Web',
+        offers: {
+          '@type': 'Offer',
+          price: '0',
+          priceCurrency: 'USD',
+        },
+        url: siteUrl,
+        description:
+          'A markdown editor and sharing platform with live preview, folder organization, and public publishing.',
+      },
+    ],
+  }
 
   return (
     <div className="flex min-h-svh flex-col">

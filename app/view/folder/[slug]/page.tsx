@@ -1,24 +1,20 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, FileText, FolderOpen, Share2 } from 'lucide-react'
-import { MarkdownPreview } from '@/components/markdown-preview'
-import { PublicFolderBrowser } from '@/components/public-folder-browser'
+import { ArrowRight } from 'lucide-react'
+import { SharedFolderViewer } from '@/components/shared-folder-viewer'
 import { Button } from '@/components/ui/button'
 import { InkdownLogo } from '@/components/inkdown-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { getPublicFolderBySlug, getPublicFolderFileById, getPublicFolderTreeBySlug } from '@/lib/public-folders'
 import { createSocialImageSet } from '@/lib/social-metadata'
-import { createSiteUrl, getRequestOrigin, getSiteUrl, getSiteUrlObject } from '@/lib/site-url'
+import { createSiteUrl, getSiteUrl, getSiteUrlObject } from '@/lib/site-url'
 import type { TreeItem } from '@/lib/types'
 import { notFound } from 'next/navigation'
-import { headers } from 'next/headers'
 
 interface SharedFolderPageProps {
   params: Promise<{ slug: string }>
   searchParams: Promise<{ file?: string }>
 }
-
-export const dynamic = 'force-dynamic'
 
 function findFirstFileId(items: TreeItem[]): string | null {
   for (const item of items) {
@@ -45,21 +41,18 @@ export async function generateMetadata({
     return { title: 'Not Found' }
   }
 
-  const requestHeaders = await headers()
-  const requestOrigin = getRequestOrigin(requestHeaders)
-  const documentUrl = createSiteUrl(`/view/folder/${slug}`, requestOrigin).toString()
+  const documentUrl = createSiteUrl(`/view/folder/${slug}`).toString()
   const description = `Browse the shared folder "${folder.name}" on Inkdown.`
   const socialImageAlt = `Preview of the shared folder "${folder.name}" on Inkdown`
   const socialImages = createSocialImageSet(
     `/view/folder/${slug}`,
     socialImageAlt,
-    requestOrigin,
   )
 
   return {
     title: folder.name,
     description,
-    metadataBase: getSiteUrlObject(requestOrigin),
+    metadataBase: getSiteUrlObject(),
     alternates: {
       canonical: documentUrl,
     },
@@ -87,8 +80,6 @@ export default async function SharedFolderPage({
 }: SharedFolderPageProps) {
   const { slug } = await params
   const { file: requestedFileId } = await searchParams
-  const requestHeaders = await headers()
-  const requestOrigin = getRequestOrigin(requestHeaders)
 
   const sharedFolder = await getPublicFolderTreeBySlug(slug)
 
@@ -106,8 +97,8 @@ export default async function SharedFolderPage({
     selectedFile = await getPublicFolderFileById(slug, fallbackFileId)
   }
 
-  const siteUrl = getSiteUrl(requestOrigin)
-  const folderUrl = createSiteUrl(`/view/folder/${slug}`, requestOrigin).toString()
+  const siteUrl = getSiteUrl()
+  const folderUrl = createSiteUrl(`/view/folder/${slug}`).toString()
   const subfolderCount = Math.max(sharedFolder.folders.length - 1, 0)
   const structuredData = {
     '@context': 'https://schema.org',
@@ -123,7 +114,7 @@ export default async function SharedFolderPage({
       url: siteUrl,
       logo: {
         '@type': 'ImageObject',
-        url: createSiteUrl('/favicon.png', requestOrigin).toString(),
+        url: createSiteUrl('/favicon.png').toString(),
       },
     },
   }
@@ -151,82 +142,15 @@ export default async function SharedFolderPage({
         </div>
       </header>
 
-      <main className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:gap-6 sm:px-6 sm:py-8 lg:grid lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] lg:items-start">
-        <aside className="min-w-0 rounded-2xl border bg-card p-3 shadow-sm sm:p-4 lg:sticky lg:top-20 lg:max-h-[calc(100svh-6rem)] lg:self-start lg:overflow-hidden">
-          <div className="border-b px-2 pb-4">
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <FolderOpen className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <h1 className="min-w-0 text-base font-semibold leading-tight sm:text-lg">
-                    {sharedFolder.folder.name}
-                  </h1>
-                  <Share2 className="h-4 w-4 shrink-0 text-primary" />
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                  {sharedFolder.files.length} {sharedFolder.files.length === 1 ? 'file' : 'files'}
-                  {' · '}
-                  {subfolderCount} {subfolderCount === 1 ? 'subfolder' : 'subfolders'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="min-w-0 pt-3 lg:max-h-[calc(100svh-13rem)] lg:overflow-y-auto lg:pr-1">
-            <PublicFolderBrowser
-              shareSlug={slug}
-              items={sharedFolder.treeItems}
-              selectedFileId={selectedFile?.id ?? null}
-            />
-          </div>
-        </aside>
-
-        <section className="min-w-0 overflow-hidden rounded-2xl border bg-card shadow-sm">
-          {selectedFile ? (
-            <>
-              <div className="border-b px-4 py-4 sm:px-6 sm:py-5">
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted">
-                    <FileText className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-xl font-semibold tracking-tight text-balance sm:text-3xl">
-                      {selectedFile.name.replace(/\.md$/, '')}
-                    </h2>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      Shared from &quot;{sharedFolder.folder.name}&quot; on{' '}
-                      <Link
-                        href="/"
-                        className="text-primary underline underline-offset-4 hover:text-primary/80"
-                      >
-                        Inkdown
-                      </Link>
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="min-w-0 px-4 py-5 sm:p-6">
-                <MarkdownPreview content={selectedFile.content} />
-              </div>
-            </>
-          ) : (
-            <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 px-6 py-12 text-center text-muted-foreground">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-                <FileText className="h-7 w-7" />
-              </div>
-              <div className="space-y-1">
-                <p className="font-medium text-foreground">No shared files in this folder</p>
-                <p className="text-sm">
-                  This shared folder does not currently contain any nested markdown files.
-                </p>
-              </div>
-            </div>
-          )}
-        </section>
-      </main>
+      <SharedFolderViewer
+        shareSlug={slug}
+        folderName={sharedFolder.folder.name}
+        filesCount={sharedFolder.files.length}
+        subfolderCount={subfolderCount}
+        treeItems={sharedFolder.treeItems}
+        initialFile={selectedFile}
+        fallbackFileId={fallbackFileId}
+      />
     </div>
   )
 }

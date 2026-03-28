@@ -3,8 +3,6 @@
 import * as React from 'react'
 import {
   isTheme,
-  RESOLVED_THEME_COOKIE,
-  THEME_COOKIE,
   THEME_STORAGE_KEY,
   type ResolvedTheme,
   type Theme,
@@ -33,10 +31,8 @@ function applyTheme(theme: ResolvedTheme) {
   document.documentElement.style.colorScheme = theme
 }
 
-function persistTheme(theme: Theme, resolvedTheme: ResolvedTheme) {
+function persistTheme(theme: Theme, _resolvedTheme: ResolvedTheme) {
   window.localStorage.setItem(THEME_STORAGE_KEY, theme)
-  document.cookie = `${THEME_COOKIE}=${theme}; path=/; max-age=31536000; samesite=lax`
-  document.cookie = `${RESOLVED_THEME_COOKIE}=${resolvedTheme}; path=/; max-age=31536000; samesite=lax`
 }
 
 export function ThemeProvider({

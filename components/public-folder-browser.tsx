@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { FileText, Folder, FolderOpen, Share2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -7,17 +9,20 @@ interface PublicFolderBrowserProps {
   shareSlug: string
   items: TreeItem[]
   selectedFileId: string | null
+  onSelectFile?: (fileId: string) => void
 }
 
 function TreeBranch({
   items,
   shareSlug,
   selectedFileId,
+  onSelectFile,
   level = 0,
 }: {
   items: TreeItem[]
   shareSlug: string
   selectedFileId: string | null
+  onSelectFile?: (fileId: string) => void
   level?: number
 }) {
   return (
@@ -48,6 +53,7 @@ function TreeBranch({
                   items={item.children}
                   shareSlug={shareSlug}
                   selectedFileId={selectedFileId}
+                  onSelectFile={onSelectFile}
                   level={level + 1}
                 />
               ) : (
@@ -62,15 +68,36 @@ function TreeBranch({
           )
         }
 
+        const className = cn(
+          'flex min-w-0 items-center gap-2 rounded-xl px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground',
+          selectedFileId === item.id && 'bg-accent text-foreground shadow-xs',
+        )
+
+        if (onSelectFile) {
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={className}
+              style={{ paddingLeft }}
+              onClick={() => onSelectFile(item.id)}
+              aria-pressed={selectedFileId === item.id}
+            >
+              <FileText className="h-4 w-4 shrink-0" />
+              <span className="min-w-0 flex-1 truncate text-left">{item.name}</span>
+              {item.is_public ? (
+                <Share2 className="h-3.5 w-3.5 shrink-0 text-primary" />
+              ) : null}
+            </button>
+          )
+        }
+
         return (
           <Link
             key={item.id}
             href={`/view/folder/${shareSlug}?file=${item.id}`}
             scroll={false}
-            className={cn(
-              'flex min-w-0 items-center gap-2 rounded-xl px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground',
-              selectedFileId === item.id && 'bg-accent text-foreground shadow-xs',
-            )}
+            className={className}
             style={{ paddingLeft }}
           >
             <FileText className="h-4 w-4 shrink-0" />
@@ -87,6 +114,7 @@ export function PublicFolderBrowser({
   shareSlug,
   items,
   selectedFileId,
+  onSelectFile,
 }: PublicFolderBrowserProps) {
   return (
     <div className="min-w-0 space-y-3 overflow-x-hidden">
@@ -95,7 +123,12 @@ export function PublicFolderBrowser({
           Shared Workspace
         </p>
       </div>
-      <TreeBranch items={items} shareSlug={shareSlug} selectedFileId={selectedFileId} />
+      <TreeBranch
+        items={items}
+        shareSlug={shareSlug}
+        selectedFileId={selectedFileId}
+        onSelectFile={onSelectFile}
+      />
     </div>
   )
 }
