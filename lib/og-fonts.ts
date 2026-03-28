@@ -1,9 +1,9 @@
 const fontCache = new Map<string, Promise<ArrayBuffer>>()
 
-function getFontPath(relativePath: string) {
+async function getFontPath(relativePath: string): Promise<string> {
   // Use process.cwd() for serverless compatibility (Vercel, etc.)
   // import.meta.url doesn't work reliably in production serverless environments
-  const { resolve } = require('path')
+  const { resolve } = await import('path')
   return resolve(process.cwd(), relativePath)
 }
 
@@ -15,7 +15,7 @@ async function loadLocalFont(relativePath: string) {
       cacheKey,
       (async () => {
         const { readFile } = await import('node:fs/promises')
-        const fontPath = getFontPath(relativePath)
+        const fontPath = await getFontPath(relativePath)
         const font = await readFile(fontPath)
 
         return font.buffer.slice(font.byteOffset, font.byteOffset + font.byteLength)

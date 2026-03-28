@@ -13,9 +13,9 @@ function createFallbackLogoUrl() {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
 }
 
-function getLogoPath() {
+async function getLogoPath(): Promise<string> {
   // Use process.cwd() for serverless compatibility (Vercel, etc.)
-  const { resolve } = require('path')
+  const { resolve } = await import('path')
   return resolve(process.cwd(), 'public/favicon.png')
 }
 
@@ -28,7 +28,7 @@ export function getOgLogoUrl() {
     ogLogoUrlPromise = (async () => {
       try {
         const { readFile } = await import('node:fs/promises')
-        const logoPath = getLogoPath()
+        const logoPath = await getLogoPath()
         const icon = await readFile(logoPath)
 
         return `data:image/png;base64,${icon.toString('base64')}`
