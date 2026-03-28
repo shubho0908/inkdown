@@ -13,6 +13,12 @@ function createFallbackLogoUrl() {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
 }
 
+function getLogoPath() {
+  // Use process.cwd() for serverless compatibility (Vercel, etc.)
+  const { resolve } = require('path')
+  return resolve(process.cwd(), 'public/favicon.png')
+}
+
 export function getOgBaseUrl(origin?: string) {
   return getSiteUrl(origin)
 }
@@ -22,7 +28,8 @@ export function getOgLogoUrl() {
     ogLogoUrlPromise = (async () => {
       try {
         const { readFile } = await import('node:fs/promises')
-        const icon = await readFile(new URL('../public/favicon.png', import.meta.url))
+        const logoPath = getLogoPath()
+        const icon = await readFile(logoPath)
 
         return `data:image/png;base64,${icon.toString('base64')}`
       } catch (error) {

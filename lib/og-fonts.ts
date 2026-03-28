@@ -1,5 +1,12 @@
 const fontCache = new Map<string, Promise<ArrayBuffer>>()
 
+function getFontPath(relativePath: string) {
+  // Use process.cwd() for serverless compatibility (Vercel, etc.)
+  // import.meta.url doesn't work reliably in production serverless environments
+  const { resolve } = require('path')
+  return resolve(process.cwd(), relativePath)
+}
+
 async function loadLocalFont(relativePath: string) {
   const cacheKey = relativePath
 
@@ -8,7 +15,8 @@ async function loadLocalFont(relativePath: string) {
       cacheKey,
       (async () => {
         const { readFile } = await import('node:fs/promises')
-        const font = await readFile(new URL(relativePath, import.meta.url))
+        const fontPath = getFontPath(relativePath)
+        const font = await readFile(fontPath)
 
         return font.buffer.slice(font.byteOffset, font.byteOffset + font.byteLength)
       })(),
@@ -21,8 +29,8 @@ async function loadLocalFont(relativePath: string) {
 export async function getOgFonts() {
   try {
     const [regular, playfairExtraBold] = await Promise.all([
-      loadLocalFont('../public/fonts/Geist-Regular.ttf'),
-      loadLocalFont('../public/fonts/PlayfairDisplay-ExtraBold.ttf'),
+      loadLocalFont('public/fonts/Geist-Regular.ttf'),
+      loadLocalFont('public/fonts/PlayfairDisplay-ExtraBold.ttf'),
     ])
 
     return [
