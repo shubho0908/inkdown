@@ -78,6 +78,7 @@
 
 @theme inline {
   --font-sans: var(--app-font-sans), system-ui, sans-serif;
+  --font-display: var(--app-font-display), ui-serif, Georgia, serif;
   --font-mono:
     ui-monospace,
     'SFMono-Regular',
@@ -151,6 +152,19 @@
   select {
     font: inherit;
   }
+}
+
+.inkdown-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E");
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .katex-display {

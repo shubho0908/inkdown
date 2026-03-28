@@ -138,7 +138,7 @@ export function DashboardSidebarContent({
         <Button
           variant="ghost"
           size="sm"
-          className="h-9 w-full justify-start rounded-lg text-muted-foreground"
+          className="h-9 w-full cursor-pointer justify-start rounded-lg text-muted-foreground"
           onClick={onSignOut}
         >
           <LogOut className="mr-2 h-4 w-4" />

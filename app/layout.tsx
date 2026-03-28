@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import localFont from 'next/font/local'
+import { Outfit, Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { QueryProvider } from '@/components/query-provider'
@@ -9,9 +9,15 @@ import { getSiteUrlObject } from '@/lib/site-url'
 import 'katex/dist/katex.min.css'
 import './globals.css'
 
-const geist = localFont({
-  src: '../public/fonts/Geist-Regular.ttf',
+const inter = Inter({
+  subsets: ['latin'],
   variable: '--app-font-sans',
+  display: 'swap',
+})
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--app-font-display',
   display: 'swap',
 })
 
@@ -91,8 +97,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${geist.variable} font-sans antialiased`}>
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
+      <body className={`${inter.variable} ${outfit.variable} font-sans antialiased selection:bg-primary/20`}>
         <script
           dangerouslySetInnerHTML={{ __html: themeBootstrapScript }}
         />
