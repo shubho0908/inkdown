@@ -66,5 +66,3 @@ export function extractMarkdownSummary(
 
   return clipAtBoundary(plainText, maxLength)
 }
-
-export { DEFAULT_SUMMARY as DEFAULT_DOCUMENT_SUMMARY }

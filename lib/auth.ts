@@ -5,7 +5,7 @@ type AuthUser = {
   confirmed_at?: string | null
 }
 
-export type AnySupabaseClient = {
+type AnySupabaseClient = {
   auth: {
     getUser: () => Promise<{
       data: { user: AuthUser | null }

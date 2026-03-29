@@ -8,37 +8,189 @@ import { AuthShell } from '@/components/auth/auth-shell'
 import { getAuthRedirectUrl } from '@/lib/site-url'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+
+type SignupError = {
+  type: 'email_exists' | 'validation' | 'network' | 'server' | 'unknown'
+  message: string
+  action?: 'login' | 'retry' | 'contact'
+}
+
+async function checkEmailExists(email: string): Promise<{ exists: boolean; error?: SignupError }> {
+  try {
+    const response = await fetch('/api/auth/check-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: email.toLowerCase().trim() }),
+    })
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        return {
+          exists: false,
+          error: {
+            type: 'server',
+            message: 'Too many attempts. Please wait a moment and try again.',
+            action: 'retry',
+          },
+        }
+      }
+
+      if (response.status >= 500) {
+        return {
+          exists: false,
+          error: {
+            type: 'server',
+            message: 'Server error. Please try again in a few moments.',
+            action: 'retry',
+          },
+        }
+      }
+
+      return {
+        exists: false,
+        error: {
+          type: 'network',
+          message: 'Unable to verify email. Please try again.',
+          action: 'retry',
+        },
+      }
+    }
+
+    const data = await response.json()
+    
+    if (typeof data.exists !== 'boolean') {
+      return {
+        exists: false,
+        error: {
+          type: 'server',
+          message: 'Unexpected server response. Please try again.',
+          action: 'retry',
+        },
+      }
+    }
+
+    return { exists: data.exists }
+  } catch {
+    return {
+      exists: false,
+      error: {
+        type: 'network',
+        message: 'Connection error. Please check your internet and try again.',
+        action: 'retry',
+      },
+    }
+  }
+}
+
+function validatePassword(password: string): { valid: boolean; error?: string } {
+  if (password.length < 6) {
+    return { valid: false, error: 'Password must be at least 6 characters' }
+  }
+
+  if (password.length > 128) {
+    return { valid: false, error: 'Password must be less than 128 characters' }
+  }
+
+  return { valid: true }
+}
+
+function validateEmail(email: string): { valid: boolean; error?: string } {
+  const normalizedEmail = email.toLowerCase().trim()
+  
+  if (!normalizedEmail) {
+    return { valid: false, error: 'Email is required' }
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(normalizedEmail)) {
+    return { valid: false, error: 'Please enter a valid email address' }
+  }
+
+  const commonTypos = ['gmil.com', 'gmal.com', 'gmail.co', 'gmail.con', 'yahoo.co', 'hotmal.com']
+  const domain = normalizedEmail.split('@')[1]
+  if (domain && commonTypos.includes(domain)) {
+    return { 
+      valid: false, 
+      error: `Did you mean ${normalizedEmail.replace(domain, domain.replace(/o/g, 'o').replace(/mal/g, 'mail'))}?` 
+    }
+  }
+
+  return { valid: true }
+}
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [repeatPassword, setRepeatPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<SignupError | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [emailChecked, setEmailChecked] = useState(false)
   const router = useRouter()
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleSignUp = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
+    
     setIsLoading(true)
     setError(null)
+    setEmailChecked(false)
 
-    if (password !== repeatPassword) {
-      setError('Passwords do not match')
+    const supabase = createClient()
+
+    const emailValidation = validateEmail(email)
+    if (!emailValidation.valid) {
+      setError({
+        type: 'validation',
+        message: emailValidation.error!,
+      })
       setIsLoading(false)
       return
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters')
+    if (password !== repeatPassword) {
+      setError({
+        type: 'validation',
+        message: 'Passwords do not match',
+      })
+      setIsLoading(false)
+      return
+    }
+
+    const passwordValidation = validatePassword(password)
+    if (!passwordValidation.valid) {
+      setError({
+        type: 'validation',
+        message: passwordValidation.error!,
+      })
       setIsLoading(false)
       return
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
+      const { exists, error: checkError } = await checkEmailExists(email)
+      
+      if (checkError) {
+        setError(checkError)
+        setIsLoading(false)
+        return
+      }
+
+      setEmailChecked(true)
+
+      if (exists) {
+        setError({
+          type: 'email_exists',
+          message: 'An account with this email already exists. Please sign in instead.',
+          action: 'login',
+        })
+        setIsLoading(false)
+        return
+      }
+
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: email.toLowerCase().trim(),
         password,
         options: {
           emailRedirectTo: getAuthRedirectUrl(
@@ -47,13 +199,77 @@ export default function SignUpPage() {
           ),
         },
       })
-      if (error) throw error
-      router.push('/auth/sign-up-success')
+
+      if (signUpError) {
+        if (signUpError.message?.includes('already registered') || 
+            signUpError.message?.includes('already exists') ||
+            signUpError.message?.includes('already taken')) {
+          setError({
+            type: 'email_exists',
+            message: 'An account with this email already exists. Please sign in instead.',
+            action: 'login',
+          })
+        } else if (signUpError.message?.includes('rate limit') || 
+                   signUpError.message?.includes('too many requests')) {
+          setError({
+            type: 'server',
+            message: 'Too many signup attempts. Please wait a few minutes and try again.',
+            action: 'retry',
+          })
+        } else {
+          setError({
+            type: 'unknown',
+            message: signUpError.message || 'Failed to create account. Please try again.',
+            action: 'retry',
+          })
+        }
+        setIsLoading(false)
+        return
+      }
+
+      if (data.user) {
+        if (data.session === null) {
+          router.push(`/auth/sign-up-success?email=${encodeURIComponent(email)}`)
+        } else {
+          router.push('/workspace')
+        }
+      } else {
+        setError({
+          type: 'unknown',
+          message: 'Something unexpected happened. Please try again.',
+          action: 'retry',
+        })
+        setIsLoading(false)
+      }
+
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'An error occurred')
-    } finally {
+      setError({
+        type: 'unknown',
+        message: error instanceof Error ? error.message : 'An unexpected error occurred',
+        action: 'retry',
+      })
       setIsLoading(false)
     }
+  }, [email, password, repeatPassword, router])
+
+  const renderError = () => {
+    if (!error) return null
+
+    return (
+      <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+        <p className="text-sm text-destructive font-medium">
+          {error.message}
+        </p>
+        {error.action === 'login' && (
+          <Link
+            href="/auth/login"
+            className="mt-2 inline-block text-sm text-primary underline underline-offset-4 hover:text-primary/80"
+          >
+            Sign in here
+          </Link>
+        )}
+      </div>
+    )
   }
 
   return (
@@ -72,6 +288,8 @@ export default function SignUpPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
+              autoComplete="email"
             />
           </div>
           <div className="grid gap-2">
@@ -82,6 +300,8 @@ export default function SignUpPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
+              autoComplete="new-password"
             />
           </div>
           <div className="grid gap-2">
@@ -92,11 +312,19 @@ export default function SignUpPage() {
               required
               value={repeatPassword}
               onChange={(e) => setRepeatPassword(e.target.value)}
+              disabled={isLoading}
+              autoComplete="new-password"
             />
           </div>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          
+          {renderError()}
+          
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Creating account...' : 'Sign up'}
+            {isLoading ? (
+              emailChecked ? 'Creating account...' : 'Checking...'
+            ) : (
+              'Sign up'
+            )}
           </Button>
         </div>
         <div className="mt-4 text-center text-sm text-muted-foreground">

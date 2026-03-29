@@ -4,7 +4,10 @@ async function getFontPath(relativePath: string): Promise<string> {
   // Use process.cwd() for serverless compatibility (Vercel, etc.)
   // import.meta.url doesn't work reliably in production serverless environments
   const { resolve } = await import('path')
-  return resolve(process.cwd(), relativePath)
+  return resolve(
+    /*turbopackIgnore: true*/ process.cwd(),
+    relativePath,
+  )
 }
 
 async function loadLocalFont(relativePath: string) {

@@ -1,6 +1,6 @@
 import type { TreeItem } from '@/lib/types'
 
-export interface FolderParentReference {
+interface FolderParentReference {
   id: string
   parent_id: string | null
 }

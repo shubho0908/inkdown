@@ -16,7 +16,10 @@ function createFallbackLogoUrl() {
 async function getLogoPath(): Promise<string> {
   // Use process.cwd() for serverless compatibility (Vercel, etc.)
   const { resolve } = await import('path')
-  return resolve(process.cwd(), 'public/favicon.png')
+  return resolve(
+    /*turbopackIgnore: true*/ process.cwd(),
+    'public/favicon.png',
+  )
 }
 
 export function getOgBaseUrl(origin?: string) {

@@ -210,9 +210,14 @@ export function DashboardSidebar({
   }
 
   const handleSignOut = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/auth/login')
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      router.push('/auth/login')
+    } catch {
+      // Even if signOut fails, redirect to login
+      router.push('/auth/login')
+    }
   }
 
   return (

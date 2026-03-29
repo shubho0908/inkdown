@@ -55,12 +55,6 @@ function hasMatchingFenceCloser(
   return false;
 }
 
-// Normalizes pasted fence openers like:
-// "Intro ```ts"
-// into:
-// "Intro"
-// "```ts"
-// so the markdown parser can treat the block as fenced code.
 export function normalizeMarkdownContent(content: string) {
   const normalizedNewlines = content.replace(/\r\n?/g, "\n");
   const lines = normalizedNewlines.split("\n");

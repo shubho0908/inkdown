@@ -1,6 +1,5 @@
 "use client";
 
-// Inspired by react-hot-toast library
 import * as React from "react";
 
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
@@ -21,9 +20,6 @@ const actionTypes = {
   DISMISS_TOAST: "DISMISS_TOAST",
   REMOVE_TOAST: "REMOVE_TOAST",
 } as const;
-
-// Re-export for consumers that need the string values at runtime
-export { actionTypes };
 
 let count = 0;
 
@@ -74,7 +70,7 @@ const addToRemoveQueue = (toastId: string) => {
   toastTimeouts.set(toastId, timeout);
 };
 
-export const reducer = (state: State, action: Action): State => {
+const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case actionTypes.ADD_TOAST:
       return {
@@ -93,8 +89,6 @@ export const reducer = (state: State, action: Action): State => {
     case actionTypes.DISMISS_TOAST: {
       const { toastId } = action;
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
         addToRemoveQueue(toastId);
       } else {
