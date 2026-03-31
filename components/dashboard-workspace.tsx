@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FileText } from 'lucide-react'
 import { DashboardSidebar } from '@/components/dashboard-sidebar'
 import { MarkdownEditor } from '@/components/markdown-editor'
@@ -8,8 +8,18 @@ import { MarkdownEditor } from '@/components/markdown-editor'
 export function DashboardWorkspace() {
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
 
+  useEffect(() => {
+    document.documentElement.classList.add('workspace-scroll-locked')
+    document.body.classList.add('workspace-scroll-locked')
+
+    return () => {
+      document.documentElement.classList.remove('workspace-scroll-locked')
+      document.body.classList.remove('workspace-scroll-locked')
+    }
+  }, [])
+
   return (
-    <div className="flex h-svh min-h-svh w-full flex-col overflow-x-hidden md:grid md:grid-cols-[var(--workspace-sidebar-width)_minmax(0,1fr)]">
+    <div className="flex h-screen min-h-screen w-full min-w-0 flex-col overflow-hidden supports-[height:100dvh]:h-dvh supports-[height:100dvh]:min-h-dvh md:grid md:grid-cols-[var(--workspace-sidebar-width)_minmax(0,1fr)]">
       <DashboardSidebar
         selectedFileId={selectedFileId}
         onFileSelect={setSelectedFileId}

@@ -96,16 +96,19 @@ export function SharedFolderViewer({
         <div className="border-b px-2 pb-4">
           <div className="flex items-start gap-3">
             <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <FolderOpen className="h-5 w-5" />
+              <FolderOpen aria-hidden="true" className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h1 className="min-w-0 text-base font-semibold leading-tight sm:text-lg">
+                <h1
+                  className="min-w-0 max-w-full truncate text-base font-semibold leading-tight sm:text-lg"
+                  title={folderName}
+                >
                   {folderName}
                 </h1>
-                <Share2 className="h-4 w-4 shrink-0 text-primary" />
+                <Share2 aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
               </div>
-              <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+              <p className="mt-1 text-xs tabular-nums text-muted-foreground sm:text-sm">
                 {filesCount} {filesCount === 1 ? 'file' : 'files'}
                 {' · '}
                 {subfolderCount} {subfolderCount === 1 ? 'subfolder' : 'subfolders'}
@@ -114,7 +117,7 @@ export function SharedFolderViewer({
           </div>
         </div>
 
-        <div className="min-w-0 pt-3 lg:max-h-[calc(100svh-13rem)] lg:overflow-y-auto lg:pr-1">
+        <div className="min-w-0 pt-3 lg:max-h-[calc(100svh-13rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
           <PublicFolderBrowser
             shareSlug={shareSlug}
             items={treeItems}
@@ -130,10 +133,13 @@ export function SharedFolderViewer({
             <div className="border-b px-4 py-4 sm:px-6 sm:py-5">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted">
-                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  <FileText aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-xl font-semibold tracking-tight text-balance sm:text-3xl">
+                  <h2
+                    className="min-w-0 max-w-full text-xl font-semibold tracking-tight text-pretty [overflow-wrap:anywhere] sm:text-3xl"
+                    title={selectedFile.name}
+                  >
                     {selectedFile.name.replace(/\.md$/, '')}
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
@@ -151,8 +157,8 @@ export function SharedFolderViewer({
 
             <div className="min-w-0 px-4 py-5 sm:p-6">
               {isFetching ? (
-                <div className="mb-4 text-sm text-muted-foreground">
-                  Loading document...
+                <div aria-live="polite" className="mb-4 text-sm text-muted-foreground">
+                  Loading document…
                 </div>
               ) : null}
               <MarkdownPreview content={selectedFile.content} />
@@ -161,7 +167,7 @@ export function SharedFolderViewer({
         ) : (
           <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 px-6 py-12 text-center text-muted-foreground">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-              <FileText className="h-7 w-7" />
+              <FileText aria-hidden="true" className="h-7 w-7" />
             </div>
             <div className="space-y-1">
               <p className="font-medium text-foreground">No shared files in this folder</p>

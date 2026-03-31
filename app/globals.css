@@ -167,6 +167,12 @@
   scrollbar-width: none;
 }
 
+.workspace-scroll-locked {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 .katex-display {
   overflow-x: auto;
   overflow-y: hidden;

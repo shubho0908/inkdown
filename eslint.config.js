@@ -21,6 +21,9 @@ const eslintConfig = [
   // Project-level overrides
   {
     rules: {
+      // React Doctor currently bridges linting through Oxlint, which does not
+      // understand this jsx-a11y rule name from the Next.js preset.
+      "jsx-a11y/no-noninteractive-element-interactions": "off",
       // Unused vars: allow underscore-prefixed names as intentional placeholders
       "@typescript-eslint/no-unused-vars": [
         "warn",

@@ -14,11 +14,13 @@ function createFallbackLogoUrl() {
 }
 
 async function getLogoPath(): Promise<string> {
-  // Use process.cwd() for serverless compatibility (Vercel, etc.)
+  // Keep the OG logo source lightweight. Embedding the full favicon raster as a
+  // data URI makes the ImageResponse renderer do unnecessary decode work and
+  // has caused flaky 500s in production.
   const { resolve } = await import('path')
   return resolve(
     /*turbopackIgnore: true*/ process.cwd(),
-    'public/favicon.png',
+    'public/apple-icon.png',
   )
 }
 
