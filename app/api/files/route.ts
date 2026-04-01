@@ -1,7 +1,11 @@
 import { requireVerifiedUser } from '@/lib/auth'
 import { createAuthErrorResponse } from '@/lib/auth/server'
+import {
+  collectPublicFolderShareSlugsForFileChange,
+  listOwnedFolderShareState,
+  revalidatePublicFolderShares,
+} from '@/lib/public-share-cache'
 import { createClient } from '@/lib/supabase/server'
-import { getOwnedFolderById } from '@/lib/workspace-folder-access'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
@@ -35,11 +39,12 @@ export async function POST(request: Request) {
 
   const body = await request.json()
   const { name, folder_id, content } = body
+  let folderShareState = [] as Awaited<ReturnType<typeof listOwnedFolderShareState>>
 
   try {
-    const folder = await getOwnedFolderById(supabase, authState.user.id, folder_id)
+    folderShareState = await listOwnedFolderShareState(supabase, authState.user.id)
 
-    if (folder_id && !folder) {
+    if (folder_id && !folderShareState.find((folder) => folder.id === folder_id)) {
       return NextResponse.json({ error: 'Invalid target folder' }, { status: 400 })
     }
   } catch (error) {
@@ -48,6 +53,12 @@ export async function POST(request: Request) {
       { status: 500 },
     )
   }
+
+  const affectedShareSlugs = collectPublicFolderShareSlugsForFileChange(
+    folderShareState,
+    folder_id || null,
+    folder_id || null,
+  )
 
   const { data: file, error } = await supabase
     .from('files')
@@ -63,6 +74,8 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  revalidatePublicFolderShares(affectedShareSlugs)
 
   return NextResponse.json(file)
 }

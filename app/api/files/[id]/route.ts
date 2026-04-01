@@ -1,5 +1,12 @@
 import { requireVerifiedUser } from '@/lib/auth'
 import { createAuthErrorResponse } from '@/lib/auth/server'
+import {
+  collectPublicFileShareSlugs,
+  collectPublicFolderShareSlugsForFileChange,
+  listOwnedFolderShareState,
+  revalidatePublicFileShares,
+  revalidatePublicFolderShares,
+} from '@/lib/public-share-cache'
 import { generateUniqueShareSlug } from '@/lib/share-slug'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
@@ -45,19 +52,40 @@ export async function PATCH(
   const body = await request.json()
   const { name, content, folder_id, is_public } = body
 
+  const { data: currentFile, error: currentFileError } = await supabase
+    .from('files')
+    .select('id, folder_id, slug, is_public')
+    .eq('id', id)
+    .eq('user_id', authState.user.id)
+    .maybeSingle()
+
+  if (currentFileError) {
+    return NextResponse.json({ error: currentFileError.message }, { status: 500 })
+  }
+
+  if (!currentFile) {
+    return NextResponse.json({ error: 'File not found' }, { status: 404 })
+  }
+
+  let folderShareState = [] as Awaited<ReturnType<typeof listOwnedFolderShareState>>
+
+  try {
+    folderShareState = await listOwnedFolderShareState(supabase, authState.user.id)
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Could not load folders' },
+      { status: 500 },
+    )
+  }
+
   const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (name !== undefined) updateData.name = name
   if (content !== undefined) updateData.content = content
   if (folder_id !== undefined) {
     if (folder_id !== null) {
-      const { data: targetFolder, error: folderError } = await supabase
-        .from('folders')
-        .select('id')
-        .eq('id', folder_id)
-        .eq('user_id', authState.user.id)
-        .single()
+      const targetFolder = folderShareState.find((folder) => folder.id === folder_id)
 
-      if (folderError || !targetFolder) {
+      if (!targetFolder) {
         return NextResponse.json({ error: 'Invalid target folder' }, { status: 400 })
       }
     }
@@ -67,13 +95,7 @@ export async function PATCH(
   if (is_public !== undefined) {
     updateData.is_public = is_public
     if (is_public) {
-      const { data: existing } = await supabase
-        .from('files')
-        .select('slug')
-        .eq('id', id)
-        .single()
-
-      if (!existing?.slug) {
+      if (!currentFile.slug) {
         updateData.slug = await generateUniqueShareSlug(async (slug) => {
           const { data, error } = await supabase
             .from('files')
@@ -103,6 +125,19 @@ export async function PATCH(
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  const affectedFolderShareSlugs = collectPublicFolderShareSlugsForFileChange(
+    folderShareState,
+    currentFile.folder_id,
+    file.folder_id,
+  )
+  const affectedFileShareSlugs = collectPublicFileShareSlugs(
+    currentFile.slug,
+    file.slug,
+  )
+
+  revalidatePublicFolderShares(affectedFolderShareSlugs)
+  revalidatePublicFileShares(affectedFileShareSlugs)
+
   return NextResponse.json(file)
 }
 
@@ -118,6 +153,38 @@ export async function DELETE(
     return createAuthErrorResponse(authState)
   }
 
+  const { data: currentFile, error: currentFileError } = await supabase
+    .from('files')
+    .select('folder_id, slug')
+    .eq('id', id)
+    .eq('user_id', authState.user.id)
+    .maybeSingle()
+
+  if (currentFileError) {
+    return NextResponse.json({ error: currentFileError.message }, { status: 500 })
+  }
+
+  if (!currentFile) {
+    return NextResponse.json({ error: 'File not found' }, { status: 404 })
+  }
+
+  let folderShareState = [] as Awaited<ReturnType<typeof listOwnedFolderShareState>>
+
+  try {
+    folderShareState = await listOwnedFolderShareState(supabase, authState.user.id)
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Could not load folders' },
+      { status: 500 },
+    )
+  }
+
+  const affectedFolderShareSlugs = collectPublicFolderShareSlugsForFileChange(
+    folderShareState,
+    currentFile.folder_id,
+    currentFile.folder_id,
+  )
+
   const { error } = await supabase
     .from('files')
     .delete()
@@ -127,6 +194,10 @@ export async function DELETE(
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  revalidatePublicFolderShares(affectedFolderShareSlugs)
+
+  revalidatePublicFileShares(collectPublicFileShareSlugs(currentFile.slug))
 
   return NextResponse.json({ success: true })
 }

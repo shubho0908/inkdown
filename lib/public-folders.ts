@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { cache } from 'react'
+import { getPublicFolderShareTag } from '@/lib/public-share-cache'
 import { buildTree } from '@/lib/workspace-tree'
 import type { TreeItem } from '@/lib/types'
 import {
@@ -66,14 +67,18 @@ function normalizeTreeItemsToSharedRoot(items: TreeItem[], rootFolderId: string)
   return [rootFolder]
 }
 
-async function fetchPublicFolders(searchParams: Record<string, string>) {
-  return fetchRestRows<PublicFolderRow>('/rest/v1/folders', searchParams)
+async function fetchPublicFolders(
+  searchParams: Record<string, string>,
+  options?: { tags?: string[] },
+) {
+  return fetchRestRows<PublicFolderRow>('/rest/v1/folders', searchParams, options)
 }
 
 async function fetchFolderTreeFolders(slug: string) {
   const rows = await postRestRpc<PublicFolderRow[]>(
     'get_public_folder_subtree_folders',
     { folder_slug: slug },
+    { tags: [getPublicFolderShareTag(slug)] },
   )
 
   return Array.isArray(rows) ? rows : []
@@ -83,6 +88,7 @@ async function fetchFolderTreeFiles(slug: string) {
   const rows = await postRestRpc<PublicFolderFileRow[]>(
     'get_public_folder_subtree_files',
     { folder_slug: slug },
+    { tags: [getPublicFolderShareTag(slug)] },
   )
 
   return Array.isArray(rows) ? rows : []
@@ -92,6 +98,7 @@ async function fetchFolderFile(slug: string, fileId: string) {
   const rows = await postRestRpc<PublicFolderFileContentRow[]>(
     'get_public_folder_file',
     { folder_slug: slug, target_file_id: fileId },
+    { tags: [getPublicFolderShareTag(slug)] },
   )
 
   return Array.isArray(rows) ? rows[0] ?? null : null
@@ -104,7 +111,7 @@ export const getPublicFolderBySlug = cache(
       slug: `eq.${slug}`,
       is_public: 'eq.true',
       limit: '1',
-    })
+    }, { tags: [getPublicFolderShareTag(slug)] })
 
     if (!folder) {
       return null

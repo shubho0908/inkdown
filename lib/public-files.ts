@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { cache } from 'react'
+import { getPublicFileShareTag } from '@/lib/public-share-cache'
 import { fetchProfileUsername, fetchRestRows } from '@/lib/public-share-utils'
 
 export interface PublicFileRecord {
@@ -17,10 +18,13 @@ const PUBLIC_FILE_SELECT = 'user_id,slug,name,content,created_at,updated_at'
 
 async function fetchPublicFiles(
   searchParams: Record<string, string>,
+  tags?: string[],
 ): Promise<
   Array<Omit<PublicFileRecord, 'username'>>
 > {
-  return fetchRestRows<Omit<PublicFileRecord, 'username'>>('/rest/v1/files', searchParams)
+  return fetchRestRows<Omit<PublicFileRecord, 'username'>>('/rest/v1/files', searchParams, {
+    tags,
+  })
 }
 
 export const getPublicFileBySlug = cache(async (slug: string): Promise<PublicFileRecord | null> => {
@@ -29,7 +33,7 @@ export const getPublicFileBySlug = cache(async (slug: string): Promise<PublicFil
     slug: `eq.${slug}`,
     is_public: 'eq.true',
     limit: '1',
-  })
+  }, [getPublicFileShareTag(slug)])
 
   if (!data) {
     return null

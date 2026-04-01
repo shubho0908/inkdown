@@ -5,8 +5,12 @@ import {
   validateMarkdownImportPayload,
   type MarkdownImportPayloadFile,
 } from '@/lib/markdown-import'
+import {
+  collectPublicFolderShareSlugsForFileChange,
+  listOwnedFolderShareState,
+  revalidatePublicFolderShares,
+} from '@/lib/public-share-cache'
 import { createClient } from '@/lib/supabase/server'
-import { getOwnedFolderById } from '@/lib/workspace-folder-access'
 import { NextResponse } from 'next/server'
 
 interface ImportFilesRequestBody {
@@ -38,10 +42,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: validationError }, { status: 400 })
   }
 
-  try {
-    const folder = await getOwnedFolderById(supabase, authState.user.id, folderId)
+  let folderShareState = [] as Awaited<ReturnType<typeof listOwnedFolderShareState>>
 
-    if (folderId && !folder) {
+  try {
+    folderShareState = await listOwnedFolderShareState(supabase, authState.user.id)
+
+    if (folderId && !folderShareState.find((folder) => folder.id === folderId)) {
       return NextResponse.json({ error: 'Invalid target folder' }, { status: 400 })
     }
   } catch (error) {
@@ -50,6 +56,12 @@ export async function POST(request: Request) {
       { status: 500 },
     )
   }
+
+  const affectedShareSlugs = collectPublicFolderShareSlugsForFileChange(
+    folderShareState,
+    folderId,
+    folderId,
+  )
 
   const { data: createdFiles, error } = await supabase
     .from('files')
@@ -66,6 +78,8 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  revalidatePublicFolderShares(affectedShareSlugs)
 
   return NextResponse.json(createdFiles)
 }

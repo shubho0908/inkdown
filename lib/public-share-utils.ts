@@ -2,6 +2,23 @@ import 'server-only'
 
 const PUBLIC_SHARE_REVALIDATE_SECONDS = 60
 
+interface PublicShareFetchOptions {
+  tags?: string[]
+}
+
+function createPublicShareNextOptions(tags?: string[]) {
+  if (tags && tags.length > 0) {
+    return {
+      revalidate: PUBLIC_SHARE_REVALIDATE_SECONDS,
+      tags,
+    }
+  }
+
+  return {
+    revalidate: PUBLIC_SHARE_REVALIDATE_SECONDS,
+  }
+}
+
 function getSupabaseRestUrl(path: string) {
   const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 
@@ -39,6 +56,7 @@ export function getSupabaseRestHeaders() {
 export async function fetchRestRows<T>(
   path: string,
   searchParams: Record<string, string>,
+  options: PublicShareFetchOptions = {},
 ): Promise<T[]> {
   const url = getSupabaseRestUrl(path)
   for (const [key, value] of Object.entries(searchParams)) {
@@ -47,7 +65,7 @@ export async function fetchRestRows<T>(
 
   const response = await fetch(url, {
     headers: getSupabaseRestHeaders(),
-    next: { revalidate: PUBLIC_SHARE_REVALIDATE_SECONDS },
+    next: createPublicShareNextOptions(options.tags),
   })
 
   if (!response.ok) {
@@ -58,12 +76,16 @@ export async function fetchRestRows<T>(
   return Array.isArray(data) ? data : []
 }
 
-export async function postRestRpc<T>(functionName: string, body: Record<string, unknown>) {
+export async function postRestRpc<T>(
+  functionName: string,
+  body: Record<string, unknown>,
+  options: PublicShareFetchOptions = {},
+) {
   const response = await fetch(getSupabaseRestUrl(`/rest/v1/rpc/${functionName}`), {
     method: 'POST',
     headers: getSupabaseRestHeaders(),
     body: JSON.stringify(body),
-    next: { revalidate: PUBLIC_SHARE_REVALIDATE_SECONDS },
+    next: createPublicShareNextOptions(options.tags),
   })
 
   if (!response.ok) {
