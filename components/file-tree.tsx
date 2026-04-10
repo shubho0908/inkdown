@@ -20,6 +20,7 @@ interface FileTreeProps {
   onDelete: (item: TreeItem) => void
   onTogglePublic?: (item: TreeItem) => void
   onDownloadFile?: (item: TreeItem) => void
+  onExportFolder?: (folderId: string, folderName: string) => void
 }
 
 interface RootDropZoneProps {
@@ -95,6 +96,7 @@ export function FileTree({
   onDelete,
   onTogglePublic,
   onDownloadFile,
+  onExportFolder,
 }: FileTreeProps) {
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | 'root' | null>(null)
@@ -350,6 +352,7 @@ export function FileTree({
           onDelete={onDelete}
           onTogglePublic={onTogglePublic}
           onDownloadFile={onDownloadFile}
+          onExportFolder={onExportFolder}
         />
       ))}
       {shouldShowBottomRootDropZone && (

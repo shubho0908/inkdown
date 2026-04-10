@@ -8,6 +8,7 @@ import {
   FileUp,
   Folder,
   FolderOpen,
+  FolderOutput,
   GripVertical,
   MoreHorizontal,
   Pencil,
@@ -53,6 +54,7 @@ interface TreeNodeProps {
   onDelete: (item: TreeItem) => void
   onTogglePublic?: (item: TreeItem) => void
   onDownloadFile?: (item: TreeItem) => void
+  onExportFolder?: (folderId: string, folderName: string) => void
 }
 
 export function TreeNode({
@@ -82,6 +84,7 @@ export function TreeNode({
   onDelete,
   onTogglePublic,
   onDownloadFile,
+  onExportFolder,
 }: TreeNodeProps) {
   const isFolder = item.type === 'folder'
   const isSelected = selectedId === item.id
@@ -258,6 +261,12 @@ export function TreeNode({
                   <Folder className="mr-2 h-4 w-4" />
                   New Folder
                 </DropdownMenuItem>
+                {onExportFolder && (
+                  <DropdownMenuItem onClick={() => onExportFolder(item.id, item.name)}>
+                    <FolderOutput className="mr-2 h-4 w-4" />
+                    Export Folder
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
               </>
             )}
@@ -326,6 +335,7 @@ export function TreeNode({
               onDelete={onDelete}
               onTogglePublic={onTogglePublic}
               onDownloadFile={onDownloadFile}
+              onExportFolder={onExportFolder}
             />
           ))}
         </div>

@@ -27,6 +27,7 @@ interface DashboardSidebarContentProps {
   onDelete: (item: TreeItem) => void
   onTogglePublic: (item: TreeItem) => void
   onDownloadFile: (item: TreeItem) => void
+  onExportFolder?: (folderId: string, folderName: string) => void
   onSignOut: () => void
 }
 
@@ -47,6 +48,7 @@ export function DashboardSidebarContent({
   onDelete,
   onTogglePublic,
   onDownloadFile,
+  onExportFolder,
   onSignOut,
 }: DashboardSidebarContentProps) {
   return (
@@ -132,6 +134,7 @@ export function DashboardSidebarContent({
                 onDelete={onDelete}
                 onTogglePublic={onTogglePublic}
                 onDownloadFile={onDownloadFile}
+                onExportFolder={onExportFolder}
               />
             </div>
           )}

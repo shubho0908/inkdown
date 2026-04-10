@@ -25,6 +25,7 @@ import {
   useFoldersQuery,
 } from '@/hooks/workspace/use-workspace-queries'
 import { downloadMarkdownFile } from '@/lib/file-export'
+import { useZipExport } from '@/hooks/use-zip-export'
 import { createClient } from '@/lib/supabase/client'
 import type { File, Folder, TreeItem } from '@/lib/types'
 import { buildTree } from '@/lib/workspace-tree'
@@ -51,6 +52,7 @@ export function DashboardSidebar({
   const [shareFile, setShareFile] = useState<File | null>(null)
   const [shareFolder, setShareFolder] = useState<Folder | null>(null)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { exportFolder } = useZipExport()
 
   const createFileMutation = useCreateFileMutation({
     onSuccess: (file) => {
@@ -255,6 +257,7 @@ export function DashboardSidebar({
             onDelete={setDeleteItem}
             onTogglePublic={handleTogglePublic}
             onDownloadFile={handleDownloadFile}
+            onExportFolder={exportFolder}
             onSignOut={handleSignOut}
           />
         </SheetContent>
@@ -276,6 +279,7 @@ export function DashboardSidebar({
           onDelete={setDeleteItem}
           onTogglePublic={handleTogglePublic}
           onDownloadFile={handleDownloadFile}
+          onExportFolder={exportFolder}
           onSignOut={handleSignOut}
         />
       </aside>

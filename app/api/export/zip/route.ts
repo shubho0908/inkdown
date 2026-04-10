@@ -35,7 +35,24 @@ function ensureMarkdownExtension(name: string): string {
     : `${sanitized}.md`
 }
 
-export async function GET() {
+function getFolderDescendants(folderId: string, folderMap: Map<string, { id: string; parent_id: string | null }>): Set<string> {
+  const descendants = new Set<string>([folderId])
+  const queue = [folderId]
+
+  while (queue.length > 0) {
+    const current = queue.shift()!
+    for (const [, folder] of folderMap) {
+      if (folder.parent_id === current) {
+        descendants.add(folder.id)
+        queue.push(folder.id)
+      }
+    }
+  }
+
+  return descendants
+}
+
+export async function GET(request: Request) {
   const supabase = await createClient()
 
   const authState = await requireVerifiedUser(supabase)
@@ -44,6 +61,9 @@ export async function GET() {
   }
 
   try {
+    const { searchParams } = new URL(request.url)
+    const folderId = searchParams.get('folderId')
+
     const [{ data: files }, { data: folders }] = await Promise.all([
       supabase
         .from('files')
@@ -57,14 +77,60 @@ export async function GET() {
         .order('name'),
     ])
 
+    const folderMap = new Map((folders || []).map(f => [f.id, f]))
+
+    if (folderId) {
+      const folder = folderMap.get(folderId)
+      if (!folder) {
+        return NextResponse.json({ error: 'Folder not found' }, { status: 404 })
+      }
+
+      const descendants = getFolderDescendants(folderId, folderMap)
+      const folderFiles = (files || []).filter(f => f.folder_id && descendants.has(f.folder_id))
+      
+      if (folderFiles.length === 0) {
+        return NextResponse.json({ error: 'Folder is empty' }, { status: 400 })
+      }
+
+      const archive = archiver('zip', { zlib: { level: 6 } })
+      const passThrough = new PassThrough()
+      archive.pipe(passThrough)
+
+      const basePath = buildFolderPath(folderId, folderMap)
+
+      for (const file of folderFiles) {
+        const relativePath = buildFolderPath(file.folder_id, folderMap).slice(basePath.length + 1)
+        const fileName = ensureMarkdownExtension(file.name)
+        const fullPath = relativePath ? `${relativePath}/${fileName}` : fileName
+
+        archive.append(file.content || '# Empty Document\n', { 
+          name: fullPath,
+          date: file.updated_at ? new Date(file.updated_at) : new Date()
+        })
+      }
+
+      archive.finalize()
+
+      const timestamp = new Date().toISOString().split('T')[0]
+      const folderName = sanitizeFileName(folder.name)
+      const downloadName = `${folderName}-${timestamp}.zip`
+
+      return new Response(passThrough as unknown as ReadableStream, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/zip',
+          'Content-Disposition': `attachment; filename="${downloadName}"`,
+          'Cache-Control': 'no-cache',
+        },
+      })
+    }
+
     if ((!files || files.length === 0) && (!folders || folders.length === 0)) {
       return NextResponse.json(
         { error: 'No files to export' },
         { status: 400 }
       )
     }
-
-    const folderMap = new Map((folders || []).map(f => [f.id, f]))
 
     const archive = archiver('zip', {
       zlib: { level: 6 },
