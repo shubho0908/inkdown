@@ -5,6 +5,19 @@ import { NextResponse } from 'next/server'
 import archiver from 'archiver'
 import { PassThrough } from 'node:stream'
 
+function getSecurityHeaders(): Record<string, string> {
+  return {
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-XSS-Protection': '1; mode=block',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Content-Security-Policy': "default-src 'none';",
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+  }
+}
+
 function buildFolderPath(
   folderId: string | null, 
   folderMap: Map<string, { id: string; name: string; parent_id: string | null }>
@@ -52,7 +65,34 @@ function getFolderDescendants(folderId: string, folderMap: Map<string, { id: str
   return descendants
 }
 
+function validateClientToken(request: Request): boolean {
+  const clientToken = request.headers.get('x-client-token')
+  const requestedWith = request.headers.get('x-requested-with')
+  
+  if (!clientToken || clientToken.length !== 32) {
+    return false
+  }
+  
+  if (requestedWith?.toLowerCase() !== 'xmlhttprequest') {
+    return false
+  }
+  
+  return /^[a-f0-9]{32}$/.test(clientToken)
+}
+
+function createErrorResponse(message: string, status: number): NextResponse {
+  return NextResponse.json(
+    { error: message },
+    { status, headers: getSecurityHeaders() }
+  )
+}
+
 export async function GET(request: Request) {
+  if (!validateClientToken(request)) {
+    console.warn('[SECURITY] Invalid client token on export endpoint')
+    return createErrorResponse('Unauthorized', 401)
+  }
+
   const supabase = await createClient()
 
   const authState = await requireVerifiedUser(supabase)
@@ -82,14 +122,14 @@ export async function GET(request: Request) {
     if (folderId) {
       const folder = folderMap.get(folderId)
       if (!folder) {
-        return NextResponse.json({ error: 'Folder not found' }, { status: 404 })
+        return createErrorResponse('Folder not found', 404)
       }
 
       const descendants = getFolderDescendants(folderId, folderMap)
       const folderFiles = (files || []).filter(f => f.folder_id && descendants.has(f.folder_id))
       
       if (folderFiles.length === 0) {
-        return NextResponse.json({ error: 'Folder is empty' }, { status: 400 })
+        return createErrorResponse('Folder is empty', 400)
       }
 
       const archive = archiver('zip', { zlib: { level: 6 } })
@@ -120,16 +160,13 @@ export async function GET(request: Request) {
         headers: {
           'Content-Type': 'application/zip',
           'Content-Disposition': `attachment; filename="${downloadName}"`,
-          'Cache-Control': 'no-cache',
+          ...getSecurityHeaders(),
         },
       })
     }
 
     if ((!files || files.length === 0) && (!folders || folders.length === 0)) {
-      return NextResponse.json(
-        { error: 'No files to export' },
-        { status: 400 }
-      )
+      return createErrorResponse('No files to export', 400)
     }
 
     const archive = archiver('zip', {
@@ -181,15 +218,18 @@ export async function GET(request: Request) {
       headers: {
         'Content-Type': 'application/zip',
         'Content-Disposition': `attachment; filename="${downloadName}"`,
-        'Cache-Control': 'no-cache',
+        ...getSecurityHeaders(),
       },
     })
 
   } catch (error) {
     console.error('Zip export failed:', error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Export failed' },
-      { status: 500 }
+    return createErrorResponse(
+      error instanceof Error ? error.message : 'Export failed',
+      500
     )
   }
 }
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
