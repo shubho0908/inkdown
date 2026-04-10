@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { FilePlus, FolderPlus, LogOut, X } from 'lucide-react'
+import { ZipExportButton } from '@/components/zip-export-button'
 import { FileTree } from '@/components/file-tree'
 import { InkdownLogo } from '@/components/inkdown-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -67,6 +68,9 @@ export function DashboardSidebarContent({
           )}
           <ThemeToggle />
         </div>
+      </div>
+      <div className="border-b px-4 py-2">
+        <ZipExportButton className="w-full" />
       </div>
 
       <div className="grid gap-2 border-b px-4 py-3 sm:grid-cols-2 md:grid-cols-1 xl:grid-cols-2">
