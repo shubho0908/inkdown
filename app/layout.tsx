@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from 'next'
 import { Outfit, Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import Script from 'next/script'
 import { ThemeProvider } from '@/components/theme-provider'
-import { QueryProvider } from '@/components/query-provider'
 import { Toaster } from '@/components/ui/sonner'
 import { createSocialImageSet } from '@/lib/social-metadata'
 import { getSiteUrlObject } from '@/lib/site-url'
+import { themeBootstrapScript } from '@/lib/theme-bootstrap'
 import 'katex/dist/katex.min.css'
 import './globals.css'
 
@@ -75,22 +76,6 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
-const themeBootstrapScript = `
-(() => {
-  const storageKey = 'inkdown-theme';
-  const storedTheme = window.localStorage.getItem(storageKey);
-  const theme = storedTheme === 'light' || storedTheme === 'dark' || storedTheme === 'system'
-    ? storedTheme
-    : 'system';
-  const resolvedTheme = theme === 'system'
-    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-    : theme;
-
-  document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
-  document.documentElement.style.colorScheme = resolvedTheme;
-})();
-`
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -99,15 +84,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <body className={`${inter.variable} ${outfit.variable} font-sans antialiased selection:bg-primary/20`}>
-        <script
-          dangerouslySetInnerHTML={{ __html: themeBootstrapScript }}
-        />
-        <QueryProvider>
-          <ThemeProvider>
-            {children}
-            <Toaster />
-          </ThemeProvider>
-        </QueryProvider>
+        <Script id="theme-bootstrap" strategy="beforeInteractive">
+          {themeBootstrapScript}
+        </Script>
+        <ThemeProvider>
+          {children}
+          <Toaster />
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

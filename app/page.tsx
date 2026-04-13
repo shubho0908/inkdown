@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { InkdownLogo } from '@/components/inkdown-logo'
+import { JsonLd } from '@/components/json-ld'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { getSiteUrl } from '@/lib/site-url'
 import Link from 'next/link'
@@ -43,10 +44,7 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-svh flex-col">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
+      <JsonLd id="home-structured-data" data={structuredData} />
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <InkdownLogo size="md" />
@@ -84,5 +82,3 @@ export default function HomePage() {
     </div>
   )
 }
-
-

@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react'
 import { SharedFolderViewer } from '@/components/shared-folder-viewer'
 import { Button } from '@/components/ui/button'
 import { InkdownLogo } from '@/components/inkdown-logo'
+import { JsonLd } from '@/components/json-ld'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { getPublicFolderBySlug, getPublicFolderFileById, getPublicFolderTreeBySlug } from '@/lib/public-folders'
 import { createSocialImageSet } from '@/lib/social-metadata'
@@ -121,10 +122,7 @@ export default async function SharedFolderPage({
 
   return (
     <div className="min-h-svh bg-background">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
+      <JsonLd id="public-folder-structured-data" data={structuredData} />
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
           <Link href="/">

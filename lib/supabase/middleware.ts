@@ -1,5 +1,10 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import {
+  clearSupabaseAuthCookies,
+  getRecoverableSessionErrorCode,
+  hasSupabaseAuthCookies,
+} from '@/lib/supabase/session-recovery'
 
 export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname
@@ -43,7 +48,23 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  await supabase.auth.getUser()
+  let authError: unknown = null
+
+  try {
+    const { error } = await supabase.auth.getUser()
+    authError = error
+  } catch (error) {
+    authError = error
+  }
+
+  const recoverableSessionErrorCode = getRecoverableSessionErrorCode(authError)
+
+  if (recoverableSessionErrorCode && hasSupabaseAuthCookies(request)) {
+    console.warn(
+      `[AUTH] Clearing stale Supabase auth cookies after ${recoverableSessionErrorCode}`,
+    )
+    clearSupabaseAuthCookies(request, supabaseResponse)
+  }
 
   return supabaseResponse
 }
