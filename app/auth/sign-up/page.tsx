@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { AuthShell } from '@/components/auth/auth-shell'
+import { fetchJson, ApiError } from '@/lib/api'
 import { getAuthRedirectUrl } from '@/lib/site-url'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -18,7 +19,7 @@ type SignupError = {
 
 async function checkEmailExists(email: string): Promise<{ exists: boolean; error?: SignupError }> {
   try {
-    const response = await fetch('/api/auth/check-email', {
+    const data = await fetchJson<{ exists: boolean }>('/api/auth/check-email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -26,8 +27,21 @@ async function checkEmailExists(email: string): Promise<{ exists: boolean; error
       body: JSON.stringify({ email: email.toLowerCase().trim() }),
     })
 
-    if (!response.ok) {
-      if (response.status === 429) {
+    if (typeof data.exists !== 'boolean') {
+      return {
+        exists: false,
+        error: {
+          type: 'server',
+          message: 'Unexpected server response. Please try again.',
+          action: 'retry',
+        },
+      }
+    }
+
+    return { exists: data.exists }
+  } catch (error) {
+    if (error instanceof ApiError) {
+      if (error.status === 429) {
         return {
           exists: false,
           error: {
@@ -38,7 +52,7 @@ async function checkEmailExists(email: string): Promise<{ exists: boolean; error
         }
       }
 
-      if (response.status >= 500) {
+      if (error.status >= 500) {
         return {
           exists: false,
           error: {
@@ -53,27 +67,12 @@ async function checkEmailExists(email: string): Promise<{ exists: boolean; error
         exists: false,
         error: {
           type: 'network',
-          message: 'Unable to verify email. Please try again.',
+          message: error.message || 'Unable to verify email. Please try again.',
           action: 'retry',
         },
       }
     }
 
-    const data = await response.json()
-    
-    if (typeof data.exists !== 'boolean') {
-      return {
-        exists: false,
-        error: {
-          type: 'server',
-          message: 'Unexpected server response. Please try again.',
-          action: 'retry',
-        },
-      }
-    }
-
-    return { exists: data.exists }
-  } catch {
     return {
       exists: false,
       error: {

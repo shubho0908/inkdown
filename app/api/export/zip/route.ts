@@ -65,21 +65,6 @@ function getFolderDescendants(folderId: string, folderMap: Map<string, { id: str
   return descendants
 }
 
-function validateClientToken(request: Request): boolean {
-  const clientToken = request.headers.get('x-client-token')
-  const requestedWith = request.headers.get('x-requested-with')
-  
-  if (!clientToken || clientToken.length !== 32) {
-    return false
-  }
-  
-  if (requestedWith?.toLowerCase() !== 'xmlhttprequest') {
-    return false
-  }
-  
-  return /^[a-f0-9]{32}$/.test(clientToken)
-}
-
 function createErrorResponse(message: string, status: number): NextResponse {
   return NextResponse.json(
     { error: message },
@@ -88,11 +73,6 @@ function createErrorResponse(message: string, status: number): NextResponse {
 }
 
 export async function GET(request: Request) {
-  if (!validateClientToken(request)) {
-    console.warn('[SECURITY] Invalid client token on export endpoint')
-    return createErrorResponse('Unauthorized', 401)
-  }
-
   const supabase = await createClient()
 
   const authState = await requireVerifiedUser(supabase)

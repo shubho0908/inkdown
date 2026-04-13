@@ -87,77 +87,32 @@ function getSecurityHeaders(): Record<string, string> {
   }
 }
 
-function validateOrigin(request: NextRequest): boolean {
+function isSafeMethod(method: string): boolean {
+  return method === 'GET' || method === 'HEAD' || method === 'OPTIONS'
+}
+
+function isAllowedOrigin(url: URL, request: NextRequest): boolean {
+  if (url.origin === request.nextUrl.origin) {
+    return true
+  }
+
+  return ALLOWED_ORIGINS.includes(url.origin)
+}
+
+function validateMutationOrigin(request: NextRequest): boolean {
   const origin = request.headers.get('origin')
   const referer = request.headers.get('referer')
-  
-  if (!origin && !referer) {
-    return !isApiPath(request.nextUrl.pathname)
+  const source = origin || referer
+
+  if (!source) {
+    return false
   }
-  
-  const checkUrl = origin || referer
-  if (!checkUrl) return false
-  
+
   try {
-    const url = new URL(checkUrl)
-    const hostname = url.hostname
-    
-    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1'
-    const isAllowedOrigin = ALLOWED_ORIGINS.some(allowed => 
-      checkUrl === allowed || checkUrl.startsWith(allowed)
-    )
-    const isTrustedDomain = hostname.endsWith('inkdown.app') || 
-                            hostname.endsWith('vercel.app') ||
-                            hostname.endsWith('inkdown.vercel.app')
-    
-    return isLocalhost || isAllowedOrigin || isTrustedDomain
+    return isAllowedOrigin(new URL(source), request)
   } catch {
     return false
   }
-}
-
-function validateUserAgent(request: NextRequest): boolean {
-  const userAgent = request.headers.get('user-agent') || ''
-  
-  if (!userAgent && isApiPath(request.nextUrl.pathname)) {
-    return false
-  }
-  
-  const blockedPatterns = [
-    /curl\/\d/i,
-    /wget\/\d/i,
-    /python-requests\//i,
-    /axios\//i,
-    /node-fetch/i,
-    /postman/i,
-    /insomnia/i,
-    /httpie/i,
-    /scrapy/i,
-    /bot\//i,
-    /crawler/i,
-    /spider/i,
-    /scan/i,
-    /masscan/i,
-    /nmap/i,
-    /nikto/i,
-  ]
-  
-  return !blockedPatterns.some(pattern => pattern.test(userAgent))
-}
-
-function validateClientToken(request: NextRequest): boolean {
-  const clientToken = request.headers.get('x-client-token')
-  const requestedWith = request.headers.get('x-requested-with')
-  
-  if (!clientToken || clientToken.length !== 32) {
-    return false
-  }
-  
-  if (requestedWith?.toLowerCase() !== 'xmlhttprequest') {
-    return false
-  }
-  
-  return /^[a-f0-9]{32}$/.test(clientToken)
 }
 
 function getClientIdentifier(request: NextRequest): string {
@@ -177,51 +132,47 @@ export async function proxy(request: NextRequest) {
   }
   
   if (request.method === 'OPTIONS') {
+    const origin = request.headers.get('origin')
+    const allowOrigin = (() => {
+      if (!origin) {
+        return request.nextUrl.origin
+      }
+
+      try {
+        return isAllowedOrigin(new URL(origin), request)
+          ? origin
+          : 'null'
+      } catch {
+        return 'null'
+      }
+    })()
+
     return new NextResponse(null, {
       status: 204,
       headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Token, X-Requested-With',
+        'Access-Control-Allow-Origin': allowOrigin,
+        'Access-Control-Allow-Methods': 'GET, HEAD, POST, PATCH, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Access-Control-Max-Age': '86400',
+        Vary: 'Origin',
       },
     })
   }
   
   if (isApiPath(pathname)) {
-    if (!validateOrigin(request)) {
-      console.warn(`[SECURITY] API request from invalid origin: ${pathname}`)
+    // Keep internal API contracts browser-native. Route handlers own auth/authorization,
+    // while the proxy only applies lightweight edge checks that do not require custom headers.
+    if (!isSafeMethod(request.method) && !validateMutationOrigin(request)) {
+      console.warn(`[SECURITY] API mutation from invalid origin: ${pathname}`)
       return new NextResponse(
         JSON.stringify({ error: 'Invalid origin' }),
-        { 
+        {
           status: 403,
-          headers: { 'Content-Type': 'application/json' }
-        }
+          headers: { 'Content-Type': 'application/json' },
+        },
       )
     }
-    
-    if (!validateUserAgent(request)) {
-      console.warn(`[SECURITY] API request with suspicious user agent: ${pathname}`)
-      return new NextResponse(
-        JSON.stringify({ error: 'Invalid user agent' }),
-        { 
-          status: 403,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      )
-    }
-    
-    if (!validateClientToken(request)) {
-      console.warn(`[SECURITY] API request with invalid client token: ${pathname}`)
-      return new NextResponse(
-        JSON.stringify({ error: 'Invalid client token' }),
-        { 
-          status: 403,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      )
-    }
-    
+
     if (isApiRateLimited(pathname)) {
       const clientId = getClientIdentifier(request)
       const rateLimit = checkGlobalRateLimit(clientId)
@@ -250,9 +201,16 @@ export async function proxy(request: NextRequest) {
   })
   
   const origin = request.headers.get('origin')
-  if (origin && ALLOWED_ORIGINS.includes(origin)) {
-    response.headers.set('Access-Control-Allow-Origin', origin)
-    response.headers.set('Access-Control-Allow-Credentials', 'true')
+  if (origin) {
+    try {
+      if (isAllowedOrigin(new URL(origin), request)) {
+        response.headers.set('Access-Control-Allow-Origin', origin)
+        response.headers.set('Access-Control-Allow-Credentials', 'true')
+        response.headers.set('Vary', 'Origin')
+      }
+    } catch {
+      // Ignore malformed origins.
+    }
   }
   
   return response

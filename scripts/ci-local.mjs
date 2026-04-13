@@ -7,9 +7,14 @@ const steps = [
     args: ['lint'],
   },
   {
+    name: 'API guardrails',
+    command: 'node',
+    args: ['scripts/check-api-guardrails.mjs'],
+  },
+  {
     name: 'Type check',
     command: 'pnpm',
-    args: ['exec', 'tsc', '--noEmit'],
+    args: ['typecheck'],
   },
   {
     name: 'Build',
