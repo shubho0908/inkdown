@@ -1,6 +1,7 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
+import { ensureSessionPersistence } from '@/lib/supabase/persistence'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -230,7 +231,8 @@ export default function SignUpPage() {
         if (data.session === null) {
           router.push(`/auth/sign-up-success?email=${encodeURIComponent(email)}`)
         } else {
-          router.push('/workspace')
+          await ensureSessionPersistence(supabase)
+          window.location.replace('/workspace')
         }
       } else {
         setError({

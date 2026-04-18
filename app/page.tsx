@@ -2,10 +2,16 @@ import { Button } from '@/components/ui/button'
 import { InkdownLogo } from '@/components/inkdown-logo'
 import { JsonLd } from '@/components/json-ld'
 import { ThemeToggle } from '@/components/theme-toggle'
+import {
+  getEmailVerificationRedirectPath,
+  requireVerifiedUser,
+} from '@/lib/auth'
 import { getSiteUrl } from '@/lib/site-url'
+import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { LandingPageContent } from '@/components/landing-page-content'
+import { redirect } from 'next/navigation'
 
 export const metadata: Metadata = {
   alternates: {
@@ -13,7 +19,18 @@ export const metadata: Metadata = {
   },
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient()
+  const authState = await requireVerifiedUser(supabase)
+
+  if (authState.kind === 'authenticated') {
+    redirect('/workspace')
+  }
+
+  if (authState.kind === 'unverified') {
+    redirect(getEmailVerificationRedirectPath(authState.user.email))
+  }
+
   const siteUrl = getSiteUrl()
   const structuredData = {
     '@context': 'https://schema.org',

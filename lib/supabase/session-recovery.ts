@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
+import { AUTH_COOKIE_NAME } from '@/lib/supabase/config'
 
 const RECOVERABLE_SESSION_ERROR_CODES = new Set([
   'bad_jwt',
@@ -27,7 +28,12 @@ export function getRecoverableSessionErrorCode(error: unknown): string | null {
 }
 
 export function hasSupabaseAuthCookies(request: NextRequest): boolean {
-  return request.cookies.getAll().some(({ name }) => name.startsWith('sb-'))
+  return request.cookies
+    .getAll()
+    .some(
+      ({ name }) =>
+        name.startsWith('sb-') || name.startsWith(AUTH_COOKIE_NAME),
+    )
 }
 
 export function clearSupabaseAuthCookies(
@@ -35,7 +41,7 @@ export function clearSupabaseAuthCookies(
   response: NextResponse,
 ): void {
   for (const { name } of request.cookies.getAll()) {
-    if (!name.startsWith('sb-')) {
+    if (!name.startsWith('sb-') && !name.startsWith(AUTH_COOKIE_NAME)) {
       continue
     }
 

@@ -5,6 +5,17 @@ import {
   getRecoverableSessionErrorCode,
   hasSupabaseAuthCookies,
 } from '@/lib/supabase/session-recovery'
+import { supabaseCookieOptions } from '@/lib/supabase/config'
+
+type SessionSnapshot = Awaited<
+  ReturnType<ReturnType<typeof createServerClient>['auth']['getSession']>
+>
+
+async function getSessionSnapshot(
+  supabase: ReturnType<typeof createServerClient>,
+): Promise<SessionSnapshot> {
+  return supabase.auth.getSession()
+}
 
 export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname
@@ -22,6 +33,7 @@ export async function updateSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: supabaseCookieOptions,
       cookies: {
         getAll() {
           return request.cookies.getAll()
@@ -49,17 +61,33 @@ export async function updateSession(request: NextRequest) {
   }
 
   let authError: unknown = null
+  let hasSession = false
 
   try {
-    const { error } = await supabase.auth.getUser()
-    authError = error
+    const {
+      data: { session },
+      error: sessionError,
+    } = await getSessionSnapshot(supabase)
+
+    hasSession = Boolean(session)
+
+    if (sessionError) {
+      authError = sessionError
+    } else if (session) {
+      const { error } = await supabase.auth.getUser()
+      authError = error
+    }
   } catch (error) {
     authError = error
   }
 
   const recoverableSessionErrorCode = getRecoverableSessionErrorCode(authError)
 
-  if (recoverableSessionErrorCode && hasSupabaseAuthCookies(request)) {
+  if (
+    recoverableSessionErrorCode &&
+    !hasSession &&
+    hasSupabaseAuthCookies(request)
+  ) {
     console.warn(
       `[AUTH] Clearing stale Supabase auth cookies after ${recoverableSessionErrorCode}`,
     )

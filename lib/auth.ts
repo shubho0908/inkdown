@@ -7,6 +7,14 @@ type AuthUser = {
 
 type AnySupabaseClient = {
   auth: {
+    getSession: () => Promise<{
+      data: {
+        session: {
+          user: AuthUser | null
+        } | null
+      }
+      error: unknown
+    }>
     getUser: () => Promise<{
       data: { user: AuthUser | null }
       error: unknown
@@ -72,6 +80,15 @@ export async function requireVerifiedUser(
   supabase: unknown,
 ): Promise<VerifiedUserResult> {
   const client = supabase as AnySupabaseClient
+  const {
+    data: { session },
+    error: sessionError,
+  } = await client.auth.getSession()
+
+  if (sessionError || !session?.user) {
+    return { kind: 'unauthenticated' }
+  }
+
   const {
     data: { user },
     error,

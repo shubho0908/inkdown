@@ -6,12 +6,12 @@ import {
   isUserEmailVerified,
 } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/client'
+import { ensureSessionPersistence } from '@/lib/supabase/persistence'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { AuthShell } from '@/components/auth/auth-shell'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 async function isProfileEmailVerified(
@@ -36,7 +36,6 @@ export function LoginForm() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -52,7 +51,7 @@ export function LoginForm() {
 
       if (error) {
         if (isEmailVerificationError(error)) {
-          router.replace(getEmailVerificationRedirectPath(email))
+          window.location.replace(getEmailVerificationRedirectPath(email))
           return
         }
 
@@ -61,7 +60,7 @@ export function LoginForm() {
 
       if (!isUserEmailVerified(data.user)) {
         await supabase.auth.signOut()
-        router.replace(
+        window.location.replace(
           getEmailVerificationRedirectPath(data.user?.email ?? email),
         )
         return
@@ -74,13 +73,14 @@ export function LoginForm() {
 
       if (!hasVerifiedProfile) {
         await supabase.auth.signOut()
-        router.replace(
+        window.location.replace(
           getEmailVerificationRedirectPath(data.user?.email ?? email),
         )
         return
       }
 
-      router.replace('/workspace')
+      await ensureSessionPersistence(supabase)
+      window.location.replace('/workspace')
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An error occurred')
     } finally {
