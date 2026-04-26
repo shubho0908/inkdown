@@ -8,9 +8,10 @@ import { Label } from '@/components/ui/label'
 import { AuthShell } from '@/components/auth/auth-shell'
 import { fetchJson, ApiError } from '@/lib/api'
 import { getAuthRedirectUrl } from '@/lib/site-url'
+import { validatePassword, getPasswordRequirements } from '@/lib/auth/password-validation'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 
 type SignupError = {
   type: 'email_exists' | 'validation' | 'network' | 'server' | 'unknown'
@@ -85,17 +86,6 @@ async function checkEmailExists(email: string): Promise<{ exists: boolean; error
   }
 }
 
-function validatePassword(password: string): { valid: boolean; error?: string } {
-  if (password.length < 6) {
-    return { valid: false, error: 'Password must be at least 6 characters' }
-  }
-
-  if (password.length > 128) {
-    return { valid: false, error: 'Password must be less than 128 characters' }
-  }
-
-  return { valid: true }
-}
 
 function validateEmail(email: string): { valid: boolean; error?: string } {
   const normalizedEmail = email.toLowerCase().trim()
@@ -129,6 +119,23 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [emailChecked, setEmailChecked] = useState(false)
   const router = useRouter()
+  const passwordValidation = useMemo(() => {
+    if (password.length === 0) {
+      return {
+        strength: null as 'weak' | 'fair' | 'good' | 'strong' | null,
+        errors: [] as string[],
+      }
+    }
+
+    const result = validatePassword(password, email)
+
+    return {
+      strength: result.valid ? result.strength : null,
+      errors: result.valid ? [] : [result.error],
+    }
+  }, [password, email])
+  const passwordStrength = passwordValidation.strength
+  const validationErrors = passwordValidation.errors
 
   const handleSignUp = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
@@ -158,11 +165,11 @@ export default function SignUpPage() {
       return
     }
 
-    const passwordValidation = validatePassword(password)
+    const passwordValidation = validatePassword(password, email)
     if (!passwordValidation.valid) {
       setError({
         type: 'validation',
-        message: passwordValidation.error!,
+        message: passwordValidation.error,
       })
       setIsLoading(false)
       return
@@ -253,6 +260,26 @@ export default function SignUpPage() {
     }
   }, [email, password, repeatPassword, router])
 
+  const getStrengthColor = () => {
+    switch (passwordStrength) {
+      case 'weak': return 'bg-red-500'
+      case 'fair': return 'bg-orange-500'
+      case 'good': return 'bg-yellow-500'
+      case 'strong': return 'bg-green-500'
+      default: return 'bg-gray-200'
+    }
+  }
+
+  const getStrengthText = () => {
+    switch (passwordStrength) {
+      case 'weak': return 'Weak'
+      case 'fair': return 'Fair'
+      case 'good': return 'Good'
+      case 'strong': return 'Strong'
+      default: return ''
+    }
+  }
+
   const renderError = () => {
     if (!error) return null
 
@@ -303,7 +330,37 @@ export default function SignUpPage() {
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
               autoComplete="new-password"
+              minLength={12}
             />
+            {password && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 flex-1 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-300 ${getStrengthColor()}`}
+                      style={{ width: passwordStrength ? '100%' : '0%' }}
+                    />
+                  </div>
+                  {passwordStrength && (
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {getStrengthText()}
+                    </span>
+                  )}
+                </div>
+                {validationErrors.length > 0 && (
+                  <ul className="text-xs text-destructive space-y-1">
+                    {validationErrors.map((err, idx) => (
+                      <li key={idx}>• {err}</li>
+                    ))}
+                  </ul>
+                )}
+                {password.length > 0 && password.length < 12 && (
+                  <p className="text-xs text-muted-foreground">
+                    Minimum 12 characters required
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="repeat-password">Confirm Password</Label>
@@ -320,13 +377,25 @@ export default function SignUpPage() {
           
           {renderError()}
           
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isLoading || !passwordStrength || passwordStrength === 'weak'}
+          >
             {isLoading ? (
               emailChecked ? 'Creating account...' : 'Checking...'
             ) : (
               'Sign up'
             )}
           </Button>
+        </div>
+        <div className="mt-4 space-y-2">
+          <p className="text-xs text-muted-foreground font-medium">Password requirements:</p>
+          <ul className="text-xs text-muted-foreground space-y-1 pl-4">
+            {getPasswordRequirements().map((req, idx) => (
+              <li key={idx}>• {req}</li>
+            ))}
+          </ul>
         </div>
         <div className="mt-4 text-center text-sm text-muted-foreground">
           Already have an account?{' '}
