@@ -19,6 +19,7 @@ Private markdown workspace with folders, sharing, and Supabase auth.
 - Public folder sharing with recursive browsing
 - Email sign-up and sign-in
 - Email verification enforcement
+- Forgot password with enterprise-grade security (rate limiting, CSRF protection, email enumeration prevention, strong password validation)
 - Light and dark theme support
 
 ## Requirements
