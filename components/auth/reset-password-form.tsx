@@ -7,7 +7,7 @@ import { AuthShell } from '@/components/auth/auth-shell'
 import { createClient } from '@/lib/supabase/client'
 import { ensureSessionPersistence } from '@/lib/supabase/persistence'
 import { isUserEmailVerified } from '@/lib/auth'
-import { validatePassword, getPasswordRequirements } from '@/lib/auth/password-validation'
+import { validatePassword, checkPasswordRequirements } from '@/lib/auth/password-validation'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 
@@ -95,11 +95,13 @@ export function ResetPasswordForm({
   const [isLoading, setIsLoading] = useState(false)
   const [passwordStrength, setPasswordStrength] = useState<'weak' | 'fair' | 'good' | 'strong' | null>(null)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
+  const [passwordRequirements, setPasswordRequirements] = useState<ReturnType<typeof checkPasswordRequirements>>([])
   const [isValidatingToken, setIsValidatingToken] = useState(true)
   const [tokenValid, setTokenValid] = useState(false)
   const [resetIssue, setResetIssue] = useState<ResetPasswordIssue | null>(
     initialIssue,
   )
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false)
 
   useEffect(() => {
     if (initialError || initialIssue) {
@@ -196,10 +198,13 @@ export function ResetPasswordForm({
     if (password.length === 0) {
       setPasswordStrength(null)
       setValidationErrors([])
+      setPasswordRequirements([])
       return
     }
 
     const result = validatePassword(password)
+    const requirements = checkPasswordRequirements(password)
+    setPasswordRequirements(requirements)
     if (result.valid) {
       setPasswordStrength(result.strength)
       setValidationErrors([])
@@ -322,26 +327,25 @@ export function ResetPasswordForm({
               type="password"
               required
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value)
+                setShowPasswordRequirements(e.target.value.length > 0)
+              }}
+              onFocus={() => password.length > 0 && setShowPasswordRequirements(true)}
+              onBlur={() => !error && setShowPasswordRequirements(false)}
               disabled={isLoading}
               autoComplete="new-password"
               minLength={12}
             />
             {password && (
               <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 flex-1 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full transition-all duration-300 ${getStrengthColor()}`}
-                      style={{ width: passwordStrength ? '100%' : '0%' }}
-                    />
-                  </div>
-                  {passwordStrength && (
+                {passwordStrength && (
+                  <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-muted-foreground">
                       {getStrengthText()}
                     </span>
-                  )}
-                </div>
+                  </div>
+                )}
                 {validationErrors.length > 0 && (
                   <ul className="text-xs text-destructive space-y-1">
                     {validationErrors.map((err, idx) => (
@@ -381,13 +385,24 @@ export function ResetPasswordForm({
             {isLoading ? 'Updating...' : 'Update password'}
           </Button>
         </div>
-        <div className="mt-4 space-y-2">
-          <p className="text-xs text-muted-foreground font-medium">Password requirements:</p>
-          <ul className="text-xs text-muted-foreground space-y-1 pl-4">
-            {getPasswordRequirements().map((req, idx) => (
-              <li key={idx}>• {req}</li>
-            ))}
-          </ul>
+        <div className="mt-4">
+          {(showPasswordRequirements || error) && password.length > 0 && (
+            <div className="space-y-1">
+              {passwordRequirements.filter(req => !req.met).map((req, idx) => (
+                <div key={idx} className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <svg className="w-3 h-3 text-destructive" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                  {req.label}
+                </div>
+              ))}
+              {passwordRequirements.filter(req => req.met).length > 0 && passwordRequirements.filter(req => !req.met).length > 0 && (
+                <div className="text-xs text-muted-foreground">
+                  {passwordRequirements.filter(req => req.met).length} requirement{passwordRequirements.filter(req => req.met).length > 1 ? 's' : ''} met
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <div className="mt-4 text-center text-sm text-muted-foreground">
           Remember your password?{' '}

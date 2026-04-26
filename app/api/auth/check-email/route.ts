@@ -1,8 +1,67 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
+const RATE_LIMIT_WINDOW = 60 * 1000
+const RATE_LIMIT_MAX_REQUESTS = 5
+
+function getRateLimitKey(identifier: string): string {
+  return `check-email:${identifier}`
+}
+
+function checkRateLimit(identifier: string): { allowed: boolean; resetTime?: number } {
+  const key = getRateLimitKey(identifier)
+  const now = Date.now()
+  const record = rateLimitMap.get(key)
+
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(key, {
+      count: 1,
+      resetTime: now + RATE_LIMIT_WINDOW,
+    })
+    return { allowed: true }
+  }
+
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return { allowed: false, resetTime: record.resetTime }
+  }
+
+  record.count++
+  return { allowed: true }
+}
+
+function getClientIdentifier(request: Request): string {
+  const headers = request.headers
+  const forwardedFor = headers.get('x-forwarded-for')
+  const realIp = headers.get('x-real-ip')
+  const cfConnectingIp = headers.get('cf-connecting-ip')
+
+  if (cfConnectingIp) return cfConnectingIp
+  if (forwardedFor) return forwardedFor.split(',')[0].trim()
+  if (realIp) return realIp
+
+  return 'unknown'
+}
+
 export async function POST(request: Request) {
   try {
+    const clientIdentifier = getClientIdentifier(request)
+    const rateLimitResult = checkRateLimit(clientIdentifier)
+
+    if (!rateLimitResult.allowed) {
+      const resetTime = rateLimitResult.resetTime!
+      const retryAfter = Math.ceil((resetTime - Date.now()) / 1000)
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': retryAfter.toString(),
+          },
+        },
+      )
+    }
+
     let email: string
     try {
       const body = await request.json()

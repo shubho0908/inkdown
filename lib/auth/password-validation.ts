@@ -80,9 +80,6 @@ export const passwordRequirementsSchema = z.object({
     .refine(val => /[0-9]/.test(val), 'Password must contain at least one number')
     .refine(val => /[^a-zA-Z0-9]/.test(val), 'Password must contain at least one special character (!@#$%^&* etc.)')
     .refine(val => !isCommonPassword(val), 'This password is too common. Please choose a more unique password.')
-    .refine(val => !hasSequentialPattern(val), 'Password must not contain sequential patterns (e.g., "abc", "123")')
-    .refine(val => !hasRepeatedCharacters(val), 'Password must not contain repeated characters (e.g., "aaa", "111")')
-    .refine(val => !hasKeyboardPattern(val), 'Password must not contain keyboard patterns (e.g., "qwerty")')
     .refine(val => !passwordMatchesEmail(val), 'Password must not be similar to your email address'),
   email: z.string().email().optional(),
 })
@@ -237,6 +234,11 @@ export function validatePassword(
   }
 }
 
+export type PasswordRequirement = {
+  label: string
+  met: boolean
+}
+
 export function getPasswordRequirements(): string[] {
   return [
     'At least 12 characters long',
@@ -246,5 +248,41 @@ export function getPasswordRequirements(): string[] {
     'Not a common password',
     'Not similar to your email',
     'No sequential patterns (e.g., "abc", "123")',
+  ]
+}
+
+export function checkPasswordRequirements(
+  password: string,
+  email?: string,
+): PasswordRequirement[] {
+  return [
+    {
+      label: 'At least 12 characters',
+      met: password.length >= 12,
+    },
+    {
+      label: 'Contains uppercase letter',
+      met: /[A-Z]/.test(password),
+    },
+    {
+      label: 'Contains lowercase letter',
+      met: /[a-z]/.test(password),
+    },
+    {
+      label: 'Contains number',
+      met: /[0-9]/.test(password),
+    },
+    {
+      label: 'Contains special character',
+      met: /[^a-zA-Z0-9]/.test(password),
+    },
+    {
+      label: 'Not a common password',
+      met: !isCommonPassword(password),
+    },
+    {
+      label: 'Not similar to email',
+      met: !passwordMatchesEmail(password, email),
+    },
   ]
 }
