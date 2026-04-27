@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { FileText, FolderOpen, Share2 } from 'lucide-react'
 import { MarkdownPreview } from '@/components/markdown-preview'
 import { PublicFolderBrowser } from '@/components/public-folder-browser'
+import { SharedCopyButton } from '@/components/shared-copy-button'
 import { fetchJson } from '@/lib/api'
 import type { PublicFolderFileRecord } from '@/lib/public-folders'
 import type { TreeItem } from '@/lib/types'
@@ -18,6 +19,7 @@ interface SharedFolderViewerProps {
   treeItems: TreeItem[]
   initialFile: PublicFolderFileRecord | null
   fallbackFileId: string | null
+  ownerId: string | null
 }
 
 function buildSelectedFileUrl(fileId: string | null) {
@@ -40,6 +42,7 @@ export function SharedFolderViewer({
   treeItems,
   initialFile,
   fallbackFileId,
+  ownerId: _ownerId,
 }: SharedFolderViewerProps) {
   const [selectedFileId, setSelectedFileId] = useState<string | null>(
     initialFile?.id ?? null,
@@ -92,32 +95,38 @@ export function SharedFolderViewer({
 
   return (
     <main className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:gap-6 sm:px-6 sm:py-8 lg:grid lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] lg:items-start">
-      <aside className="min-w-0 rounded-2xl border bg-card p-3 shadow-sm sm:p-4 lg:sticky lg:top-20 lg:max-h-[calc(100svh-6rem)] lg:self-start lg:overflow-hidden">
-        <div className="border-b px-2 pb-4">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+      <aside className="min-w-0 rounded-2xl border bg-card shadow-sm lg:sticky lg:top-20 lg:max-h-[calc(100svh-6rem)] lg:self-start lg:overflow-hidden">
+        <div className="border-b p-4">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <FolderOpen aria-hidden="true" className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-center gap-2">
                 <h1
-                  className="min-w-0 max-w-full truncate text-base font-semibold leading-tight sm:text-lg"
+                  className="min-w-0 truncate text-base font-semibold leading-tight"
                   title={folderName}
                 >
                   {folderName}
                 </h1>
-                <Share2 aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
+                <Share2 aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-primary" />
               </div>
-              <p className="mt-1 text-xs tabular-nums text-muted-foreground sm:text-sm">
-                {filesCount} {filesCount === 1 ? 'file' : 'files'}
-                {' · '}
-                {subfolderCount} {subfolderCount === 1 ? 'subfolder' : 'subfolders'}
+              <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs tabular-nums text-muted-foreground">
+                <span>{filesCount} {filesCount === 1 ? 'file' : 'files'}</span>
+                <span aria-hidden="true">·</span>
+                <span>{subfolderCount} {subfolderCount === 1 ? 'subfolder' : 'subfolders'}</span>
               </p>
             </div>
           </div>
+          <SharedCopyButton
+            shareSlug={shareSlug}
+            itemName={folderName}
+            itemType="folder"
+            className="mt-3 h-9 w-full"
+          />
         </div>
 
-        <div className="min-w-0 pt-3 lg:max-h-[calc(100svh-13rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
+        <div className="min-w-0 p-3 lg:max-h-[calc(100svh-14rem)] lg:overflow-y-auto lg:overscroll-contain">
           <PublicFolderBrowser
             shareSlug={shareSlug}
             items={treeItems}

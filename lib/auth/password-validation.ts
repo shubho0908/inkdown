@@ -112,46 +112,6 @@ function calculateEntropy(password: string): number {
   return password.length * Math.log2(charsetSize || 1)
 }
 
-function hasSequentialPattern(password: string): boolean {
-  const sequences = [
-    'abc', 'bcd', 'cde', 'def', 'efg', 'fgh', 'ghi', 'hij', 'ijk', 'jkl',
-    'klm', 'lmn', 'mno', 'nop', 'opq', 'pqr', 'qrs', 'rst', 'stu', 'tuv',
-    'uvw', 'vwx', 'wxy', 'xyz',
-    '012', '123', '234', '345', '456', '567', '678', '789', '890',
-    'qwe', 'wer', 'ert', 'rty', 'tyu', 'yui', 'uio', 'iop',
-    'asd', 'sdf', 'dfg', 'fgh', 'ghj', 'hjk', 'jkl',
-    'zxc', 'xcv', 'cvb', 'vbn', 'bnm',
-  ]
-
-  const lowerPassword = password.toLowerCase()
-  for (const seq of sequences) {
-    if (lowerPassword.includes(seq)) {
-      return true
-    }
-  }
-  return false
-}
-
-function hasRepeatedCharacters(password: string): boolean {
-  return /(.)\1{2,}/.test(password)
-}
-
-function hasKeyboardPattern(password: string): boolean {
-  const patterns = [
-    'qwerty', 'asdfgh', 'zxcvbn', 'qwertyuiop', 'asdfghjkl', 'zxcvbnm',
-    '1qaz', '2wsx', '3edc', '4rfv', '5tgb', '6yhn', '7ujm', '8ik,',
-    '9ol.', '0p;/',
-  ]
-
-  const lowerPassword = password.toLowerCase()
-  for (const pattern of patterns) {
-    if (lowerPassword.includes(pattern)) {
-      return true
-    }
-  }
-  return false
-}
-
 function passwordMatchesEmail(password: string, email?: string): boolean {
   if (!email) return false
 

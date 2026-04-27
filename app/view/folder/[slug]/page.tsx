@@ -148,6 +148,7 @@ export default async function SharedFolderPage({
         treeItems={sharedFolder.treeItems}
         initialFile={selectedFile}
         fallbackFileId={fallbackFileId}
+        ownerId={sharedFolder.folder.user_id}
       />
     </div>
   )

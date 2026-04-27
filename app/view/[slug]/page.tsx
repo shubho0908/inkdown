@@ -2,6 +2,7 @@ import { MarkdownPreview } from '@/components/markdown-preview'
 import { Button } from '@/components/ui/button'
 import { InkdownLogo } from '@/components/inkdown-logo'
 import { JsonLd } from '@/components/json-ld'
+import { SharedCopyButton } from '@/components/shared-copy-button'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
@@ -125,10 +126,21 @@ export default async function ViewPage({ params }: ViewPageProps) {
       <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
         <article>
           <header className="mb-8 border-b pb-6">
-            <h1 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Last updated on {updatedAt}
-            </p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <h1 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Last updated on {updatedAt}
+                </p>
+              </div>
+              <SharedCopyButton
+                shareSlug={slug}
+                itemName={file.name}
+                itemType="file"
+                label="full"
+                className="w-full shrink-0 sm:w-auto"
+              />
+            </div>
           </header>
           <MarkdownPreview content={file.content} />
         </article>

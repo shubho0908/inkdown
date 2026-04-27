@@ -9,7 +9,7 @@ import { ensureSessionPersistence } from '@/lib/supabase/persistence'
 import { isUserEmailVerified } from '@/lib/auth'
 import { validatePassword, checkPasswordRequirements } from '@/lib/auth/password-validation'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 export type ResetPasswordIssue =
   | 'expired'
@@ -83,11 +83,15 @@ async function isProfileEmailVerified(
 type ResetPasswordFormProps = {
   initialError?: string | null
   initialIssue?: ResetPasswordIssue | null
+  recoveryCode?: string | null
+  recoveryTokenHash?: string | null
 }
 
 export function ResetPasswordForm({
   initialError = null,
   initialIssue = null,
+  recoveryCode = null,
+  recoveryTokenHash = null,
 }: ResetPasswordFormProps) {
   const [password, setPassword] = useState('')
   const [repeatPassword, setRepeatPassword] = useState('')
@@ -102,6 +106,7 @@ export function ResetPasswordForm({
     initialIssue,
   )
   const [showPasswordRequirements, setShowPasswordRequirements] = useState(false)
+  const hasProcessedRecoveryLink = useRef(false)
 
   useEffect(() => {
     if (initialError || initialIssue) {
@@ -112,25 +117,53 @@ export function ResetPasswordForm({
 
     const supabase = createClient()
 
-    supabase.auth.getUser()
-    .then(({ data, error }) => {
-      if (error || !data.user) {
-        setResetIssue('missing_session')
-        setError('No active password reset session found.')
+    async function validateResetSession() {
+      try {
+        if ((recoveryCode || recoveryTokenHash) && !hasProcessedRecoveryLink.current) {
+          hasProcessedRecoveryLink.current = true
+
+          const { error: recoveryError } = recoveryTokenHash
+            ? await supabase.auth.verifyOtp({
+                token_hash: recoveryTokenHash,
+                type: 'recovery',
+              })
+            : await supabase.auth.exchangeCodeForSession(recoveryCode!)
+
+          if (recoveryError) {
+            const message = recoveryError.message || 'Invalid or expired reset link.'
+            const normalizedMessage = message.toLowerCase()
+
+            setResetIssue(
+              normalizedMessage.includes('expired') ? 'expired' : 'invalid',
+            )
+            setError(message)
+            setTokenValid(false)
+            return
+          }
+
+          window.history.replaceState(null, '', '/auth/reset-password')
+        }
+
+        const { data, error } = await supabase.auth.getUser()
+
+        if (error || !data.user) {
+          setResetIssue('missing_session')
+          setError('No active password reset session found.')
+          setTokenValid(false)
+        } else {
+          setTokenValid(true)
+        }
+      } catch {
+        setResetIssue('validation_failed')
+        setError('Failed to validate reset link. Please try again.')
         setTokenValid(false)
-      } else {
-        setTokenValid(true)
+      } finally {
+        setIsValidatingToken(false)
       }
-    })
-    .catch(() => {
-      setResetIssue('validation_failed')
-      setError('Failed to validate reset link. Please try again.')
-      setTokenValid(false)
-    })
-    .finally(() => {
-      setIsValidatingToken(false)
-    })
-  }, [initialError, initialIssue])
+    }
+
+    void validateResetSession()
+  }, [initialError, initialIssue, recoveryCode, recoveryTokenHash])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -213,16 +246,6 @@ export function ResetPasswordForm({
       setValidationErrors([result.error])
     }
   }, [password])
-
-  const getStrengthColor = () => {
-    switch (passwordStrength) {
-      case 'weak': return 'bg-red-500'
-      case 'fair': return 'bg-orange-500'
-      case 'good': return 'bg-yellow-500'
-      case 'strong': return 'bg-green-500'
-      default: return 'bg-gray-200'
-    }
-  }
 
   const getStrengthText = () => {
     switch (passwordStrength) {

@@ -265,16 +265,6 @@ export default function SignUpPage() {
     }
   }, [email, password, repeatPassword, router])
 
-  const getStrengthColor = () => {
-    switch (passwordStrength) {
-      case 'weak': return 'bg-red-500'
-      case 'fair': return 'bg-orange-500'
-      case 'good': return 'bg-yellow-500'
-      case 'strong': return 'bg-green-500'
-      default: return 'bg-gray-200'
-    }
-  }
-
   const getStrengthText = () => {
     switch (passwordStrength) {
       case 'weak': return 'Weak'
