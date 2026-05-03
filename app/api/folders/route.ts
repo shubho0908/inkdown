@@ -1,5 +1,6 @@
 import { requireVerifiedUser } from '@/lib/auth'
 import { createAuthErrorResponse } from '@/lib/auth/server'
+import { formatFolderName } from '@/lib/folder-utils'
 import {
   collectPublicFolderShareSlugsForFolderCreate,
   listOwnedFolderShareState,
@@ -7,17 +8,6 @@ import {
 } from '@/lib/public-share-cache'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-
-/**
- * Convert kebab-case folder name to title case with spaces
- * Example: "hello-world-api" -> "Hello World Api"
- */
-function formatFolderName(name: string): string {
-  return name
-    .split('-')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ')
-}
 
 export async function GET() {
   const supabase = await createClient()
