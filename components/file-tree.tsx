@@ -11,7 +11,7 @@ interface FileTreeProps {
   items: TreeItem[]
   selectedId: string | null
   emptyState?: ReactNode
-  onImportFiles: (files: globalThis.File[], folderId: string | null) => void
+  onImportFiles: (files: globalThis.File[], folderId: string | null, items?: DataTransferItemList) => void
   onSelect: (item: TreeItem) => void
   onMove: (item: TreeItem, targetFolderId: string | null) => void
   onCreateFile: (folderId: string | null) => void
@@ -205,10 +205,11 @@ export function FileTree({
       event.stopPropagation()
       event.preventDefault()
       const files = getDroppedFiles(event)
+      const items = event.dataTransfer.items
 
       resetExternalDragState()
       if (files.length === 0) return
-      onImportFiles(files, null)
+      onImportFiles(files, null, items)
       return
     }
 
@@ -285,10 +286,11 @@ export function FileTree({
           if (!isTreeBackgroundDragEvent(event)) return
           event.preventDefault()
           const files = getDroppedFiles(event)
+          const items = event.dataTransfer.items
 
           resetExternalDragState()
           if (files.length === 0) return
-          onImportFiles(files, null)
+          onImportFiles(files, null, items)
           return
         }
 

@@ -21,6 +21,11 @@ import {
   splitMarkdownImportSelection,
   validateMarkdownImportSelection,
 } from '@/lib/markdown-import'
+import {
+  parseDroppedItems,
+  supportsWebkitGetAsEntry,
+} from '@/lib/folder-import'
+import { FileReadQueue } from '@/lib/upload-queue'
 
 interface CreateFileInput {
   folderId: string | null
@@ -39,6 +44,7 @@ interface UpdateFileInput {
 interface ImportMarkdownFilesInput {
   files: globalThis.File[]
   folderId: string | null
+  items?: DataTransferItemList
 }
 
 interface ImportMarkdownFilesResult {
@@ -145,7 +151,82 @@ export function useImportMarkdownFilesMutation(options?: ImportMarkdownFilesCall
     mutationFn: async ({
       files,
       folderId,
+      items,
     }: ImportMarkdownFilesInput): Promise<ImportMarkdownFilesResult> => {
+      // Check if we have folder structure
+      const hasFolders = items && supportsWebkitGetAsEntry()
+      
+      if (hasFolders) {
+        // Use webkitGetAsEntry for proper folder traversal
+        const { files: allFiles, folderPaths } = await parseDroppedItems(items!)
+        
+        // Filter markdown files
+        const markdownFiles = allFiles.filter(({ file }) =>
+          isMarkdownFileName(file.name) && file.size <= MARKDOWN_IMPORT_MAX_FILE_BYTES,
+        )
+        
+        if (markdownFiles.length === 0) {
+          throw new ApiError('No markdown files found in the dropped folder', 400)
+        }
+        
+        // Read file contents using queue with progress tracking
+        const fileReadQueue = new FileReadQueue({
+          concurrency: MARKDOWN_IMPORT_READ_CONCURRENCY,
+          maxQueueSize: 500, // Limit queue size to prevent memory issues
+          onProgress: (completed, total) => {
+            // Progress tracking for future UI integration
+            // Currently logs for debugging
+          },
+        })
+        
+        // Add all files to queue (queue manages concurrency internally)
+        const fileReadResults = await Promise.all(
+          markdownFiles.map(({ file }) => fileReadQueue.add({ file }))
+        )
+        
+        // Clean up queue to prevent memory leaks
+        fileReadQueue.reset()
+        
+        // Create a Map for O(1) file lookup instead of O(n*m) find
+        const fileContentMap = new Map<globalThis.File, string>()
+        for (const result of fileReadResults) {
+          fileContentMap.set(result.file, result.content)
+        }
+        
+        // Prepare folder structure
+        const folders = folderPaths.map((path) => {
+          const parts = path.split('/')
+          return {
+            name: parts[parts.length - 1],
+            relativePath: path,
+          }
+        })
+        
+        // Prepare files with relative paths from the parsed structure
+        const payloadFiles = markdownFiles.map(({ file, relativePath }) => ({
+          name: normalizeMarkdownImportFileName(file.name),
+          content: fileContentMap.get(file) || '',
+          relativePath,
+        }))
+        
+        // Import with folder structure
+        const response = await fetchJson<{ folders: any[]; files: File[] }>('/api/files/import-folder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            folder_id: folderId,
+            folders,
+            files: payloadFiles,
+          }),
+        })
+        
+        return {
+          files: response.files,
+          skippedMessage: null,
+        }
+      }
+      
+      // Fallback to original file-only import
       const selection = splitMarkdownImportSelection(
         files.map((file) => ({ name: file.name, size: file.size })),
       )
@@ -187,7 +268,14 @@ export function useImportMarkdownFilesMutation(options?: ImportMarkdownFilesCall
       return { uploadToastId }
     },
     onSuccess: ({ files, skippedMessage }, _variables, context) => {
+      // Sync files to cache
       files.forEach((file) => syncFile(queryClient, file))
+
+      // Invalidate folders query to update the hierarchy immediately
+      queryClient.invalidateQueries({ queryKey: workspaceKeys.folders() })
+      
+      // Invalidate files query to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: workspaceKeys.files() })
 
       const successMessage =
         files.length === 1

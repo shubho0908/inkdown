@@ -8,6 +8,17 @@ import {
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
+/**
+ * Convert kebab-case folder name to title case with spaces
+ * Example: "hello-world-api" -> "Hello World Api"
+ */
+function formatFolderName(name: string): string {
+  return name
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
+}
+
 export async function GET() {
   const supabase = await createClient()
 
@@ -66,7 +77,7 @@ export async function POST(request: Request) {
   const { data: folder, error } = await supabase
     .from('folders')
     .insert({
-      name: name || 'New Folder',
+      name: formatFolderName(name || 'New Folder'),
       parent_id: parent_id || null,
       user_id: authState.user.id,
     })

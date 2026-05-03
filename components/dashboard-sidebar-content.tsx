@@ -19,7 +19,7 @@ interface DashboardSidebarContentProps {
   onClose?: () => void
   onCreateFile: (folderId: string | null) => void
   onCreateFolder: (parentId: string | null) => void
-  onImportFiles: (files: globalThis.File[], folderId: string | null) => void
+  onImportFiles: (files: globalThis.File[], folderId: string | null, items?: DataTransferItemList) => void
   isImportingFiles?: boolean
   onSelect: (item: TreeItem) => void
   onMove: (item: TreeItem, targetFolderId: string | null) => void

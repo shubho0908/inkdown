@@ -42,7 +42,7 @@ interface TreeNodeProps {
   onDropTargetChange: (targetId: string | 'root' | null) => void
   onExternalDropTargetChange: (targetId: string | 'root' | null) => void
   onExternalDragActiveChange: (active: boolean) => void
-  onImportFiles: (files: globalThis.File[], folderId: string | null) => void
+  onImportFiles: (files: globalThis.File[], folderId: string | null, items?: DataTransferItemList) => void
   isFolderExpanded: (itemId: string) => boolean
   onToggleExpanded: (itemId: string) => void
   onExpand: (itemId: string) => void
@@ -165,8 +165,9 @@ export function TreeNode({
             onExternalDropTargetChange(null)
 
             const files = Array.from(event.dataTransfer.files)
+            const items = event.dataTransfer.items
             if (files.length > 0) {
-              onImportFiles(files, item.id)
+              onImportFiles(files, item.id, items)
             }
             return
           }

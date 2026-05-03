@@ -110,13 +110,14 @@ export function DashboardSidebar({
   const handleImportMarkdownFiles = (
     importedFiles: globalThis.File[],
     folderId: string | null,
+    items?: DataTransferItemList,
   ) => {
     if (importMarkdownFilesMutation.isPending) {
       toast.error('Markdown import already in progress')
       return
     }
 
-    importMarkdownFilesMutation.mutate({ files: importedFiles, folderId })
+    importMarkdownFilesMutation.mutate({ files: importedFiles, folderId, items })
   }
 
   const handleRename = (newName: string) => {
