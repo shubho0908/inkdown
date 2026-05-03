@@ -99,7 +99,7 @@ export class UploadQueue<TInput, TOutput> {
   /**
    * Execute a single task - to be overridden by subclasses
    */
-  protected async executeTask(input: TInput): Promise<TOutput> {
+  protected async executeTask(_input: TInput): Promise<TOutput> {
     throw new Error('executeTask must be implemented by subclass')
   }
 

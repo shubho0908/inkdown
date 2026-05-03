@@ -3,7 +3,6 @@ import { createAuthErrorResponse } from '@/lib/auth/server'
 import {
   normalizeMarkdownImportFileName,
   validateMarkdownImportPayload,
-  type MarkdownImportPayloadFile,
 } from '@/lib/markdown-import'
 import {
   collectPublicFolderShareSlugsForFileChange,
@@ -143,7 +142,7 @@ export async function POST(request: Request) {
     const sortedFolders = foldersWithDepth.sort((a, b) => a.depth - b.depth)
 
     const folderPathToId = new Map<string, string>()
-    const createdFolders: any[] = []
+    const createdFolders: Array<{ id: string; name: string; parent_id: string | null }> = []
 
     // Insert folders one at a time to maintain parent-child relationships
     for (const folder of sortedFolders) {
@@ -178,7 +177,7 @@ export async function POST(request: Request) {
 
     // Create files in batches for better performance
     const BATCH_SIZE = 100
-    const allCreatedFiles: any[] = []
+    const allCreatedFiles: Array<{ id: string; name: string; content: string; folder_id: string | null }> = []
     
     // Process files in batches without creating intermediate arrays
     for (let i = 0; i < files.length; i += BATCH_SIZE) {

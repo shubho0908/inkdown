@@ -173,7 +173,7 @@ export function useImportMarkdownFilesMutation(options?: ImportMarkdownFilesCall
         const fileReadQueue = new FileReadQueue({
           concurrency: MARKDOWN_IMPORT_READ_CONCURRENCY,
           maxQueueSize: 500, // Limit queue size to prevent memory issues
-          onProgress: (completed, total) => {
+          onProgress: (_completed, _total) => {
             // Progress tracking for future UI integration
             // Currently logs for debugging
           },
@@ -210,7 +210,7 @@ export function useImportMarkdownFilesMutation(options?: ImportMarkdownFilesCall
         }))
         
         // Import with folder structure
-        const response = await fetchJson<{ folders: any[]; files: File[] }>('/api/files/import-folder', {
+        const response = await fetchJson<{ folders: Array<{ id: string; name: string; parent_id: string | null }>; files: File[] }>('/api/files/import-folder', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

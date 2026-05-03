@@ -117,7 +117,7 @@ export async function parseDroppedItems(items: DataTransferItemList): Promise<{ 
   for (const item of items) {
     try {
       // Try getAsEntry first (standard), fallback to webkitGetAsEntry (older)
-      // @ts-ignore - getAsEntry and webkitGetAsEntry are not in standard TypeScript definitions
+      // @ts-expect-error - getAsEntry and webkitGetAsEntry are not in standard TypeScript definitions
       const entry = item.getAsEntry ? item.getAsEntry() : item.webkitGetAsEntry()
       
       if (!entry) {
