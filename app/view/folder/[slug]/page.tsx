@@ -11,7 +11,6 @@ import {
   getPublicFolderFileById,
   getPublicFolderTreeBySlug,
 } from "@/lib/public-folders";
-import { createSocialImageSet } from "@/lib/social-metadata";
 import { createSiteUrl, getRequestOrigin, getSiteUrl, getSiteUrlObject } from "@/lib/site-url";
 import type { TreeItem } from "@/lib/types";
 import { headers } from "next/headers";
@@ -48,8 +47,6 @@ export async function generateMetadata({ params }: SharedFolderPageProps): Promi
   const origin = getRequestOrigin(await headers());
   const documentUrl = createSiteUrl(`/view/folder/${slug}`, origin).toString();
   const description = `Browse the shared folder "${folder.name}" on Inkdown.`;
-  const socialImageAlt = `Preview of the shared folder "${folder.name}" on Inkdown`;
-  const socialImages = createSocialImageSet(`/view/folder/${slug}`, socialImageAlt, origin);
 
   return {
     title: folder.name,
@@ -65,13 +62,11 @@ export async function generateMetadata({ params }: SharedFolderPageProps): Promi
       locale: "en_US",
       siteName: "Inkdown",
       url: documentUrl,
-      images: socialImages.openGraph,
     },
     twitter: {
       card: "summary_large_image",
       title: folder.name,
       description,
-      images: socialImages.twitter,
     },
   };
 }

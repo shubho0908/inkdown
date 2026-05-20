@@ -44,12 +44,8 @@ function isApiRateLimited(path: string): boolean {
   return API_RATE_LIMIT_PATHS.some((apiPath) => path.startsWith(apiPath));
 }
 
-function isSocialImagePath(path: string) {
-  return path.endsWith("/opengraph-image") || path.endsWith("/twitter-image");
-}
-
 function shouldRefreshSession(path: string) {
-  return isSupabaseConfigured() && !isSocialImagePath(path);
+  return isSupabaseConfigured();
 }
 
 function checkGlobalRateLimit(identifier: string): { allowed: boolean; retryAfter?: number } {
@@ -219,7 +215,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$|.*opengraph-image$|.*twitter-image$).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };
