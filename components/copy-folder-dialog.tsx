@@ -13,11 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Folder, FolderOpen, ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { fetchJson } from "@/lib/api";
-import { createClient } from "@/lib/supabase/client";
 import { useFoldersQuery } from "@/hooks/workspace/use-workspace-queries";
+import { useCopySharedItemMutation } from "@/hooks/workspace/use-copy-shared-item";
 import type { Folder as FolderType } from "@/lib/types";
-import { toast } from "sonner";
 
 interface CopyFolderDialogProps {
   open: boolean;
@@ -145,7 +143,8 @@ export function CopyFolderDialog({
   const { data: folders, isLoading } = useFoldersQuery();
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(new Set());
-  const [isCopying, setIsCopying] = useState(false);
+
+  const copyMutation = useCopySharedItemMutation();
 
   const folderTree = folders ? buildFolderTree(folders) : [];
 
@@ -161,37 +160,21 @@ export function CopyFolderDialog({
     });
   };
 
-  const handleCopy = async () => {
-    const supabase = createClient();
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session?.user) {
-      toast.error(
-        `You must be signed in to copy ${itemType === "folder" ? "folders" : "documents"}`,
-      );
-      return;
-    }
-
-    setIsCopying(true);
-    try {
-      await fetchJson(
-        `/api/public/${itemType === "folder" ? "folders" : "files"}/${shareSlug}/copy`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ destination_parent_id: selectedFolderId }),
+  const handleCopy = () => {
+    copyMutation.mutate(
+      {
+        shareSlug,
+        itemType,
+        itemName,
+        destinationParentId: selectedFolderId,
+      },
+      {
+        onSuccess: () => {
+          onOpenChange(false);
+          setSelectedFolderId(null);
         },
-      );
-      toast.success(`"${itemName}" copied to your workspace`);
-      onOpenChange(false);
-      setSelectedFolderId(null);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : `Failed to copy ${itemType}`);
-    } finally {
-      setIsCopying(false);
-    }
+      },
+    );
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -260,7 +243,7 @@ export function CopyFolderDialog({
             type="button"
             variant="outline"
             onClick={() => handleOpenChange(false)}
-            disabled={isCopying}
+            disabled={copyMutation.isPending}
             className="w-full sm:w-auto"
           >
             Cancel
@@ -268,10 +251,12 @@ export function CopyFolderDialog({
           <Button
             type="button"
             onClick={handleCopy}
-            disabled={isCopying}
+            disabled={copyMutation.isPending}
             className="w-full sm:w-auto"
           >
-            {isCopying ? "Copying..." : `Copy ${itemType === "folder" ? "Folder" : "Document"}`}
+            {copyMutation.isPending
+              ? "Copying..."
+              : `Copy ${itemType === "folder" ? "Folder" : "Document"}`}
           </Button>
         </DialogFooter>
       </DialogContent>

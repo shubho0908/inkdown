@@ -44,7 +44,7 @@ function isApiRateLimited(path: string): boolean {
   return API_RATE_LIMIT_PATHS.some((apiPath) => path.startsWith(apiPath));
 }
 
-function shouldRefreshSession(path: string) {
+function shouldRefreshSession(_path: string) {
   return isSupabaseConfigured();
 }
 
