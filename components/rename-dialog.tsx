@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -27,17 +28,20 @@ export function RenameDialog({
   type,
   onRename,
 }: RenameDialogProps) {
+  const [localName, setLocalName] = useState(currentName);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (currentName.trim()) {
-      onRename(currentName.trim());
-      onOpenChange(false);
+    const trimmed = localName.trim();
+    if (trimmed && trimmed !== currentName) {
+      onRename(trimmed);
     }
+    onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent key={currentName} className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Rename {type}</DialogTitle>
           <DialogDescription>Enter a new name for this {type}.</DialogDescription>
@@ -46,15 +50,25 @@ export function RenameDialog({
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Name</Label>
-              <Input id="name" value={currentName} onChange={(e) => onRename(e.target.value)} />
+              <Input
+                id="name"
+                value={localName}
+                onChange={(e) => setLocalName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSubmit(e);
+                  }
+                }}
+                autoFocus
+              />
             </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!currentName.trim()}>
-              Rename…
+            <Button type="submit" disabled={!localName.trim() || localName.trim() === currentName}>
+              Rename
             </Button>
           </DialogFooter>
         </form>
