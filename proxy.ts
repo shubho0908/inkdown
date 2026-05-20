@@ -1,4 +1,5 @@
 import { updateSession } from '@/lib/supabase/middleware'
+import { isSupabaseConfigured } from '@/lib/supabase/config'
 import { type NextRequest, NextResponse } from 'next/server'
 
 const ALLOWED_ORIGINS = [
@@ -46,6 +47,14 @@ function isApiPath(path: string): boolean {
 
 function isApiRateLimited(path: string): boolean {
   return API_RATE_LIMIT_PATHS.some(apiPath => path.startsWith(apiPath))
+}
+
+function isSocialImagePath(path: string) {
+  return path.endsWith('/opengraph-image') || path.endsWith('/twitter-image')
+}
+
+function shouldRefreshSession(path: string) {
+  return isSupabaseConfigured() && !isSocialImagePath(path)
 }
 
 function checkGlobalRateLimit(identifier: string): { allowed: boolean; retryAfter?: number } {
@@ -193,7 +202,9 @@ export async function proxy(request: NextRequest) {
     }
   }
   
-  const response = await updateSession(request)
+  const response = shouldRefreshSession(pathname)
+    ? await updateSession(request)
+    : NextResponse.next({ request })
   
   const securityHeaders = getSecurityHeaders()
   Object.entries(securityHeaders).forEach(([key, value]) => {

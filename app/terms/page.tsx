@@ -22,7 +22,7 @@ export default function TermsPage() {
             <ThemeToggle />
             <Button variant="ghost" size="sm" asChild>
               <Link href="/">
-                <ArrowLeft className="mr-2 h-4 w-4" />
+                <ArrowLeft className="mr-2 size-4" />
                 <span className="hidden sm:inline">Back</span>
                 <span className="sr-only sm:hidden">Back</span>
               </Link>
@@ -34,7 +34,7 @@ export default function TermsPage() {
       <main className="flex-1">
         <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-16">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold sm:text-4xl">Terms of Service</h1>
+            <h1 className="text-3xl font-semibold sm:text-4xl">Terms of Service</h1>
             <p className="mt-2 text-muted-foreground">
               Last updated: {LAST_UPDATED}
             </p>

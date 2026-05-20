@@ -14,17 +14,17 @@ export function LandingPageContent() {
           <motion.div
             animate={{ x: [0, 50, 0, -50, 0], y: [0, -50, -20, 40, 0], scale: [1, 1.2, 0.9, 1.1, 1] }}
             transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-            className="absolute -top-[20%] left-[10%] h-[70vw] w-[70vw] max-h-[800px] max-w-[800px] rounded-full bg-blue-500/15 blur-[100px] sm:blur-[140px]"
+            className="absolute -top-[20%] left-[10%] size-[70vw] max-h-[800px] max-w-[800px] rounded-full bg-blue-500/15 blur-[100px] sm:blur-[140px]"
           />
           <motion.div
             animate={{ x: [0, -60, 30, 60, 0], y: [0, 60, -50, 20, 0], scale: [1, 0.8, 1.2, 0.9, 1] }}
             transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
-            className="absolute top-[20%] -right-[10%] h-[60vw] w-[60vw] max-h-[700px] max-w-[700px] rounded-full bg-violet-600/15 blur-[100px] sm:blur-[140px]"
+            className="absolute top-[20%] -right-[10%] size-[60vw] max-h-[700px] max-w-[700px] rounded-full bg-violet-600/15 blur-[100px] sm:blur-[140px]"
           />
           <motion.div
             animate={{ x: [0, 30, -40, -10, 0], y: [0, -30, 40, 10, 0], scale: [1, 1.1, 0.95, 1.05, 1] }}
             transition={{ duration: 35, repeat: Infinity, ease: 'linear' }}
-            className="absolute -bottom-[20%] left-[30%] h-[50vw] w-[50vw] max-h-[600px] max-w-[600px] rounded-full bg-emerald-500/10 blur-[100px] sm:blur-[130px]"
+            className="absolute -bottom-[20%] left-[30%] size-[50vw] max-h-[600px] max-w-[600px] rounded-full bg-emerald-500/10 blur-[100px] sm:blur-[130px]"
           />
         </div>
         <div className="inkdown-noise pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.015]" />
@@ -37,7 +37,7 @@ export function LandingPageContent() {
               transition={{ duration: 0.8 }}
               className="mb-8 inline-flex items-center rounded-full border border-border/50 bg-background/50 py-1.5 px-4 text-xs font-medium text-foreground/70 backdrop-blur-md shadow-sm"
             >
-              <span className="mr-2.5 flex h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></span>
+              <span className="mr-2.5 flex size-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></span>
               Inkdown 1.0 is now live
             </motion.div>
 
@@ -72,7 +72,7 @@ export function LandingPageContent() {
               <Button size="lg" asChild className="group">
                 <Link href="/auth/sign-up">
                   Start drafting
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
             </motion.div>
@@ -99,7 +99,7 @@ export function LandingPageContent() {
             <Button size="lg" className="group mt-8 sm:mt-10" asChild>
               <Link href="/auth/sign-up">
                 Start writing seamlessly
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
           </motion.div>

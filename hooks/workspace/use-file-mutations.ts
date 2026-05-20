@@ -153,12 +153,21 @@ export function useImportMarkdownFilesMutation(options?: ImportMarkdownFilesCall
       folderId,
       items,
     }: ImportMarkdownFilesInput): Promise<ImportMarkdownFilesResult> => {
-      // Check if we have folder structure
-      const hasFolders = items && supportsWebkitGetAsEntry()
-      
-      if (hasFolders) {
-        // Use webkitGetAsEntry for proper folder traversal
-        const { files: allFiles, folderPaths } = await parseDroppedItems(items!)
+      let filesToImport = files
+      let parsedDroppedItems:
+        | Awaited<ReturnType<typeof parseDroppedItems>>
+        | null = null
+
+      if (items && supportsWebkitGetAsEntry()) {
+        parsedDroppedItems = await parseDroppedItems(Array.from(items))
+        if (parsedDroppedItems.files.length > 0) {
+          filesToImport = parsedDroppedItems.files.map(({ file }) => file)
+        }
+      }
+
+      // Preserve folder structure only when the drop actually contains folders.
+      if (parsedDroppedItems && parsedDroppedItems.folderPaths.length > 0) {
+        const { files: allFiles, folderPaths } = parsedDroppedItems
         
         // Filter markdown files
         const markdownFiles = allFiles.filter(({ file }) =>
@@ -166,7 +175,7 @@ export function useImportMarkdownFilesMutation(options?: ImportMarkdownFilesCall
         )
         
         if (markdownFiles.length === 0) {
-          throw new ApiError('No markdown files found in the dropped folder', 400)
+          throw new ApiError('No markdown files found in the dropped items', 400)
         }
         
         // Read file contents using queue with progress tracking
@@ -228,7 +237,7 @@ export function useImportMarkdownFilesMutation(options?: ImportMarkdownFilesCall
       
       // Fallback to original file-only import
       const selection = splitMarkdownImportSelection(
-        files.map((file) => ({ name: file.name, size: file.size })),
+        filesToImport.map((file) => ({ name: file.name, size: file.size })),
       )
       const validationError = validateMarkdownImportSelection(selection)
 
@@ -236,7 +245,7 @@ export function useImportMarkdownFilesMutation(options?: ImportMarkdownFilesCall
         throw new ApiError(validationError, 400)
       }
 
-      const acceptedFiles = files.filter((file) =>
+      const acceptedFiles = filesToImport.filter((file) =>
         isMarkdownFileName(file.name) && file.size <= MARKDOWN_IMPORT_MAX_FILE_BYTES,
       )
 

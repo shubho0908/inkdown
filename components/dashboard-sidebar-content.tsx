@@ -65,7 +65,7 @@ export function DashboardSidebarContent({
               onClick={onClose}
               aria-label="Close workspace"
             >
-              <X className="h-4 w-4" />
+              <X className="size-4" />
             </Button>
           )}
           <ThemeToggle />
@@ -83,7 +83,7 @@ export function DashboardSidebarContent({
           disabled={isImportingFiles}
           onClick={() => onCreateFile(null)}
         >
-          <FilePlus className="mr-1.5 h-4 w-4" />
+          <FilePlus className="mr-1.5 size-4" />
           File
         </Button>
         <Button
@@ -93,7 +93,7 @@ export function DashboardSidebarContent({
           disabled={isImportingFiles}
           onClick={() => onCreateFolder(null)}
         >
-          <FolderPlus className="mr-1.5 h-4 w-4" />
+          <FolderPlus className="mr-1.5 size-4" />
           Folder
         </Button>
       </div>
@@ -141,14 +141,14 @@ export function DashboardSidebarContent({
         </div>
       </div>
 
-      <div className="border-t px-3 py-3">
+      <div className="border-t p-3">
         <Button
           variant="ghost"
           size="sm"
           className="h-9 w-full cursor-pointer justify-start rounded-lg text-muted-foreground"
           onClick={onSignOut}
         >
-          <LogOut className="mr-2 h-4 w-4" />
+          <LogOut className="mr-2 size-4" />
           Sign out
         </Button>
       </div>

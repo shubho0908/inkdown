@@ -51,9 +51,9 @@ function RootDropZone({
       onDrop={onDrop}
     >
       {mode === 'import' ? (
-        <FileUp className="h-3.5 w-3.5" />
+        <FileUp className="size-3.5" />
       ) : (
-        <Move className="h-3.5 w-3.5" />
+        <Move className="size-3.5" />
       )}
       {mode === 'import'
         ? 'Drop .md files to import to workspace root'

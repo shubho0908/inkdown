@@ -13,6 +13,10 @@ function isLocalOrigin(origin: string) {
   return LOCALHOST_HOSTNAMES.has(new URL(origin).hostname)
 }
 
+function getForwardedHeaderValue(value: string | null) {
+  return value?.split(',')[0]?.trim() || null
+}
+
 export function getSiteUrl(origin?: string) {
   if (origin) {
     return normalizeSiteUrl(new URL('/', origin).toString())
@@ -26,18 +30,20 @@ export function getSiteUrl(origin?: string) {
 }
 
 export function getRequestOrigin(headers: HeaderLookup) {
-  const forwardedHost = headers.get('x-forwarded-host')
-  const host = forwardedHost || headers.get('host')
+  const forwardedHost = getForwardedHeaderValue(headers.get('x-forwarded-host'))
+  const host = forwardedHost || getForwardedHeaderValue(headers.get('host'))
 
   if (!host) {
     return undefined
   }
 
-  const forwardedProto = headers.get('x-forwarded-proto')
+  const forwardedProto = getForwardedHeaderValue(headers.get('x-forwarded-proto'))
   const proto =
     forwardedProto && forwardedProto.length > 0
-      ? forwardedProto.split(',')[0]?.trim()
-      : 'https'
+      ? forwardedProto
+      : LOCALHOST_HOSTNAMES.has(host.split(':')[0] ?? '')
+        ? 'http'
+        : 'https'
 
   return normalizeSiteUrl(`${proto}://${host}`)
 }

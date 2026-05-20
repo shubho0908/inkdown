@@ -9,7 +9,7 @@ export default function SharedFolderLoading() {
           <Skeleton className="h-9 w-28" />
         </div>
       </div>
-      <main className="mx-auto grid max-w-7xl gap-4 px-4 py-4 sm:px-6 sm:py-8 lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)]">
+      <main className="mx-auto grid max-w-7xl gap-4 p-4 sm:px-6 sm:py-8 lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)]">
         <div className="rounded-2xl border p-4">
           <Skeleton className="h-6 w-40" />
           <Skeleton className="mt-2 h-4 w-28" />

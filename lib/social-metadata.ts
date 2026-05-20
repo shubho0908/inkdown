@@ -4,10 +4,13 @@ import { createSiteUrl } from '@/lib/site-url'
 type SocialImageKind = 'opengraph-image' | 'twitter-image'
 
 function normalizeRoutePath(routePath: string) {
-  const segments = routePath
-    .split('/')
-    .filter(Boolean)
-    .map((segment) => encodeURIComponent(segment))
+  const segments: string[] = []
+
+  for (const segment of routePath.split('/')) {
+    if (segment) {
+      segments.push(encodeURIComponent(segment))
+    }
+  }
 
   return segments.length > 0 ? `/${segments.join('/')}` : ''
 }

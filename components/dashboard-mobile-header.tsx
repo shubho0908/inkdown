@@ -24,7 +24,7 @@ export function DashboardMobileHeader({
           onClick={onOpenWorkspace}
           aria-label="Open workspace"
         >
-          <PanelLeftOpen className="h-4 w-4" />
+          <PanelLeftOpen className="size-4" />
         </Button>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium">
@@ -43,7 +43,7 @@ export function DashboardMobileHeader({
           onClick={onCreateFile}
           aria-label="Create file"
         >
-          <FilePlus className="h-4 w-4" />
+          <FilePlus className="size-4" />
         </Button>
       </div>
     </div>

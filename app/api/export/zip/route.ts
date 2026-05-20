@@ -72,7 +72,22 @@ function createErrorResponse(message: string, status: number): NextResponse {
   )
 }
 
-export async function GET(request: Request) {
+async function readExportFolderId(request: Request) {
+  try {
+    const body = (await request.json()) as { folderId?: unknown }
+    return typeof body.folderId === 'string' && body.folderId.trim()
+      ? body.folderId
+      : null
+  } catch {
+    return null
+  }
+}
+
+export async function GET() {
+  return createErrorResponse('Use POST to export ZIP archives', 405)
+}
+
+export async function POST(request: Request) {
   const supabase = await createClient()
 
   const authState = await requireVerifiedUser(supabase)
@@ -81,8 +96,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const { searchParams } = new URL(request.url)
-    const folderId = searchParams.get('folderId')
+    const folderId = await readExportFolderId(request)
 
     const [{ data: files }, { data: folders }] = await Promise.all([
       supabase

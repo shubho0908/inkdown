@@ -125,9 +125,9 @@ export function ShareDialog({
                     className="w-full sm:w-9"
                   >
                     {copied ? (
-                      <Check className="h-4 w-4" />
+                      <Check className="size-4" />
                     ) : (
-                      <Copy className="h-4 w-4" />
+                      <Copy className="size-4" />
                     )}
                     <span className="sm:hidden">{copied ? 'Copied' : 'Copy'}</span>
                   </Button>
@@ -140,7 +140,7 @@ export function ShareDialog({
                     className="w-full sm:w-9"
                   >
                     <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4" />
+                      <ExternalLink className="size-4" />
                       <span className="sm:hidden">Open</span>
                       <span className="sr-only">Open in new tab</span>
                     </a>

@@ -35,7 +35,7 @@ export function MarkdownEditorHeader({
   onSave,
 }: MarkdownEditorHeaderProps) {
   return (
-    <div className="flex min-w-0 flex-col gap-3 border-b px-3 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 sm:px-4 sm:py-2">
+    <div className="flex min-w-0 flex-col gap-3 border-b p-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 sm:px-4 sm:py-2">
       <div className="min-w-0 md:flex-1">
         <h1 className="truncate font-medium">{fileName}</h1>
         <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
@@ -56,7 +56,7 @@ export function MarkdownEditorHeader({
           className="min-w-0 w-full md:w-auto"
           onClick={onShare}
         >
-          <Share2 className="mr-1.5 h-4 w-4" />
+          <Share2 className="mr-1.5 size-4" />
           Share
         </Button>
         <Button
@@ -65,7 +65,7 @@ export function MarkdownEditorHeader({
           className="min-w-0 w-full md:w-auto"
           onClick={onDownload}
         >
-          <Download className="mr-1.5 h-4 w-4" />
+          <Download className="mr-1.5 size-4" />
           Download
         </Button>
         <Button
@@ -74,7 +74,7 @@ export function MarkdownEditorHeader({
           onClick={onSave}
           disabled={!hasChanges || isSaving}
         >
-          <Save className="mr-1.5 h-4 w-4" />
+          <Save className="mr-1.5 size-4" />
           Save
         </Button>
       </div>
@@ -89,8 +89,8 @@ export function MarkdownEditorHeader({
             value="edit"
             className="h-9 min-w-0 rounded-xl px-2.5 md:h-8 md:px-3"
           >
-            <span className="flex h-4 w-4 items-center justify-center">
-              <Edit3 className="h-3.5 w-3.5" />
+            <span className="flex size-4 items-center justify-center">
+              <Edit3 className="size-3.5" />
             </span>
             Edit
           </TabsTrigger>
@@ -98,8 +98,8 @@ export function MarkdownEditorHeader({
             value="split"
             className="h-9 min-w-0 rounded-xl px-2.5 md:h-8 md:px-3"
           >
-            <span className="flex h-4 w-4 items-center justify-center">
-              <Columns2 className="h-3.5 w-3.5" />
+            <span className="flex size-4 items-center justify-center">
+              <Columns2 className="size-3.5" />
             </span>
             Split
           </TabsTrigger>
@@ -107,8 +107,8 @@ export function MarkdownEditorHeader({
             value="preview"
             className="h-9 min-w-0 rounded-xl px-2.5 md:h-8 md:px-3"
           >
-            <span className="flex h-4 w-4 items-center justify-center">
-              <Eye className="h-3.5 w-3.5" />
+            <span className="flex size-4 items-center justify-center">
+              <Eye className="size-3.5" />
             </span>
             Preview
           </TabsTrigger>

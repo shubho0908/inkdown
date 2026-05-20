@@ -7,6 +7,7 @@ import {
   requireVerifiedUser,
 } from '@/lib/auth'
 import { getSiteUrl } from '@/lib/site-url'
+import { isSupabaseConfigured } from '@/lib/supabase/config'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import type { Metadata } from 'next'
@@ -20,14 +21,15 @@ export const metadata: Metadata = {
 }
 
 export default async function HomePage() {
-  const supabase = await createClient()
-  const authState = await requireVerifiedUser(supabase)
+  const authState = isSupabaseConfigured()
+    ? await requireVerifiedUser(await createClient())
+    : null
 
-  if (authState.kind === 'authenticated') {
+  if (authState?.kind === 'authenticated') {
     redirect('/workspace')
   }
 
-  if (authState.kind === 'unverified') {
+  if (authState?.kind === 'unverified') {
     redirect(getEmailVerificationRedirectPath(authState.user.email))
   }
 

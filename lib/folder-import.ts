@@ -110,11 +110,17 @@ async function traverseDirectory(
  * Parse dropped items using webkitGetAsEntry API
  * This is the modern, robust approach for folder drag-drop
  */
-export async function parseDroppedItems(items: DataTransferItemList): Promise<{ files: Array<{ file: File; relativePath: string }>; folderPaths: string[] }> {
+export async function parseDroppedItems(
+  items: DataTransferItemList | DataTransferItem[],
+): Promise<{ files: Array<{ file: File; relativePath: string }>; folderPaths: string[] }> {
   const allFiles: Array<{ file: File; relativePath: string }> = []
   const allFolderPaths: string[] = []
   
-  for (const item of items) {
+  for (const item of Array.from(items)) {
+    if (item.kind !== 'file') {
+      continue
+    }
+
     try {
       // Try getAsEntry first (standard), fallback to webkitGetAsEntry (older)
       // @ts-expect-error - getAsEntry and webkitGetAsEntry are not in standard TypeScript definitions

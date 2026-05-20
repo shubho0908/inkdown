@@ -89,20 +89,20 @@ function FolderTreeItem({
         {hasChildren ? (
           <button
             type="button"
-            className="flex h-5 w-5 items-center justify-center rounded hover:bg-accent"
+            className="flex size-5 items-center justify-center rounded hover:bg-accent"
             onClick={(e) => {
               e.stopPropagation()
               onToggleFolder(node.folder.id)
             }}
           >
             {isExpanded ? (
-              <ChevronDown className="h-3.5 w-3.5" />
+              <ChevronDown className="size-3.5" />
             ) : (
-              <ChevronRight className="h-3.5 w-3.5" />
+              <ChevronRight className="size-3.5" />
             )}
           </button>
         ) : (
-          <span className="h-5 w-5" />
+          <span className="size-5" />
         )}
         <button
           type="button"
@@ -110,9 +110,9 @@ function FolderTreeItem({
           onClick={() => onSelectFolder(node.folder.id)}
         >
           {isExpanded ? (
-            <FolderOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <FolderOpen className="size-4 shrink-0 text-muted-foreground" />
           ) : (
-            <Folder className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <Folder className="size-4 shrink-0 text-muted-foreground" />
           )}
           <span className="flex-1 truncate">{node.folder.name}</span>
         </button>
@@ -224,8 +224,8 @@ export function CopyFolderDialog({
                     )}
                     onClick={() => setSelectedFolderId(null)}
                   >
-                    <span className="h-5 w-5" />
-                    <Folder className="h-4 w-4 text-muted-foreground" />
+                    <span className="size-5" />
+                    <Folder className="size-4 text-muted-foreground" />
                     <span className="flex-1 truncate">Root</span>
                   </button>
                   {folderTree.map((node) => (

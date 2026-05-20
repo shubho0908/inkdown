@@ -25,7 +25,7 @@ Private markdown workspace with folders, sharing, and Supabase auth.
 ## Requirements
 
 - Node.js 20+
-- pnpm
+- Bun
 - A Supabase project
 
 ## Environment Variables
@@ -86,13 +86,13 @@ If you want a post-confirm redirect:
 Install dependencies:
 
 ```bash
-pnpm install
+bun install
 ```
 
 Start the app:
 
 ```bash
-pnpm dev
+bun run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
@@ -100,14 +100,14 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Scripts
 
 ```bash
-pnpm dev
-pnpm build
-pnpm start
-pnpm lint
-pnpm ci:local
+bun run dev
+bun run build
+bun run start
+bun run lint
+bun run ci:local
 ```
 
-`pnpm ci:local` runs the local quality checks used for day-to-day validation.
+`bun run ci:local` runs the local quality checks used for day-to-day validation.
 
 ## Project Layout
 

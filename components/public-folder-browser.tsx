@@ -116,7 +116,7 @@ function TreeBranch({
         const isActive = activeItemId === item.id
         const paddingLeft = `${metadata.level * 14 + 8}px`
         const rowClassName = cn(
-          'group flex min-w-0 max-w-full items-center gap-2 overflow-hidden rounded-xl px-2 py-2 text-left text-sm transition-colors hover:bg-accent/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none',
+          'group flex min-w-0 max-w-full items-center gap-2 overflow-hidden rounded-xl p-2 text-left text-sm transition-colors hover:bg-accent/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none',
           isFolder ? 'font-medium text-foreground' : 'text-muted-foreground',
           isSelected && 'bg-accent text-foreground shadow-xs',
         )
@@ -126,18 +126,18 @@ function TreeBranch({
               isExpanded ? (
                 <FolderOpen
                   aria-hidden="true"
-                  className="h-4 w-4 shrink-0 text-muted-foreground"
+                  className="size-4 shrink-0 text-muted-foreground"
                 />
               ) : (
                 <Folder
                   aria-hidden="true"
-                  className="h-4 w-4 shrink-0 text-muted-foreground"
+                  className="size-4 shrink-0 text-muted-foreground"
                 />
               )
             ) : (
               <FileText
                 aria-hidden="true"
-                className="h-4 w-4 shrink-0 text-muted-foreground"
+                className="size-4 shrink-0 text-muted-foreground"
               />
             )}
             <span
@@ -159,7 +159,7 @@ function TreeBranch({
                 <button
                   type="button"
                   className={cn(
-                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none',
+                    'flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none',
                     !isFolder && 'invisible',
                   )}
                   style={{ marginLeft: paddingLeft }}
@@ -179,9 +179,9 @@ function TreeBranch({
                 >
                   {isFolder ? (
                     isExpanded ? (
-                      <ChevronDown aria-hidden="true" className="h-3.5 w-3.5" />
+                      <ChevronDown aria-hidden="true" className="size-3.5" />
                     ) : (
-                      <ChevronRight aria-hidden="true" className="h-3.5 w-3.5" />
+                      <ChevronRight aria-hidden="true" className="size-3.5" />
                     )
                   ) : null}
                 </button>

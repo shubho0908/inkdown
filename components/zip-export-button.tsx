@@ -26,9 +26,9 @@ export function ZipExportButton({
       onClick={exportWorkspace}
     >
       {isExporting ? (
-        <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+        <Loader2 className="mr-1.5 size-4 animate-spin" />
       ) : (
-        <Download className="mr-1.5 h-4 w-4" />
+        <Download className="mr-1.5 size-4" />
       )}
       {isExporting ? 'Exporting...' : 'Export Workspace'}
     </Button>

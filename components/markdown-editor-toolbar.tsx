@@ -25,7 +25,7 @@ interface MarkdownEditorToolbarProps {
 }
 
 type ToolbarButton =
-  | { type: 'divider' }
+  | { type: 'divider'; id: string }
   | {
       type: 'button'
       icon: LucideIcon
@@ -44,11 +44,11 @@ const toolbarButtons: ToolbarButton[] = [
     args: ['~~', '~~'],
     title: 'Strikethrough',
   },
-  { type: 'divider' },
+  { type: 'divider', id: 'format-headings' },
   { type: 'button', icon: Heading1, action: 'line', args: ['# '], title: 'Heading 1' },
   { type: 'button', icon: Heading2, action: 'line', args: ['## '], title: 'Heading 2' },
   { type: 'button', icon: Heading3, action: 'line', args: ['### '], title: 'Heading 3' },
-  { type: 'divider' },
+  { type: 'divider', id: 'headings-lists' },
   { type: 'button', icon: List, action: 'line', args: ['- '], title: 'Bullet List' },
   {
     type: 'button',
@@ -64,7 +64,7 @@ const toolbarButtons: ToolbarButton[] = [
     args: ['- [ ] '],
     title: 'Task List',
   },
-  { type: 'divider' },
+  { type: 'divider', id: 'lists-blocks' },
   { type: 'button', icon: Quote, action: 'line', args: ['> '], title: 'Quote' },
   { type: 'button', icon: Code, action: 'wrap', args: ['`', '`'], title: 'Inline Code' },
   {
@@ -74,7 +74,7 @@ const toolbarButtons: ToolbarButton[] = [
     args: ['\n---\n'],
     title: 'Horizontal Rule',
   },
-  { type: 'divider' },
+  { type: 'divider', id: 'blocks-links' },
   { type: 'button', icon: Link2, action: 'wrap', args: ['[', '](url)'], title: 'Link' },
   { type: 'button', icon: Image, action: 'wrap', args: ['![alt](', ')'], title: 'Image' },
 ]
@@ -87,15 +87,15 @@ export function MarkdownEditorToolbar({
     <div className="min-w-0 overflow-hidden border-b bg-muted/30">
       <div className="overflow-x-visible sm:overflow-x-auto">
         <div className="flex min-w-full flex-wrap items-center gap-1 px-2 py-1.5 sm:w-max sm:min-w-full sm:flex-nowrap">
-          {toolbarButtons.map((button, index) =>
+          {toolbarButtons.map((button) =>
             button.type === 'divider' ? (
-              <div key={index} className="mx-1 hidden h-6 w-px bg-border sm:block" />
+              <div key={button.id} className="mx-1 hidden h-6 w-px bg-border sm:block" />
             ) : (
               <Button
-                key={index}
+                key={button.title}
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 shrink-0"
+                className="size-8 shrink-0"
                 onClick={() => {
                   if (button.action === 'wrap') {
                     onWrap(button.args[0], button.args[1])
@@ -106,7 +106,7 @@ export function MarkdownEditorToolbar({
                 }}
                 title={button.title}
               >
-                <button.icon className="h-4 w-4" />
+                <button.icon className="size-4" />
                 <span className="sr-only">{button.title}</span>
               </Button>
             ),

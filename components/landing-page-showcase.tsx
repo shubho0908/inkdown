@@ -14,7 +14,7 @@ import {
 const scenarios = [
   {
     id: 'scenario-edit',
-    icon: <Edit3 className="h-5 w-5" />,
+    icon: <Edit3 className="size-5" />,
     title: 'Precision Editing',
     description:
       'A deeply refined writing environment with side-by-side live rendering and instant GFM support.',
@@ -22,9 +22,9 @@ const scenarios = [
       <div className="flex h-full w-full flex-col backdrop-blur-3xl relative">
         <div className="flex items-center gap-2 border-b border-border bg-muted/30 px-4 py-2.5 sm:py-3">
           <div className="flex gap-1.5 hidden sm:flex">
-            <div className="h-2.5 w-2.5 rounded-full bg-foreground/20" />
-            <div className="h-2.5 w-2.5 rounded-full bg-foreground/20" />
-            <div className="h-2.5 w-2.5 rounded-full bg-foreground/20" />
+            <div className="size-2.5 rounded-full bg-foreground/20" />
+            <div className="size-2.5 rounded-full bg-foreground/20" />
+            <div className="size-2.5 rounded-full bg-foreground/20" />
           </div>
           <div className="sm:ml-4 text-xs font-medium text-muted-foreground">brand_guidelines.md</div>
         </div>
@@ -72,7 +72,7 @@ const scenarios = [
   },
   {
     id: 'scenario-organize',
-    icon: <FolderTree className="h-5 w-5" />,
+    icon: <FolderTree className="size-5" />,
     title: 'Workspace Clarity',
     description:
       'Unclutter your mind with fluid folder nesting and lightning-fast full text search.',
@@ -84,42 +84,42 @@ const scenarios = [
         <div className="flex flex-1 flex-col p-4 gap-1.5 overflow-y-auto hide-scrollbar">
           <motion.div initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="flex items-center justify-between rounded-lg bg-muted/50 py-2.5 px-3 border border-border/50 shadow-sm">
             <div className="flex items-center gap-3">
-              <Folder className="h-4 w-4 text-emerald-500" />
+              <Folder className="size-4 text-emerald-500" />
               <span className="text-sm font-medium text-foreground">Marketing Strategy</span>
             </div>
           </motion.div>
           <div className="pl-6 flex flex-col gap-1 border-l border-border/50 ml-3 py-1">
             <motion.div initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.15 }} className="flex items-center gap-3 rounded-md py-1.5 px-2 hover:bg-muted/50 transition-colors cursor-pointer">
-              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+              <FileText className="size-3.5 text-muted-foreground" />
               <span className="text-sm text-foreground/70">Q3 Launch Plan</span>
             </motion.div>
             <motion.div initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="flex items-center gap-3 rounded-md py-1.5 px-2 bg-background border border-border shadow-sm cursor-pointer">
-              <FileText className="h-3.5 w-3.5 text-foreground" />
+              <FileText className="size-3.5 text-foreground" />
               <span className="text-sm text-foreground font-medium">Brand Guidelines</span>
             </motion.div>
           </div>
 
           <motion.div initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="mt-2 flex items-center justify-between rounded-lg hover:bg-muted/30 transition-colors py-2 px-3 border border-transparent">
             <div className="flex items-center gap-3">
-              <Folder className="h-4 w-4 text-blue-500" />
+              <Folder className="size-4 text-blue-500" />
               <span className="text-sm font-medium text-foreground/80">Engineering Discussions</span>
             </div>
             <div className="text-[10px] text-muted-foreground px-2 py-0.5 rounded-full border border-border bg-muted">2</div>
           </motion.div>
           <div className="pl-6 flex flex-col gap-1 border-l border-border/30 ml-3 py-1">
             <motion.div initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.35 }} className="flex items-center gap-3 rounded-md py-1.5 px-2 hover:bg-muted/50 transition-colors cursor-pointer">
-              <FileText className="h-3.5 w-3.5 text-muted-foreground/60" />
+              <FileText className="size-3.5 text-muted-foreground/60" />
               <span className="text-sm text-muted-foreground">Weekly Sync</span>
             </motion.div>
             <motion.div initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="flex items-center gap-3 rounded-md py-1.5 px-2 hover:bg-muted/50 transition-colors cursor-pointer">
-              <FileText className="h-3.5 w-3.5 text-muted-foreground/60" />
+              <FileText className="size-3.5 text-muted-foreground/60" />
               <span className="text-sm text-muted-foreground">Architecture Planning</span>
             </motion.div>
           </div>
 
           <motion.div initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.45 }} className="mt-1 flex items-center justify-between rounded-lg hover:bg-muted/30 transition-colors py-2 px-3 border border-transparent">
             <div className="flex items-center gap-3">
-              <Lock className="h-3.5 w-3.5 text-muted-foreground/80" />
+              <Lock className="size-3.5 text-muted-foreground/80" />
               <span className="text-sm font-medium text-foreground/80">Personal Drafts</span>
             </div>
           </motion.div>
@@ -129,7 +129,7 @@ const scenarios = [
   },
   {
     id: 'scenario-share',
-    icon: <Share2 className="h-5 w-5" />,
+    icon: <Share2 className="size-5" />,
     title: 'Instant Publishing',
     description:
       'Publish flawlessly. One click transforms your markdown into a perfectly typeset web page.',
@@ -142,8 +142,8 @@ const scenarios = [
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="relative z-10 flex w-full max-w-sm flex-col items-center gap-4 sm:gap-5 rounded-2xl border border-border/80 bg-background/90 p-6 sm:p-8 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] backdrop-blur-2xl"
         >
-          <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl bg-foreground text-background shadow-md">
-            <Share2 className="h-5 w-5 sm:h-6 sm:w-6" />
+          <div className="flex size-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl bg-foreground text-background shadow-md">
+            <Share2 className="size-5 sm:h-6 sm:w-6" />
           </div>
           <div className="text-center">
             <h3 className="font-display font-medium tracking-tight text-foreground text-lg sm:text-xl">Shared Successfully</h3>
@@ -195,7 +195,7 @@ export function LandingPageShowcase() {
               }`}
             >
               <div className="flex items-center gap-4 w-full">
-                <div className={`flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl border transition-colors ${
+                <div className={`flex size-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl border transition-colors ${
                   activeIndex === idx ? 'border-transparent bg-foreground text-background shadow-inner' : 'border-border bg-background text-muted-foreground group-hover:border-foreground/20 group-hover:text-foreground/80'
                 }`}>
                   {scenario.icon}

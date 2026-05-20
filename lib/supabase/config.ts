@@ -12,3 +12,10 @@ export const supabaseCookieOptions = {
 
 export const AUTH_PERSISTENCE_TIMEOUT_MS = 3_000
 export const AUTH_PERSISTENCE_POLL_INTERVAL_MS = 100
+
+export function isSupabaseConfigured() {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  )
+}

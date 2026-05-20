@@ -76,7 +76,7 @@ export function SharedCopyButton({
         className={className}
         title={`Copy ${itemType} to workspace`}
       >
-        <Copy className="h-4 w-4" />
+        <Copy className="size-4" />
         <span>{label === 'full' ? 'Copy to Workspace' : 'Copy'}</span>
       </Button>
       {isAuthenticated ? (

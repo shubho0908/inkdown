@@ -8,7 +8,7 @@ if (existsSync(devTypesPath)) {
   rmSync(devTypesPath, { recursive: true, force: true })
 }
 
-const result = spawnSync('pnpm', ['exec', 'tsc', '--noEmit'], {
+const result = spawnSync('bun', ['x', 'tsc', '--noEmit'], {
   stdio: 'inherit',
   shell: process.platform === 'win32',
 })

@@ -94,12 +94,12 @@ export function SharedFolderViewer({
   }
 
   return (
-    <main className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:gap-6 sm:px-6 sm:py-8 lg:grid lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] lg:items-start">
+    <main className="mx-auto flex max-w-7xl flex-col gap-4 p-4 sm:gap-6 sm:px-6 sm:py-8 lg:grid lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] lg:items-start">
       <aside className="min-w-0 rounded-2xl border bg-card shadow-sm lg:sticky lg:top-20 lg:max-h-[calc(100svh-6rem)] lg:self-start lg:overflow-hidden">
         <div className="border-b p-4">
           <div className="flex min-w-0 items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <FolderOpen aria-hidden="true" className="h-5 w-5" />
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <FolderOpen aria-hidden="true" className="size-5" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex min-w-0 items-center gap-2">
@@ -109,7 +109,7 @@ export function SharedFolderViewer({
                 >
                   {folderName}
                 </h1>
-                <Share2 aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-primary" />
+                <Share2 aria-hidden="true" className="size-3.5 shrink-0 text-primary" />
               </div>
               <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs tabular-nums text-muted-foreground">
                 <span>{filesCount} {filesCount === 1 ? 'file' : 'files'}</span>
@@ -139,10 +139,10 @@ export function SharedFolderViewer({
       <section className="min-w-0 overflow-hidden rounded-2xl border bg-card shadow-sm">
         {selectedFile ? (
           <>
-            <div className="border-b px-4 py-4 sm:px-6 sm:py-5">
+            <div className="border-b p-4 sm:px-6 sm:py-5">
               <div className="flex items-start gap-3">
-                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted">
-                  <FileText aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
+                <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted">
+                  <FileText aria-hidden="true" className="size-5 text-muted-foreground" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <h2
@@ -175,8 +175,8 @@ export function SharedFolderViewer({
           </>
         ) : (
           <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 px-6 py-12 text-center text-muted-foreground">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-              <FileText aria-hidden="true" className="h-7 w-7" />
+            <div className="flex size-14 items-center justify-center rounded-full bg-muted">
+              <FileText aria-hidden="true" className="size-7" />
             </div>
             <div className="space-y-1">
               <p className="font-medium text-foreground">No shared files in this folder</p>

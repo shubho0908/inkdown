@@ -126,7 +126,7 @@ export const MarkdownPreview = memo(function MarkdownPreview({
   const components = useMemo<Components>(
     () => ({
       h1: ({ children }) => (
-        <h1 className="mb-4 border-b pb-2 text-2xl font-bold tracking-tight sm:text-3xl">
+        <h1 className="mb-4 border-b pb-2 text-2xl font-semibold tracking-tight sm:text-3xl">
           {children}
         </h1>
       ),
@@ -287,7 +287,7 @@ export const MarkdownPreview = memo(function MarkdownPreview({
               type="checkbox"
               checked={checked}
               readOnly
-              className="mr-2 h-4 w-4"
+              className="mr-2 size-4"
               {...props}
             />
           );

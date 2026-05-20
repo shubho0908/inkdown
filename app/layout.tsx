@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Outfit, Inter } from 'next/font/google'
+import localFont from 'next/font/local'
 import { Analytics } from '@vercel/analytics/next'
 import Script from 'next/script'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -10,14 +10,14 @@ import { themeBootstrapScript } from '@/lib/theme-bootstrap'
 import 'katex/dist/katex.min.css'
 import './globals.css'
 
-const inter = Inter({
-  subsets: ['latin'],
+const geist = localFont({
+  src: '../public/fonts/Geist-Regular.ttf',
   variable: '--app-font-sans',
   display: 'swap',
 })
 
-const outfit = Outfit({
-  subsets: ['latin'],
+const playfair = localFont({
+  src: '../public/fonts/PlayfairDisplay-ExtraBold.ttf',
   variable: '--app-font-display',
   display: 'swap',
 })
@@ -83,7 +83,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
-      <body className={`${inter.variable} ${outfit.variable} font-sans antialiased selection:bg-primary/20`}>
+      <body className={`${geist.variable} ${playfair.variable} font-sans antialiased selection:bg-primary/20`}>
         <Script id="theme-bootstrap" strategy="beforeInteractive">
           {themeBootstrapScript}
         </Script>

@@ -29,8 +29,8 @@ export function DashboardWorkspace() {
           <MarkdownEditor fileId={selectedFileId} />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-4 px-6 py-12 text-center text-muted-foreground">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-              <FileText className="h-8 w-8" />
+            <div className="flex size-16 items-center justify-center rounded-full bg-muted">
+              <FileText className="size-8" />
             </div>
             <div className="max-w-sm space-y-1">
               <p className="font-medium">No file selected</p>

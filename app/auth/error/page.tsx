@@ -30,7 +30,7 @@ export default async function AuthErrorPage({
   return (
     <div className="relative flex min-h-svh w-full items-start justify-center px-4 py-16 sm:px-6 sm:py-20 md:items-center md:px-10">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-1/2 left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-destructive/5 blur-3xl" />
+        <div className="absolute -top-1/2 left-1/2 size-[600px] -translate-x-1/2 rounded-full bg-destructive/5 blur-3xl" />
       </div>
 
       <div className="absolute right-4 top-4">
@@ -46,8 +46,8 @@ export default async function AuthErrorPage({
           </div>
           <Card className="border-border/50 py-5 shadow-xl shadow-destructive/5 sm:py-6">
             <CardHeader className="text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
-                <AlertCircle className="h-7 w-7 text-destructive" />
+              <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-destructive/10">
+                <AlertCircle className="size-7 text-destructive" />
               </div>
               <CardTitle className="text-2xl">Something went wrong</CardTitle>
             </CardHeader>

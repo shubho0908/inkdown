@@ -3,23 +3,23 @@ import { spawnSync } from 'node:child_process'
 const steps = [
   {
     name: 'Lint',
-    command: 'pnpm',
-    args: ['lint'],
+    command: 'bun',
+    args: ['run', 'lint'],
   },
   {
     name: 'API guardrails',
-    command: 'node',
+    command: 'bun',
     args: ['scripts/check-api-guardrails.mjs'],
   },
   {
     name: 'Type check',
-    command: 'pnpm',
-    args: ['typecheck'],
+    command: 'bun',
+    args: ['run', 'typecheck'],
   },
   {
     name: 'Build',
-    command: 'pnpm',
-    args: ['build'],
+    command: 'bun',
+    args: ['run', 'build'],
     env: {
       NEXT_TELEMETRY_DISABLED: '1',
     },

@@ -11,7 +11,13 @@ import type { Metadata } from 'next'
 import { extractMarkdownSummary } from '@/lib/markdown-summary'
 import { getPublicFileBySlug } from '@/lib/public-files'
 import { createSocialImageSet } from '@/lib/social-metadata'
-import { createSiteUrl, getSiteUrl, getSiteUrlObject } from '@/lib/site-url'
+import {
+  createSiteUrl,
+  getRequestOrigin,
+  getSiteUrl,
+  getSiteUrlObject,
+} from '@/lib/site-url'
+import { headers } from 'next/headers'
 
 interface ViewPageProps {
   params: Promise<{ slug: string }>
@@ -25,21 +31,23 @@ export async function generateMetadata({ params }: ViewPageProps): Promise<Metad
     return { title: 'Not Found' }
   }
 
+  const origin = getRequestOrigin(await headers())
   const title = file.name.replace(/\.md$/, '')
   const description = extractMarkdownSummary(file.content, {
     fallback: `Read "${title}" on Inkdown`,
   })
-  const documentUrl = createSiteUrl(`/view/${slug}`).toString()
+  const documentUrl = createSiteUrl(`/view/${slug}`, origin).toString()
   const socialImageAlt = `Preview of "${title}" shared on Inkdown`
   const socialImages = createSocialImageSet(
     `/view/${slug}`,
     socialImageAlt,
+    origin,
   )
 
   return {
     title,
     description,
-    metadataBase: getSiteUrlObject(),
+    metadataBase: getSiteUrlObject(origin),
     authors: file.username ? [{ name: file.username }] : undefined,
     alternates: {
       canonical: documentUrl,
@@ -82,8 +90,9 @@ export default async function ViewPage({ params }: ViewPageProps) {
     month: 'long',
     day: 'numeric',
   })
-  const siteUrl = getSiteUrl()
-  const documentUrl = createSiteUrl(`/view/${slug}`).toString()
+  const origin = getRequestOrigin(await headers())
+  const siteUrl = getSiteUrl(origin)
+  const documentUrl = createSiteUrl(`/view/${slug}`, origin).toString()
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'CreativeWork',
@@ -98,7 +107,7 @@ export default async function ViewPage({ params }: ViewPageProps) {
       url: siteUrl,
       logo: {
         '@type': 'ImageObject',
-        url: createSiteUrl('/favicon.png').toString(),
+        url: createSiteUrl('/favicon.png', origin).toString(),
       },
     },
   }
@@ -116,7 +125,7 @@ export default async function ViewPage({ params }: ViewPageProps) {
             <Button size="sm" asChild className="shrink-0">
               <Link href="/auth/sign-up">
                 Start writing
-                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                <ArrowRight className="ml-1.5 size-3.5" />
               </Link>
             </Button>
           </div>
@@ -128,7 +137,7 @@ export default async function ViewPage({ params }: ViewPageProps) {
           <header className="mb-8 border-b pb-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
-                <h1 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
+                <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1>
                 <p className="mt-2 text-sm text-muted-foreground">
                   Last updated on {updatedAt}
                 </p>

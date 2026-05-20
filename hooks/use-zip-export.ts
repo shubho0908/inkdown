@@ -13,6 +13,7 @@ export function useZipExport() {
       filename: string,
       loadingMsg: string,
       successMsg: string,
+      body?: Record<string, unknown>,
     ): Promise<void> => {
       setIsExporting(true)
       const toastId = toast.loading(loadingMsg)
@@ -22,10 +23,13 @@ export function useZipExport() {
 
       try {
         const response = await fetchApi(url, {
+          method: 'POST',
           signal: controller.signal,
           headers: {
             Accept: 'application/zip',
+            ...(body ? { 'Content-Type': 'application/json' } : {}),
           },
+          body: body ? JSON.stringify(body) : undefined,
         })
 
         clearTimeout(timeoutId)
@@ -105,10 +109,11 @@ export function useZipExport() {
         folderName.replace(/[<>:"/\\|?*\u0000-\u001f]/g, '-').trim() ||
         'folder'
       await downloadZip(
-        `/api/export/zip?folderId=${encodeURIComponent(folderId)}`,
+        '/api/export/zip',
         `${sanitizedName}-${timestamp}.zip`,
         `Exporting ${folderName}...`,
         'Folder exported',
+        { folderId },
       )
     },
     [isExporting, downloadZip],

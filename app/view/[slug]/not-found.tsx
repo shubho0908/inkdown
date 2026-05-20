@@ -21,14 +21,14 @@ export default function NotFound() {
       <main className="relative flex flex-1 flex-col items-center justify-center gap-6 p-4">
         {/* Background decoration */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute left-1/2 top-1/2 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-3xl" />
+          <div className="absolute left-1/2 top-1/2 size-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-3xl" />
         </div>
 
-        <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-          <FileQuestion className="h-10 w-10 text-muted-foreground" />
+        <div className="relative flex size-20 items-center justify-center rounded-full bg-muted">
+          <FileQuestion className="size-10 text-muted-foreground" />
         </div>
         <div className="relative text-center">
-          <h1 className="text-2xl font-bold">Document not found</h1>
+          <h1 className="text-2xl font-semibold">Document not found</h1>
           <p className="mt-2 text-muted-foreground">
             This document may have been deleted or made private.
           </p>
@@ -36,14 +36,14 @@ export default function NotFound() {
         <div className="relative flex gap-3">
           <Button variant="outline" asChild>
             <Link href="/">
-              <Home className="mr-1.5 h-4 w-4" />
+              <Home className="mr-1.5 size-4" />
               Go home
             </Link>
           </Button>
           <Button asChild>
             <Link href="/auth/sign-up">
               Start writing
-              <ArrowRight className="ml-1.5 h-4 w-4" />
+              <ArrowRight className="ml-1.5 size-4" />
             </Link>
           </Button>
         </div>

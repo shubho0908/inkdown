@@ -24,7 +24,7 @@ export function AuthShell({
   return (
     <div className="relative flex min-h-svh w-full items-center justify-center px-4 py-16 sm:px-6 lg:px-8 bg-background">
       <div className="pointer-events-none absolute inset-0 overflow-hidden flex items-center justify-center opacity-50 dark:opacity-100">
-        <div className="h-[300px] w-[300px] rounded-full bg-primary/5 blur-[80px]" />
+        <div className="size-[300px] rounded-full bg-primary/5 blur-[80px]" />
       </div>
       <div className="inkdown-noise pointer-events-none absolute inset-0 opacity-[0.02]" />
 

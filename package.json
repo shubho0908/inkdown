@@ -7,9 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "node scripts/typecheck.mjs",
-    "guard:api": "node scripts/check-api-guardrails.mjs",
-    "ci:local": "node scripts/ci-local.mjs"
+    "typecheck": "bun scripts/typecheck.mjs",
+    "guard:api": "bun scripts/check-api-guardrails.mjs",
+    "ci:local": "bun scripts/ci-local.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

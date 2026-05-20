@@ -8,8 +8,14 @@ import { JsonLd } from '@/components/json-ld'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { getPublicFolderBySlug, getPublicFolderFileById, getPublicFolderTreeBySlug } from '@/lib/public-folders'
 import { createSocialImageSet } from '@/lib/social-metadata'
-import { createSiteUrl, getSiteUrl, getSiteUrlObject } from '@/lib/site-url'
+import {
+  createSiteUrl,
+  getRequestOrigin,
+  getSiteUrl,
+  getSiteUrlObject,
+} from '@/lib/site-url'
 import type { TreeItem } from '@/lib/types'
+import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 
 interface SharedFolderPageProps {
@@ -42,18 +48,20 @@ export async function generateMetadata({
     return { title: 'Not Found' }
   }
 
-  const documentUrl = createSiteUrl(`/view/folder/${slug}`).toString()
+  const origin = getRequestOrigin(await headers())
+  const documentUrl = createSiteUrl(`/view/folder/${slug}`, origin).toString()
   const description = `Browse the shared folder "${folder.name}" on Inkdown.`
   const socialImageAlt = `Preview of the shared folder "${folder.name}" on Inkdown`
   const socialImages = createSocialImageSet(
     `/view/folder/${slug}`,
     socialImageAlt,
+    origin,
   )
 
   return {
     title: folder.name,
     description,
-    metadataBase: getSiteUrlObject(),
+    metadataBase: getSiteUrlObject(origin),
     alternates: {
       canonical: documentUrl,
     },
@@ -98,8 +106,9 @@ export default async function SharedFolderPage({
     selectedFile = await getPublicFolderFileById(slug, fallbackFileId)
   }
 
-  const siteUrl = getSiteUrl()
-  const folderUrl = createSiteUrl(`/view/folder/${slug}`).toString()
+  const origin = getRequestOrigin(await headers())
+  const siteUrl = getSiteUrl(origin)
+  const folderUrl = createSiteUrl(`/view/folder/${slug}`, origin).toString()
   const subfolderCount = Math.max(sharedFolder.folders.length - 1, 0)
   const structuredData = {
     '@context': 'https://schema.org',
@@ -115,7 +124,7 @@ export default async function SharedFolderPage({
       url: siteUrl,
       logo: {
         '@type': 'ImageObject',
-        url: createSiteUrl('/favicon.png').toString(),
+        url: createSiteUrl('/favicon.png', origin).toString(),
       },
     },
   }
@@ -133,7 +142,7 @@ export default async function SharedFolderPage({
             <Button size="sm" asChild className="shrink-0">
               <Link href="/auth/sign-up">
                 Start writing
-                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                <ArrowRight className="ml-1.5 size-3.5" />
               </Link>
             </Button>
           </div>

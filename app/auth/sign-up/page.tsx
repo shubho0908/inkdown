@@ -343,8 +343,8 @@ export default function SignUpPage() {
                 )}
                 {validationErrors.length > 0 && (
                   <ul className="text-xs text-destructive space-y-1">
-                    {validationErrors.map((err, idx) => (
-                      <li key={idx}>• {err}</li>
+                    {validationErrors.map((err) => (
+                      <li key={err}>• {err}</li>
                     ))}
                   </ul>
                 )}
@@ -386,9 +386,9 @@ export default function SignUpPage() {
         <div className="mt-4">
           {(showPasswordRequirements || error?.type === 'validation') && password.length > 0 && (
             <div className="space-y-1">
-              {passwordValidation.requirements.filter(req => !req.met).map((req, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <svg className="w-3 h-3 text-destructive" fill="currentColor" viewBox="0 0 20 20">
+              {passwordValidation.requirements.filter(req => !req.met).map((req) => (
+                <div key={req.label} className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <svg className="size-3 text-destructive" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
                   {req.label}

@@ -108,7 +108,7 @@ export function TreeNode({
       <div
         data-tree-node-id={item.id}
         className={cn(
-          'group flex min-w-0 items-center gap-1 rounded-xl border border-transparent px-2 py-2 text-sm transition-colors hover:bg-accent/70',
+          'group flex min-w-0 items-center gap-1 rounded-xl border border-transparent p-2 text-sm transition-colors hover:bg-accent/70',
           isSelected && 'border-border bg-accent/80 shadow-xs',
           isDragging && 'cursor-grabbing opacity-55',
           isDropTarget &&
@@ -189,20 +189,20 @@ export function TreeNode({
           className="flex h-6 w-5 shrink-0 cursor-grab items-center justify-center text-muted-foreground/55 transition-colors hover:text-muted-foreground"
           aria-label={`Drag ${item.name}`}
         >
-          <GripVertical className="h-3.5 w-3.5" />
+          <GripVertical className="size-3.5" />
         </button>
 
         {isFolder ? (
           <button
             onClick={() => onToggleExpanded(item.id)}
-            className="flex h-4 w-4 shrink-0 items-center justify-center"
+            className="flex size-4 shrink-0 items-center justify-center"
             aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${item.name}`}
             aria-expanded={isExpanded}
           >
             {isExpanded ? (
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              <ChevronDown className="size-3.5 text-muted-foreground" />
             ) : (
-              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+              <ChevronRight className="size-3.5 text-muted-foreground" />
             )}
           </button>
         ) : (
@@ -224,19 +224,19 @@ export function TreeNode({
         >
           {isFolder ? (
             isExpanded ? (
-              <FolderOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <FolderOpen className="size-4 shrink-0 text-muted-foreground" />
             ) : (
-              <Folder className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <Folder className="size-4 shrink-0 text-muted-foreground" />
             )
           ) : (
-            <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <FileText className="size-4 shrink-0 text-muted-foreground" />
           )}
           <span className="min-w-0 flex-1 truncate">{item.name}</span>
           {isFolder && isExternalDropTarget && (
-            <FileUp className="h-3.5 w-3.5 shrink-0 text-primary" />
+            <FileUp className="size-3.5 shrink-0 text-primary" />
           )}
           {item.is_public && (
-            <Share2 className="h-3 w-3 shrink-0 text-primary" />
+            <Share2 className="size-3 shrink-0 text-primary" />
           )}
         </button>
 
@@ -245,9 +245,9 @@ export function TreeNode({
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 shrink-0 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+              className="size-6 shrink-0 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
             >
-              <MoreHorizontal className="h-4 w-4" />
+              <MoreHorizontal className="size-4" />
               <span className="sr-only">More options</span>
             </Button>
           </DropdownMenuTrigger>
@@ -255,16 +255,16 @@ export function TreeNode({
             {isFolder && (
               <>
                 <DropdownMenuItem onClick={() => onCreateFile(item.id)}>
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className="mr-2 size-4" />
                   New File
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onCreateFolder(item.id)}>
-                  <Folder className="mr-2 h-4 w-4" />
+                  <Folder className="mr-2 size-4" />
                   New Folder
                 </DropdownMenuItem>
                 {onExportFolder && (
                   <DropdownMenuItem onClick={() => onExportFolder(item.id, item.name)}>
-                    <FolderOutput className="mr-2 h-4 w-4" />
+                    <FolderOutput className="mr-2 size-4" />
                     Export Folder
                   </DropdownMenuItem>
                 )}
@@ -274,7 +274,7 @@ export function TreeNode({
             {onTogglePublic && (
               <>
                 <DropdownMenuItem onClick={() => onTogglePublic(item)}>
-                  <Share2 className="mr-2 h-4 w-4" />
+                  <Share2 className="mr-2 size-4" />
                   {item.is_public ? 'Make Private' : 'Make Public'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -282,7 +282,7 @@ export function TreeNode({
             )}
             {!isFolder && onDownloadFile ? (
               <DropdownMenuItem onClick={() => onDownloadFile(item)}>
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="mr-2 size-4" />
                 Download .md
               </DropdownMenuItem>
             ) : null}
@@ -290,7 +290,7 @@ export function TreeNode({
               <DropdownMenuSeparator />
             ) : null}
             <DropdownMenuItem onClick={() => onRename(item)}>
-              <Pencil className="mr-2 h-4 w-4" />
+              <Pencil className="mr-2 size-4" />
               Rename
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -298,7 +298,7 @@ export function TreeNode({
               onClick={() => onDelete(item)}
               className="mt-1 rounded-lg"
             >
-              <Trash2 className="mr-2 h-4 w-4" />
+              <Trash2 className="mr-2 size-4" />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>

@@ -24,7 +24,7 @@ export default function EmailPreviewPage() {
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" asChild>
               <Link href="/">
-                <ArrowLeft className="mr-1.5 h-4 w-4" />
+                <ArrowLeft className="mr-1.5 size-4" />
                 Back
               </Link>
             </Button>
@@ -36,7 +36,7 @@ export default function EmailPreviewPage() {
 
       <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold sm:text-4xl">Email Templates</h1>
+          <h1 className="text-3xl font-semibold sm:text-4xl">Email Templates</h1>
           <p className="mt-2 text-muted-foreground">
             Preview the email templates used by Inkdown for user communications.
           </p>
