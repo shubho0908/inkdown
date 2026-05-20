@@ -1,91 +1,81 @@
-'use client'
+"use client";
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { AuthShell } from '@/components/auth/auth-shell'
-import { createClient } from '@/lib/supabase/client'
-import { ensureSessionPersistence } from '@/lib/supabase/persistence'
-import { isUserEmailVerified } from '@/lib/auth'
-import { validatePassword, checkPasswordRequirements } from '@/lib/auth/password-validation'
-import Link from 'next/link'
-import { useState, useEffect, useRef } from 'react'
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AuthShell } from "@/components/auth/auth-shell";
+import { createClient } from "@/lib/supabase/client";
+import { ensureSessionPersistence } from "@/lib/supabase/persistence";
+import { isUserEmailVerified } from "@/lib/auth";
+import { validatePassword, checkPasswordRequirements } from "@/lib/auth/password-validation";
+import Link from "next/link";
+import { useState, useEffect, useRef, useTransition } from "react";
 
-export type ResetPasswordIssue =
-  | 'expired'
-  | 'invalid'
-  | 'missing_session'
-  | 'validation_failed'
+export type ResetPasswordIssue = "expired" | "invalid" | "missing_session" | "validation_failed";
 
 type ResetPasswordIssueCopy = {
-  title: string
-  description: string
-  heading: string
-  message: string
-  tone: 'amber' | 'destructive'
-}
+  title: string;
+  description: string;
+  heading: string;
+  message: string;
+  tone: "amber" | "destructive";
+};
 
-const RESET_PASSWORD_ISSUE_COPY: Record<
-  ResetPasswordIssue,
-  ResetPasswordIssueCopy
-> = {
+const RESET_PASSWORD_ISSUE_COPY: Record<ResetPasswordIssue, ResetPasswordIssueCopy> = {
   expired: {
-    title: 'Link Expired',
-    description: 'Your password reset link has expired',
-    heading: 'Reset link expired',
+    title: "Link Expired",
+    description: "Your password reset link has expired",
+    heading: "Reset link expired",
     message:
-      'Password reset links are time-limited. Request a new link and use the newest email you receive.',
-    tone: 'amber',
+      "Password reset links are time-limited. Request a new link and use the newest email you receive.",
+    tone: "amber",
   },
   invalid: {
-    title: 'Invalid Link',
-    description: 'This password reset link cannot be used',
-    heading: 'Reset link invalid',
+    title: "Invalid Link",
+    description: "This password reset link cannot be used",
+    heading: "Reset link invalid",
     message:
-      'This link may be malformed, already used, or from an older reset request. Request a fresh link to continue.',
-    tone: 'destructive',
+      "This link may be malformed, already used, or from an older reset request. Request a fresh link to continue.",
+    tone: "destructive",
   },
   missing_session: {
-    title: 'Reset Session Missing',
-    description: 'Open your password reset link from your email',
-    heading: 'No active reset session',
+    title: "Reset Session Missing",
+    description: "Open your password reset link from your email",
+    heading: "No active reset session",
     message:
-      'This page only works after opening a valid password reset email. Request a new link if you do not have one.',
-    tone: 'destructive',
+      "This page only works after opening a valid password reset email. Request a new link if you do not have one.",
+    tone: "destructive",
   },
   validation_failed: {
-    title: 'Reset Link Problem',
-    description: 'We could not validate your reset link',
-    heading: 'Reset link could not be validated',
+    title: "Reset Link Problem",
+    description: "We could not validate your reset link",
+    heading: "Reset link could not be validated",
     message:
-      'Something went wrong while checking this reset link. Request a new link and try again.',
-    tone: 'destructive',
+      "Something went wrong while checking this reset link. Request a new link and try again.",
+    tone: "destructive",
   },
-}
+};
 
-async function isProfileEmailVerified(
-  supabase: ReturnType<typeof createClient>,
-  userId: string,
-) {
+async function isProfileEmailVerified(supabase: ReturnType<typeof createClient>, userId: string) {
   const { data, error } = await supabase
-    .from('profiles')
-    .select('email_verified')
-    .eq('user_id', userId)
-    .maybeSingle()
+    .from("profiles")
+    .select("email_verified")
+    .eq("user_id", userId)
+    .maybeSingle();
 
   if (error) {
-    return false
+    return false;
   }
 
-  return Boolean(data?.email_verified)
+  return Boolean(data?.email_verified);
 }
 
 type ResetPasswordFormProps = {
-  initialError?: string | null
-  initialIssue?: ResetPasswordIssue | null
-  recoveryCode?: string | null
-  recoveryTokenHash?: string | null
-}
+  initialError?: string | null;
+  initialIssue?: ResetPasswordIssue | null;
+  recoveryCode?: string | null;
+  recoveryTokenHash?: string | null;
+};
 
 export function ResetPasswordForm({
   initialError = null,
@@ -93,208 +83,198 @@ export function ResetPasswordForm({
   recoveryCode = null,
   recoveryTokenHash = null,
 }: ResetPasswordFormProps) {
-  const [password, setPassword] = useState('')
-  const [repeatPassword, setRepeatPassword] = useState('')
-  const [error, setError] = useState<string | null>(initialError)
-  const [isLoading, setIsLoading] = useState(false)
-  const [passwordStrength, setPasswordStrength] = useState<'weak' | 'fair' | 'good' | 'strong' | null>(null)
-  const [validationErrors, setValidationErrors] = useState<string[]>([])
-  const [passwordRequirements, setPasswordRequirements] = useState<ReturnType<typeof checkPasswordRequirements>>([])
-  const [isValidatingToken, setIsValidatingToken] = useState(true)
-  const [tokenValid, setTokenValid] = useState(false)
-  const [resetIssue, setResetIssue] = useState<ResetPasswordIssue | null>(
-    initialIssue,
-  )
-  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false)
-  const hasProcessedRecoveryLink = useRef(false)
+  const [password, setPassword] = useState("");
+  const [repeatPassword, setRepeatPassword] = useState("");
+  const [error, setError] = useState<string | null>(initialError);
+  const [isPending, startTransition] = useTransition();
+  const [passwordStrength, setPasswordStrength] = useState<
+    "weak" | "fair" | "good" | "strong" | null
+  >(null);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [passwordRequirements, setPasswordRequirements] = useState<
+    ReturnType<typeof checkPasswordRequirements>
+  >([]);
+  const [isValidatingToken, setIsValidatingToken] = useState(true);
+  const [tokenValid, setTokenValid] = useState(false);
+  const [resetIssue, setResetIssue] = useState<ResetPasswordIssue | null>(initialIssue);
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
+  const hasProcessedRecoveryLink = useRef(false);
 
   useEffect(() => {
     if (initialError || initialIssue) {
-      setResetIssue(initialIssue ?? 'validation_failed')
-      setIsValidatingToken(false)
-      return
+      setResetIssue(initialIssue ?? "validation_failed");
+      setIsValidatingToken(false);
+      return;
     }
 
-    const supabase = createClient()
+    const supabase = createClient();
 
     async function validateResetSession() {
       try {
         if ((recoveryCode || recoveryTokenHash) && !hasProcessedRecoveryLink.current) {
-          hasProcessedRecoveryLink.current = true
+          hasProcessedRecoveryLink.current = true;
 
           const { error: recoveryError } = recoveryTokenHash
             ? await supabase.auth.verifyOtp({
                 token_hash: recoveryTokenHash,
-                type: 'recovery',
+                type: "recovery",
               })
-            : await supabase.auth.exchangeCodeForSession(recoveryCode!)
+            : await supabase.auth.exchangeCodeForSession(recoveryCode!);
 
           if (recoveryError) {
-            const message = recoveryError.message || 'Invalid or expired reset link.'
-            const normalizedMessage = message.toLowerCase()
+            const message = recoveryError.message || "Invalid or expired reset link.";
+            const normalizedMessage = message.toLowerCase();
 
-            setResetIssue(
-              normalizedMessage.includes('expired') ? 'expired' : 'invalid',
-            )
-            setError(message)
-            setTokenValid(false)
-            return
+            setResetIssue(normalizedMessage.includes("expired") ? "expired" : "invalid");
+            setError(message);
+            setTokenValid(false);
+            return;
           }
 
-          window.history.replaceState(null, '', '/auth/reset-password')
+          window.history.replaceState(null, "", "/auth/reset-password");
         }
 
-        const { data, error } = await supabase.auth.getUser()
+        const { data, error } = await supabase.auth.getUser();
 
         if (error || !data.user) {
-          setResetIssue('missing_session')
-          setError('No active password reset session found.')
-          setTokenValid(false)
+          setResetIssue("missing_session");
+          setError("No active password reset session found.");
+          setTokenValid(false);
         } else {
-          setTokenValid(true)
+          setTokenValid(true);
         }
       } catch {
-        setResetIssue('validation_failed')
-        setError('Failed to validate reset link. Please try again.')
-        setTokenValid(false)
+        setResetIssue("validation_failed");
+        setError("Failed to validate reset link. Please try again.");
+        setTokenValid(false);
       } finally {
-        setIsValidatingToken(false)
+        setIsValidatingToken(false);
       }
     }
 
-    void validateResetSession()
-  }, [initialError, initialIssue, recoveryCode, recoveryTokenHash])
+    void validateResetSession();
+  }, [initialError, initialIssue, recoveryCode, recoveryTokenHash]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (!tokenValid) {
-      setError('Invalid reset link. Please request a new password reset.')
-      return
+      setError("Invalid reset link. Please request a new password reset.");
+      return;
     }
-    
-    const supabase = createClient()
-    setIsLoading(true)
-    setError(null)
-    setValidationErrors([])
 
-    const passwordValidation = validatePassword(password)
+    const supabase = createClient();
+    setError(null);
+    setValidationErrors([]);
+
+    const passwordValidation = validatePassword(password);
     if (!passwordValidation.valid) {
-      setError(passwordValidation.error)
-      setIsLoading(false)
-      return
+      setError(passwordValidation.error);
+      return;
     }
 
     if (password !== repeatPassword) {
-      setError('Passwords do not match')
-      setIsLoading(false)
-      return
+      setError("Passwords do not match");
+      return;
     }
 
-    try {
-      const { data, error: updateError } = await supabase.auth.updateUser({
-        password,
-      })
+    startTransition(async () => {
+      try {
+        const { data, error: updateError } = await supabase.auth.updateUser({
+          password,
+        });
 
-      if (updateError) {
-        throw updateError
-      }
-
-      if (!data.user) {
-        throw new Error('Failed to update password')
-      }
-
-      if (!isUserEmailVerified(data.user)) {
-        const hasVerifiedProfile = await isProfileEmailVerified(
-          supabase,
-          data.user.id,
-        )
-
-        if (!hasVerifiedProfile) {
-          await supabase.auth.signOut()
-          setError('Your email is not verified. Please verify your email first.')
-          setIsLoading(false)
-          return
+        if (updateError) {
+          throw updateError;
         }
-      }
 
-      await ensureSessionPersistence(supabase)
-      window.location.replace('/workspace')
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'An error occurred')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+        if (!data.user) {
+          throw new Error("Failed to update password");
+        }
+
+        if (!isUserEmailVerified(data.user)) {
+          const hasVerifiedProfile = await isProfileEmailVerified(supabase, data.user.id);
+
+          if (!hasVerifiedProfile) {
+            await supabase.auth.signOut();
+            setError("Your email is not verified. Please verify your email first.");
+            return;
+          }
+        }
+
+        await ensureSessionPersistence(supabase);
+        window.location.replace("/workspace");
+      } catch (error: unknown) {
+        setError(error instanceof Error ? error.message : "An error occurred");
+      }
+    });
+  };
 
   useEffect(() => {
     if (password.length === 0) {
-      setPasswordStrength(null)
-      setValidationErrors([])
-      setPasswordRequirements([])
-      return
+      setPasswordStrength(null);
+      setValidationErrors([]);
+      setPasswordRequirements([]);
+      return;
     }
 
-    const result = validatePassword(password)
-    const requirements = checkPasswordRequirements(password)
-    setPasswordRequirements(requirements)
+    const result = validatePassword(password);
+    const requirements = checkPasswordRequirements(password);
+    setPasswordRequirements(requirements);
     if (result.valid) {
-      setPasswordStrength(result.strength)
-      setValidationErrors([])
+      setPasswordStrength(result.strength);
+      setValidationErrors([]);
     } else {
-      setPasswordStrength(null)
-      setValidationErrors([result.error])
+      setPasswordStrength(null);
+      setValidationErrors([result.error]);
     }
-  }, [password])
+  }, [password]);
 
   const getStrengthText = () => {
     switch (passwordStrength) {
-      case 'weak': return 'Weak'
-      case 'fair': return 'Fair'
-      case 'good': return 'Good'
-      case 'strong': return 'Strong'
-      default: return ''
+      case "weak":
+        return "Weak";
+      case "fair":
+        return "Fair";
+      case "good":
+        return "Good";
+      case "strong":
+        return "Strong";
+      default:
+        return "";
     }
-  }
+  };
 
   if (isValidatingToken) {
     return (
-      <AuthShell
-        title="Validating..."
-        description="Please wait while we validate your reset link"
-      >
+      <AuthShell title="Validating..." description="Please wait while we validate your reset link">
         <div className="flex justify-center py-8">
           <div className="animate-spin rounded-full size-8 border-b-2 border-primary" />
         </div>
       </AuthShell>
-    )
+    );
   }
 
   if (!tokenValid) {
-    const issueCopy =
-      RESET_PASSWORD_ISSUE_COPY[resetIssue ?? 'validation_failed']
+    const issueCopy = RESET_PASSWORD_ISSUE_COPY[resetIssue ?? "validation_failed"];
     const issueClasses =
-      issueCopy.tone === 'amber'
+      issueCopy.tone === "amber"
         ? {
-            container:
-              'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800',
-            icon: 'text-amber-600 dark:text-amber-400',
-            heading: 'text-amber-800 dark:text-amber-200',
-            message: 'text-amber-700 dark:text-amber-300',
+            container: "bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800",
+            icon: "text-amber-600 dark:text-amber-400",
+            heading: "text-amber-800 dark:text-amber-200",
+            message: "text-amber-700 dark:text-amber-300",
           }
         : {
             container:
-              'bg-destructive/10 border-destructive/20 dark:bg-destructive/10 dark:border-destructive/30',
-            icon: 'text-destructive',
-            heading: 'text-destructive',
-            message: 'text-muted-foreground',
-          }
+              "bg-destructive/10 border-destructive/20 dark:bg-destructive/10 dark:border-destructive/30",
+            icon: "text-destructive",
+            heading: "text-destructive",
+            message: "text-muted-foreground",
+          };
 
     return (
-      <AuthShell
-        title={issueCopy.title}
-        description={issueCopy.description}
-      >
+      <AuthShell title={issueCopy.title} description={issueCopy.description}>
         <div className="flex flex-col gap-4">
           <div className={`border rounded-lg p-4 ${issueClasses.container}`}>
             <div className="flex items-start gap-3">
@@ -312,19 +292,13 @@ export function ResetPasswordForm({
                 />
               </svg>
               <div className="flex-1">
-                <p className={`text-sm font-medium ${issueClasses.heading}`}>
-                  {issueCopy.heading}
-                </p>
-                <p className={`text-xs mt-1 ${issueClasses.message}`}>
-                  {issueCopy.message}
-                </p>
+                <p className={`text-sm font-medium ${issueClasses.heading}`}>{issueCopy.heading}</p>
+                <p className={`text-xs mt-1 ${issueClasses.message}`}>{issueCopy.message}</p>
               </div>
             </div>
           </div>
           {error ? (
-            <p className="text-xs text-muted-foreground text-center break-words">
-              {error}
-            </p>
+            <p className="text-xs text-muted-foreground text-center break-words">{error}</p>
           ) : null}
           <Link href="/auth/forgot-password" className="w-full">
             <Button variant="outline" className="w-full">
@@ -333,14 +307,11 @@ export function ResetPasswordForm({
           </Link>
         </div>
       </AuthShell>
-    )
+    );
   }
 
   return (
-    <AuthShell
-      title="Set new password"
-      description="Enter your new password below"
-    >
+    <AuthShell title="Set new password" description="Enter your new password below">
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-4">
           <div className="grid gap-2">
@@ -351,12 +322,12 @@ export function ResetPasswordForm({
               required
               value={password}
               onChange={(e) => {
-                setPassword(e.target.value)
-                setShowPasswordRequirements(e.target.value.length > 0)
+                setPassword(e.target.value);
+                setShowPasswordRequirements(e.target.value.length > 0);
               }}
               onFocus={() => password.length > 0 && setShowPasswordRequirements(true)}
               onBlur={() => !error && setShowPasswordRequirements(false)}
-              disabled={isLoading}
+              disabled={isPending}
               autoComplete="new-password"
               minLength={12}
             />
@@ -377,9 +348,7 @@ export function ResetPasswordForm({
                   </ul>
                 )}
                 {password.length > 0 && password.length < 12 && (
-                  <p className="text-xs text-muted-foreground">
-                    Minimum 12 characters required
-                  </p>
+                  <p className="text-xs text-muted-foreground">Minimum 12 characters required</p>
                 )}
               </div>
             )}
@@ -392,7 +361,7 @@ export function ResetPasswordForm({
               required
               value={repeatPassword}
               onChange={(e) => setRepeatPassword(e.target.value)}
-              disabled={isLoading}
+              disabled={isPending}
               autoComplete="new-password"
             />
             {repeatPassword && password !== repeatPassword && (
@@ -400,35 +369,55 @@ export function ResetPasswordForm({
             )}
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={isLoading || !passwordStrength || passwordStrength === 'weak'}
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isPending || !passwordStrength || passwordStrength === "weak"}
           >
-            {isLoading ? 'Updating...' : 'Update password'}
+            {isPending ? "Updating…" : "Update password"}
           </Button>
         </div>
         <div className="mt-4">
           {(showPasswordRequirements || error) && password.length > 0 && (
             <div className="space-y-1">
-              {passwordRequirements.filter(req => !req.met).map((req) => (
-                <div key={req.label} className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <svg className="size-3 text-destructive" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                  {req.label}
-                </div>
-              ))}
-              {passwordRequirements.filter(req => req.met).length > 0 && passwordRequirements.filter(req => !req.met).length > 0 && (
-                <div className="text-xs text-muted-foreground">
-                  {passwordRequirements.filter(req => req.met).length} requirement{passwordRequirements.filter(req => req.met).length > 1 ? 's' : ''} met
-                </div>
-              )}
+              {passwordRequirements.reduce<Array<React.ReactNode>>((acc, req) => {
+                if (!req.met) {
+                  acc.push(
+                    <div
+                      key={req.label}
+                      className="flex items-center gap-2 text-xs text-muted-foreground"
+                    >
+                      <svg
+                        className="size-3 text-destructive"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      {req.label}
+                    </div>,
+                  );
+                }
+                return acc;
+              }, [])}
+              {(() => {
+                const metCount = passwordRequirements.filter((req) => req.met).length;
+                const unmetCount = passwordRequirements.filter((req) => !req.met).length;
+                return metCount > 0 && unmetCount > 0 ? (
+                  <div className="text-xs text-muted-foreground">
+                    {metCount} requirement{metCount > 1 ? "s" : ""} met
+                  </div>
+                ) : null;
+              })()}
             </div>
           )}
         </div>
         <div className="mt-4 text-center text-sm text-muted-foreground">
-          Remember your password?{' '}
+          Remember your password?{" "}
           <Link
             href="/auth/login"
             className="text-primary underline underline-offset-4 hover:text-primary/80"
@@ -438,5 +427,5 @@ export function ResetPasswordForm({
         </div>
       </form>
     </AuthShell>
-  )
+  );
 }

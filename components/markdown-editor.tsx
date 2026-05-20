@@ -1,18 +1,8 @@
 "use client";
 
-import {
-  type DragEvent,
-  useCallback,
-  useDeferredValue,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { type DragEvent, useCallback, useDeferredValue, useEffect, useRef, useState } from "react";
 import { ShareDialog } from "@/components/share-dialog";
-import {
-  MarkdownEditorHeader,
-  type ViewMode,
-} from "@/components/markdown-editor-header";
+import { MarkdownEditorHeader, type ViewMode } from "@/components/markdown-editor-header";
 import { MarkdownEditorLoading } from "@/components/markdown-editor-loading";
 import { MarkdownEditorToolbar } from "@/components/markdown-editor-toolbar";
 import { MarkdownPreview } from "@/components/markdown-preview";
@@ -56,7 +46,7 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
   const [isFileDropActive, setIsFileDropActive] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("split");
   const [shareOpen, setShareOpen] = useState(false);
-  const [prevFileId, setPrevFileId] = useState<string | undefined>(undefined);
+  const prevFileIdRef = useRef<string | undefined>(undefined);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fileDragDepthRef = useRef(0);
@@ -74,8 +64,8 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
   // useEffect so that state is updated in the same render pass rather than
   // causing a cascading second render via an effect.
   // See: https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
-  if (file?.id !== prevFileId) {
-    setPrevFileId(file?.id);
+  if (file?.id !== prevFileIdRef.current) {
+    prevFileIdRef.current = file?.id;
     if (file) {
       setContent(file.content);
       setHasChanges(false);
@@ -147,20 +137,17 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
     setIsFileDropActive(true);
   }, []);
 
-  const handleFileDragLeave = useCallback(
-    (event: DragEvent<HTMLDivElement>) => {
-      if (!hasDraggedFiles(event.dataTransfer)) {
-        return;
-      }
+  const handleFileDragLeave = useCallback((event: DragEvent<HTMLDivElement>) => {
+    if (!hasDraggedFiles(event.dataTransfer)) {
+      return;
+    }
 
-      event.preventDefault();
-      fileDragDepthRef.current = Math.max(fileDragDepthRef.current - 1, 0);
-      if (fileDragDepthRef.current === 0) {
-        setIsFileDropActive(false);
-      }
-    },
-    [],
-  );
+    event.preventDefault();
+    fileDragDepthRef.current = Math.max(fileDragDepthRef.current - 1, 0);
+    if (fileDragDepthRef.current === 0) {
+      setIsFileDropActive(false);
+    }
+  }, []);
 
   const handleFileDrop = useCallback(
     async (event: DragEvent<HTMLDivElement>) => {
@@ -225,11 +212,7 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
     const end = textarea.selectionEnd;
     const selectedText = content.substring(start, end);
     const newContent =
-      content.substring(0, start) +
-      before +
-      selectedText +
-      after +
-      content.substring(end);
+      content.substring(0, start) + before + selectedText + after + content.substring(end);
 
     handleContentChange(newContent);
 
@@ -246,8 +229,7 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
 
     const start = textarea.selectionStart;
     const lineStart = content.lastIndexOf("\n", start - 1) + 1;
-    const newContent =
-      content.substring(0, lineStart) + prefix + content.substring(lineStart);
+    const newContent = content.substring(0, lineStart) + prefix + content.substring(lineStart);
 
     handleContentChange(newContent);
 
@@ -302,10 +284,7 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
       />
 
       {viewMode !== "preview" && (
-        <MarkdownEditorToolbar
-          onWrap={insertMarkdown}
-          onLinePrefix={insertAtLineStart}
-        />
+        <MarkdownEditorToolbar onWrap={insertMarkdown} onLinePrefix={insertAtLineStart} />
       )}
 
       <div

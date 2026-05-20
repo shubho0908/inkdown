@@ -4,11 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import hljs from "highlight.js/lib/common";
 import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  escapeHtml,
-  formatLanguageLabel,
-  resolveLanguage,
-} from "@/lib/code-block";
+import { escapeHtml, formatLanguageLabel, resolveLanguage } from "@/lib/code-block";
 
 interface CodeBlockProps {
   code: string;
@@ -35,24 +31,16 @@ async function copyText(text: string) {
   const textarea = document.createElement("textarea");
   textarea.value = text;
   textarea.setAttribute("readonly", "");
-  textarea.style.position = "absolute";
-  textarea.style.left = "-9999px";
+  textarea.style.cssText = "position:absolute;left:-9999px";
   document.body.appendChild(textarea);
   textarea.select();
   document.execCommand("copy");
   document.body.removeChild(textarea);
 }
 
-export function CodeBlock({
-  code,
-  language,
-  showCopyButton = true,
-}: CodeBlockProps) {
+export function CodeBlock({ code, language, showCopyButton = true }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
-  const highlightedCode = useMemo(
-    () => highlightCode(code, language),
-    [code, language],
-  );
+  const highlightedCode = useMemo(() => highlightCode(code, language), [code, language]);
   const label = formatLanguageLabel(language);
 
   useEffect(() => {
@@ -88,11 +76,7 @@ export function CodeBlock({
             onClick={handleCopy}
             aria-label={copied ? "Code copied" : "Copy code"}
           >
-            {copied ? (
-              <Check className="size-3.5" />
-            ) : (
-              <Copy className="size-3.5" />
-            )}
+            {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
             {copied ? "Copied" : "Copy"}
           </Button>
         ) : null}

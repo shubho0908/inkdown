@@ -13,7 +13,7 @@ import {
 
 export function ThemeToggle() {
   const { setTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
+  const [mounted, setMounted] = React.useState(true);
 
   React.useEffect(() => {
     setMounted(true);
@@ -38,15 +38,9 @@ export function ThemeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          Light
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
-          Dark
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
-          System
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

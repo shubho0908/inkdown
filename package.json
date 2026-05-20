@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "format": "prettier --write .",
     "typecheck": "bun scripts/typecheck.mjs",
     "guard:api": "bun scripts/check-api-guardrails.mjs",
-    "ci:local": "bun scripts/ci-local.mjs"
+    "ci:local": "bun scripts/ci-local.mjs",
+    "prepare": "husky"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -85,7 +87,11 @@
     "@types/react-dom": "19.2.3",
     "eslint": "^9.0.0",
     "eslint-config-next": "16.2.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.5",
     "postcss": "^8.5",
+    "prettier": "^3.8.3",
+    "react-doctor": "^0.2.1",
     "tailwindcss": "^4.2.0",
     "tw-animate-css": "1.3.3",
     "type-fest": "5.5.0",

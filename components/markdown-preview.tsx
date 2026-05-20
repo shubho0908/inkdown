@@ -57,11 +57,7 @@ function normalizeUrl(value?: string) {
   try {
     const url = new URL(trimmed);
 
-    if (
-      ["http:", "https:", "mailto:", "tel:", "data:", "blob:"].includes(
-        url.protocol,
-      )
-    ) {
+    if (["http:", "https:", "mailto:", "tel:", "data:", "blob:"].includes(url.protocol)) {
       return trimmed;
     }
   } catch {
@@ -105,9 +101,9 @@ function getCodeBlockDataFromNode(node?: {
     : codeNode.properties?.className;
 
   const code = (codeNode.children || [])
-    .filter((child) => child.type === "text")
-    .map((child) => child.value || "")
-    .join("")
+    .reduce((acc, child) => {
+      return child.type === "text" ? acc + (child.value || "") : acc;
+    }, "")
     .replace(/\n$/, "");
 
   return {
@@ -136,19 +132,13 @@ export const MarkdownPreview = memo(function MarkdownPreview({
         </h2>
       ),
       h3: ({ children }) => (
-        <h3 className="mt-6 mb-3 text-lg font-semibold tracking-tight sm:text-xl">
-          {children}
-        </h3>
+        <h3 className="mt-6 mb-3 text-lg font-semibold tracking-tight sm:text-xl">{children}</h3>
       ),
       h4: ({ children }) => (
-        <h4 className="mt-4 mb-2 text-base font-semibold tracking-tight sm:text-lg">
-          {children}
-        </h4>
+        <h4 className="mt-4 mb-2 text-base font-semibold tracking-tight sm:text-lg">{children}</h4>
       ),
       p: ({ children }) => (
-        <p className="leading-7 [overflow-wrap:anywhere] [&:not(:first-child)]:mt-4">
-          {children}
-        </p>
+        <p className="leading-7 [overflow-wrap:anywhere] [&:not(:first-child)]:mt-4">{children}</p>
       ),
       ul: ({ children }) => (
         <ul className="my-4 ml-5 list-disc [overflow-wrap:anywhere] sm:ml-6 [&>li]:mt-2">
@@ -162,7 +152,7 @@ export const MarkdownPreview = memo(function MarkdownPreview({
       ),
       li: ({ children }) => <li>{children}</li>,
       blockquote: ({ children }) => (
-        <blockquote className="mt-4 border-l-4 border-primary/30 pl-4 italic text-muted-foreground">
+        <blockquote className="mt-4 border-l-2 border-primary/30 pl-4 italic text-muted-foreground">
           {children}
         </blockquote>
       ),
@@ -184,19 +174,12 @@ export const MarkdownPreview = memo(function MarkdownPreview({
         );
 
         if (!codeBlock) {
-          return (
-            <pre className="overflow-x-auto rounded-lg bg-muted p-4">
-              {children}
-            </pre>
-          );
+          return <pre className="overflow-x-auto rounded-lg bg-muted p-4">{children}</pre>;
         }
 
         if (codeBlock.language === "mermaid") {
           return (
-            <MermaidDiagram
-              chart={codeBlock.code}
-              theme={isPrintMode ? "light" : undefined}
-            />
+            <MermaidDiagram chart={codeBlock.code} theme={isPrintMode ? "light" : undefined} />
           );
         }
 
@@ -237,9 +220,7 @@ export const MarkdownPreview = memo(function MarkdownPreview({
         );
       },
       img: ({ src, alt }) => {
-        const safeSrc = normalizeImageSrc(
-          typeof src === "string" ? src : undefined,
-        );
+        const safeSrc = normalizeImageSrc(typeof src === "string" ? src : undefined);
 
         if (!safeSrc) {
           return (
@@ -253,11 +234,7 @@ export const MarkdownPreview = memo(function MarkdownPreview({
 
         return (
           <span className="my-4 block overflow-hidden rounded-lg border">
-            <img
-              src={safeSrc}
-              alt={alt || ""}
-              className="h-auto max-w-full"
-            />
+            <img src={safeSrc} alt={alt || ""} className="h-auto max-w-full" />
           </span>
         );
       },
@@ -276,20 +253,12 @@ export const MarkdownPreview = memo(function MarkdownPreview({
         </th>
       ),
       td: ({ children }) => (
-        <td className="border border-border px-3 py-2 align-top sm:px-4">
-          {children}
-        </td>
+        <td className="border border-border px-3 py-2 align-top sm:px-4">{children}</td>
       ),
       input: ({ type, checked, ...props }) => {
         if (type === "checkbox") {
           return (
-            <input
-              type="checkbox"
-              checked={checked}
-              readOnly
-              className="mr-2 size-4"
-              {...props}
-            />
+            <input type="checkbox" checked={checked} readOnly className="mr-2 size-4" {...props} />
           );
         }
         return <input type={type} {...props} />;
@@ -308,11 +277,7 @@ export const MarkdownPreview = memo(function MarkdownPreview({
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[
-          rehypeRaw,
-          [rehypeSanitize, markdownSanitizeSchema],
-          rehypeKatex,
-        ]}
+        rehypePlugins={[rehypeRaw, [rehypeSanitize, markdownSanitizeSchema], rehypeKatex]}
         components={components}
       >
         {normalizedContent}

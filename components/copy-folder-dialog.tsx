@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,52 +8,52 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Folder, FolderOpen, ChevronDown, ChevronRight } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { fetchJson } from '@/lib/api'
-import { createClient } from '@/lib/supabase/client'
-import { useFoldersQuery } from '@/hooks/workspace/use-workspace-queries'
-import type { Folder as FolderType } from '@/lib/types'
-import { toast } from 'sonner'
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Folder, FolderOpen, ChevronDown, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { fetchJson } from "@/lib/api";
+import { createClient } from "@/lib/supabase/client";
+import { useFoldersQuery } from "@/hooks/workspace/use-workspace-queries";
+import type { Folder as FolderType } from "@/lib/types";
+import { toast } from "sonner";
 
 interface CopyFolderDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  shareSlug: string
-  itemName: string
-  itemType?: 'file' | 'folder'
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  shareSlug: string;
+  itemName: string;
+  itemType?: "file" | "folder";
 }
 
 interface FolderNode {
-  folder: FolderType
-  level: number
-  children: FolderNode[]
+  folder: FolderType;
+  level: number;
+  children: FolderNode[];
 }
 
 function buildFolderTree(folders: FolderType[]): FolderNode[] {
-  const folderMap = new Map<string, FolderNode>()
-  const rootNodes: FolderNode[] = []
+  const folderMap = new Map<string, FolderNode>();
+  const rootNodes: FolderNode[] = [];
 
   folders.forEach((folder) => {
-    folderMap.set(folder.id, { folder, level: 0, children: [] })
-  })
+    folderMap.set(folder.id, { folder, level: 0, children: [] });
+  });
 
   folders.forEach((folder) => {
-    const node = folderMap.get(folder.id)
-    if (!node) return
+    const node = folderMap.get(folder.id);
+    if (!node) return;
 
     if (folder.parent_id && folderMap.has(folder.parent_id)) {
-      folderMap.get(folder.parent_id)?.children.push(node)
-      node.level = folderMap.get(folder.parent_id)!.level + 1
+      folderMap.get(folder.parent_id)?.children.push(node);
+      node.level = folderMap.get(folder.parent_id)!.level + 1;
     } else {
-      rootNodes.push(node)
+      rootNodes.push(node);
     }
-  })
+  });
 
-  return rootNodes
+  return rootNodes;
 }
 
 function FolderTreeItem({
@@ -63,15 +63,15 @@ function FolderTreeItem({
   expandedFolderIds,
   onToggleFolder,
 }: {
-  node: FolderNode
-  selectedFolderId: string | null
-  onSelectFolder: (folderId: string | null) => void
-  expandedFolderIds: Set<string>
-  onToggleFolder: (folderId: string) => void
+  node: FolderNode;
+  selectedFolderId: string | null;
+  onSelectFolder: (folderId: string | null) => void;
+  expandedFolderIds: Set<string>;
+  onToggleFolder: (folderId: string) => void;
 }) {
-  const isExpanded = expandedFolderIds.has(node.folder.id)
-  const hasChildren = node.children.length > 0
-  const isSelected = selectedFolderId === node.folder.id
+  const isExpanded = expandedFolderIds.has(node.folder.id);
+  const hasChildren = node.children.length > 0;
+  const isSelected = selectedFolderId === node.folder.id;
 
   return (
     <div
@@ -81,8 +81,8 @@ function FolderTreeItem({
     >
       <div
         className={cn(
-          'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none',
-          isSelected && 'bg-accent text-accent-foreground',
+          "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none",
+          isSelected && "bg-accent text-accent-foreground",
         )}
         style={{ paddingLeft: `${node.level * 16 + 8}px` }}
       >
@@ -91,8 +91,8 @@ function FolderTreeItem({
             type="button"
             className="flex size-5 items-center justify-center rounded hover:bg-accent"
             onClick={(e) => {
-              e.stopPropagation()
-              onToggleFolder(node.folder.id)
+              e.stopPropagation();
+              onToggleFolder(node.folder.id);
             }}
           >
             {isExpanded ? (
@@ -132,7 +132,7 @@ function FolderTreeItem({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 export function CopyFolderDialog({
@@ -140,59 +140,66 @@ export function CopyFolderDialog({
   onOpenChange,
   shareSlug,
   itemName,
-  itemType = 'folder',
+  itemType = "folder",
 }: CopyFolderDialogProps) {
-  const { data: folders, isLoading } = useFoldersQuery()
-  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
-  const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(new Set())
-  const [isCopying, setIsCopying] = useState(false)
+  const { data: folders, isLoading } = useFoldersQuery();
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(new Set());
+  const [isCopying, setIsCopying] = useState(false);
 
-  const folderTree = folders ? buildFolderTree(folders) : []
+  const folderTree = folders ? buildFolderTree(folders) : [];
 
   const toggleFolder = (folderId: string) => {
     setExpandedFolderIds((current) => {
-      const next = new Set(current)
+      const next = new Set(current);
       if (next.has(folderId)) {
-        next.delete(folderId)
+        next.delete(folderId);
       } else {
-        next.add(folderId)
+        next.add(folderId);
       }
-      return next
-    })
-  }
+      return next;
+    });
+  };
 
   const handleCopy = async () => {
-    const supabase = createClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const supabase = createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
     if (!session?.user) {
-      toast.error(`You must be signed in to copy ${itemType === 'folder' ? 'folders' : 'documents'}`)
-      return
+      toast.error(
+        `You must be signed in to copy ${itemType === "folder" ? "folders" : "documents"}`,
+      );
+      return;
     }
 
-    setIsCopying(true)
+    setIsCopying(true);
     try {
-      await fetchJson(`/api/public/${itemType === 'folder' ? 'folders' : 'files'}/${shareSlug}/copy`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ destination_parent_id: selectedFolderId }),
-      })
-      toast.success(`"${itemName}" copied to your workspace`)
-      onOpenChange(false)
-      setSelectedFolderId(null)
+      await fetchJson(
+        `/api/public/${itemType === "folder" ? "folders" : "files"}/${shareSlug}/copy`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ destination_parent_id: selectedFolderId }),
+        },
+      );
+      toast.success(`"${itemName}" copied to your workspace`);
+      onOpenChange(false);
+      setSelectedFolderId(null);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : `Failed to copy ${itemType}`)
+      toast.error(error instanceof Error ? error.message : `Failed to copy ${itemType}`);
     } finally {
-      setIsCopying(false)
+      setIsCopying(false);
     }
-  }
+  };
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
-      setSelectedFolderId(null)
+      setSelectedFolderId(null);
     }
-    onOpenChange(nextOpen)
-  }
+    onOpenChange(nextOpen);
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -212,15 +219,15 @@ export function CopyFolderDialog({
             <div className="max-h-[min(320px,45svh)] overflow-y-auto rounded-lg border bg-background p-2">
               {isLoading ? (
                 <div className="text-sm text-muted-foreground text-center py-4">
-                  Loading folders...
+                  Loading folders…
                 </div>
               ) : folders && folders.length > 0 ? (
                 <div className="space-y-1" role="tree" aria-label="Destination folders">
                   <button
                     type="button"
                     className={cn(
-                      'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none',
-                      selectedFolderId === null && 'bg-accent text-accent-foreground',
+                      "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none",
+                      selectedFolderId === null && "bg-accent text-accent-foreground",
                     )}
                     onClick={() => setSelectedFolderId(null)}
                   >
@@ -264,10 +271,10 @@ export function CopyFolderDialog({
             disabled={isCopying}
             className="w-full sm:w-auto"
           >
-            {isCopying ? 'Copying...' : `Copy ${itemType === 'folder' ? 'Folder' : 'Document'}`}
+            {isCopying ? "Copying..." : `Copy ${itemType === "folder" ? "Folder" : "Document"}`}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

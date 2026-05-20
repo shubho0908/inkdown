@@ -1,31 +1,29 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { InkdownLogo } from '@/components/inkdown-logo'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { AlertCircle } from 'lucide-react'
-import Link from 'next/link'
-import type { Metadata } from 'next'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { InkdownLogo } from "@/components/inkdown-logo";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { AlertCircle } from "lucide-react";
+import Link from "next/link";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Authentication Error',
+  title: "Authentication Error",
   robots: {
     index: false,
     follow: false,
   },
-}
+};
 
 export default async function AuthErrorPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string }>;
 }) {
-  const params = await searchParams
-  const errorMessage =
-    params?.error ??
-    'An unexpected error occurred during authentication.'
+  const params = await searchParams;
+  const errorMessage = params?.error ?? "An unexpected error occurred during authentication.";
   const isPkceStorageError = errorMessage
     .toLowerCase()
-    .includes('pkce code verifier not found in storage')
+    .includes("pkce code verifier not found in storage");
 
   return (
     <div className="relative flex min-h-svh w-full items-start justify-center px-4 py-16 sm:px-6 sm:py-20 md:items-center md:px-10">
@@ -57,11 +55,10 @@ export default async function AuthErrorPage({
               </p>
               {isPkceStorageError ? (
                 <p className="mt-4 text-sm text-muted-foreground">
-                  This usually means the confirmation link opened in a
-                  different browser context than the one that started the auth
-                  flow. Update your Supabase email template to use the server
-                  confirmation route with a `token_hash` instead of the default
-                  PKCE callback URL.
+                  This usually means the confirmation link opened in a different browser context
+                  than the one that started the auth flow. Update your Supabase email template to
+                  use the server confirmation route with a `token_hash` instead of the default PKCE
+                  callback URL.
                 </p>
               ) : null}
               <div className="mt-6">
@@ -74,5 +71,5 @@ export default async function AuthErrorPage({
         </div>
       </div>
     </div>
-  )
+  );
 }

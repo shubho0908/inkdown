@@ -1,69 +1,69 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { Copy } from 'lucide-react'
-import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { CopyFolderDialog } from '@/components/copy-folder-dialog'
-import { createClient } from '@/lib/supabase/client'
+import { useEffect, useState } from "react";
+import { Copy } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { CopyFolderDialog } from "@/components/copy-folder-dialog";
+import { createClient } from "@/lib/supabase/client";
 
 interface SharedCopyButtonProps {
-  shareSlug: string
-  itemName: string
-  itemType: 'file' | 'folder'
-  label?: 'full' | 'short'
-  className?: string
+  shareSlug: string;
+  itemName: string;
+  itemType: "file" | "folder";
+  label?: "full" | "short";
+  className?: string;
 }
 
 export function SharedCopyButton({
   shareSlug,
   itemName,
   itemType,
-  label = 'full',
+  label = "full",
   className,
 }: SharedCopyButtonProps) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
-  const [copyDialogOpen, setCopyDialogOpen] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [copyDialogOpen, setCopyDialogOpen] = useState(false);
 
   useEffect(() => {
-    let isMounted = true
+    let isMounted = true;
 
     async function checkAuth() {
       try {
-        const supabase = createClient()
+        const supabase = createClient();
         const {
           data: { session },
-        } = await supabase.auth.getSession()
+        } = await supabase.auth.getSession();
 
         if (isMounted) {
-          setIsAuthenticated(Boolean(session?.user))
+          setIsAuthenticated(Boolean(session?.user));
         }
       } catch {
         if (isMounted) {
-          setIsAuthenticated(false)
+          setIsAuthenticated(false);
         }
       }
     }
 
-    void checkAuth()
+    void checkAuth();
 
     return () => {
-      isMounted = false
-    }
-  }, [])
+      isMounted = false;
+    };
+  }, []);
 
-  const handleClick = () => {
+  const handleCopyToWorkspace = () => {
     if (isAuthenticated === null) {
-      return
+      return;
     }
 
     if (!isAuthenticated) {
-      toast.error(`Sign in to copy this ${itemType} to your workspace`)
-      return
+      toast.error(`Sign in to copy this ${itemType} to your workspace`);
+      return;
     }
 
-    setCopyDialogOpen(true)
-  }
+    setCopyDialogOpen(true);
+  };
 
   return (
     <>
@@ -71,13 +71,13 @@ export function SharedCopyButton({
         type="button"
         variant="outline"
         size="sm"
-        onClick={handleClick}
+        onClick={handleCopyToWorkspace}
         disabled={isAuthenticated === null}
         className={className}
         title={`Copy ${itemType} to workspace`}
       >
         <Copy className="size-4" />
-        <span>{label === 'full' ? 'Copy to Workspace' : 'Copy'}</span>
+        <span>{label === "full" ? "Copy to Workspace" : "Copy"}</span>
       </Button>
       {isAuthenticated ? (
         <CopyFolderDialog
@@ -89,5 +89,5 @@ export function SharedCopyButton({
         />
       ) : null}
     </>
-  )
+  );
 }

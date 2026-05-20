@@ -1,57 +1,55 @@
-'use client'
+"use client";
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { AuthShell } from '@/components/auth/auth-shell'
-import { fetchJson, ApiError } from '@/lib/api'
-import Link from 'next/link'
-import { useState } from 'react'
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AuthShell } from "@/components/auth/auth-shell";
+import { fetchJson, ApiError } from "@/lib/api";
+import Link from "next/link";
+import { useState, useTransition } from "react";
 
 export function ForgotPasswordForm() {
-  const [email, setEmail] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError(null)
-    setSuccess(false)
+    e.preventDefault();
+    setError(null);
+    setSuccess(false);
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address')
-      setIsLoading(false)
-      return
+      setError("Please enter a valid email address");
+      return;
     }
 
-    try {
-      await fetchJson('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: email.toLowerCase().trim() }),
-      })
-      setSuccess(true)
-    } catch (error) {
-      if (error instanceof ApiError) {
-        if (error.status === 429) {
-          setError('Too many attempts. Please wait a moment and try again.')
-        } else if (error.status >= 500) {
-          setError('Server error. Please try again in a few moments.')
+    startTransition(async () => {
+      try {
+        await fetchJson("/api/auth/forgot-password", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: email.toLowerCase().trim() }),
+        });
+        setSuccess(true);
+      } catch (error) {
+        if (error instanceof ApiError) {
+          if (error.status === 429) {
+            setError("Too many attempts. Please wait a moment and try again.");
+          } else if (error.status >= 500) {
+            setError("Server error. Please try again in a few moments.");
+          } else {
+            setError(error.message || "Failed to send reset link. Please try again.");
+          }
         } else {
-          setError(error.message || 'Failed to send reset link. Please try again.')
+          setError("An unexpected error occurred. Please try again.");
         }
-      } else {
-        setError('An unexpected error occurred. Please try again.')
       }
-    } finally {
-      setIsLoading(false)
-    }
-  }
+    });
+  };
 
   if (success) {
     return (
@@ -68,14 +66,14 @@ export function ForgotPasswordForm() {
             variant="outline"
             className="w-full"
             onClick={() => {
-              setSuccess(false)
-              setEmail('')
+              setSuccess(false);
+              setEmail("");
             }}
           >
             Send another link
           </Button>
           <div className="mt-4 text-center text-sm text-muted-foreground">
-            Remember your password?{' '}
+            Remember your password?{" "}
             <Link
               href="/auth/login"
               className="text-primary underline underline-offset-4 hover:text-primary/80"
@@ -85,7 +83,7 @@ export function ForgotPasswordForm() {
           </div>
         </div>
       </AuthShell>
-    )
+    );
   }
 
   return (
@@ -104,17 +102,17 @@ export function ForgotPasswordForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              disabled={isLoading}
+              disabled={isPending}
               autoComplete="email"
             />
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Sending...' : 'Send reset link'}
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending ? "Sending..." : "Send reset link"}
           </Button>
         </div>
         <div className="mt-4 text-center text-sm text-muted-foreground">
-          Remember your password?{' '}
+          Remember your password?{" "}
           <Link
             href="/auth/login"
             className="text-primary underline underline-offset-4 hover:text-primary/80"
@@ -124,5 +122,5 @@ export function ForgotPasswordForm() {
         </div>
       </form>
     </AuthShell>
-  )
+  );
 }

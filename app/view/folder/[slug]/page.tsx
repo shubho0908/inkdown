@@ -1,62 +1,55 @@
-import type { Metadata } from 'next'
-import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
-import { SharedFolderViewer } from '@/components/shared-folder-viewer'
-import { Button } from '@/components/ui/button'
-import { InkdownLogo } from '@/components/inkdown-logo'
-import { JsonLd } from '@/components/json-ld'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { getPublicFolderBySlug, getPublicFolderFileById, getPublicFolderTreeBySlug } from '@/lib/public-folders'
-import { createSocialImageSet } from '@/lib/social-metadata'
+import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { SharedFolderViewer } from "@/components/shared-folder-viewer";
+import { Button } from "@/components/ui/button";
+import { InkdownLogo } from "@/components/inkdown-logo";
+import { JsonLd } from "@/components/json-ld";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
-  createSiteUrl,
-  getRequestOrigin,
-  getSiteUrl,
-  getSiteUrlObject,
-} from '@/lib/site-url'
-import type { TreeItem } from '@/lib/types'
-import { headers } from 'next/headers'
-import { notFound } from 'next/navigation'
+  getPublicFolderBySlug,
+  getPublicFolderFileById,
+  getPublicFolderTreeBySlug,
+} from "@/lib/public-folders";
+import { createSocialImageSet } from "@/lib/social-metadata";
+import { createSiteUrl, getRequestOrigin, getSiteUrl, getSiteUrlObject } from "@/lib/site-url";
+import type { TreeItem } from "@/lib/types";
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 
 interface SharedFolderPageProps {
-  params: Promise<{ slug: string }>
-  searchParams: Promise<{ file?: string }>
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ file?: string }>;
 }
 
 function findFirstFileId(items: TreeItem[]): string | null {
   for (const item of items) {
-    if (item.type === 'file') {
-      return item.id
+    if (item.type === "file") {
+      return item.id;
     }
 
-    const nestedFileId = item.children ? findFirstFileId(item.children) : null
+    const nestedFileId = item.children ? findFirstFileId(item.children) : null;
     if (nestedFileId) {
-      return nestedFileId
+      return nestedFileId;
     }
   }
 
-  return null
+  return null;
 }
 
-export async function generateMetadata({
-  params,
-}: SharedFolderPageProps): Promise<Metadata> {
-  const { slug } = await params
-  const folder = await getPublicFolderBySlug(slug)
+export async function generateMetadata({ params }: SharedFolderPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const folder = await getPublicFolderBySlug(slug);
 
   if (!folder) {
-    return { title: 'Not Found' }
+    return { title: "Not Found" };
   }
 
-  const origin = getRequestOrigin(await headers())
-  const documentUrl = createSiteUrl(`/view/folder/${slug}`, origin).toString()
-  const description = `Browse the shared folder "${folder.name}" on Inkdown.`
-  const socialImageAlt = `Preview of the shared folder "${folder.name}" on Inkdown`
-  const socialImages = createSocialImageSet(
-    `/view/folder/${slug}`,
-    socialImageAlt,
-    origin,
-  )
+  const origin = getRequestOrigin(await headers());
+  const documentUrl = createSiteUrl(`/view/folder/${slug}`, origin).toString();
+  const description = `Browse the shared folder "${folder.name}" on Inkdown.`;
+  const socialImageAlt = `Preview of the shared folder "${folder.name}" on Inkdown`;
+  const socialImages = createSocialImageSet(`/view/folder/${slug}`, socialImageAlt, origin);
 
   return {
     title: folder.name,
@@ -68,66 +61,60 @@ export async function generateMetadata({
     openGraph: {
       title: folder.name,
       description,
-      type: 'website',
-      locale: 'en_US',
-      siteName: 'Inkdown',
+      type: "website",
+      locale: "en_US",
+      siteName: "Inkdown",
       url: documentUrl,
       images: socialImages.openGraph,
     },
     twitter: {
-      card: 'summary_large_image',
+      card: "summary_large_image",
       title: folder.name,
       description,
       images: socialImages.twitter,
     },
-  }
+  };
 }
 
-export default async function SharedFolderPage({
-  params,
-  searchParams,
-}: SharedFolderPageProps) {
-  const { slug } = await params
-  const { file: requestedFileId } = await searchParams
+export default async function SharedFolderPage({ params, searchParams }: SharedFolderPageProps) {
+  const [{ slug }, { file: requestedFileId }] = await Promise.all([params, searchParams]);
 
-  const sharedFolder = await getPublicFolderTreeBySlug(slug)
+  const sharedFolder = await getPublicFolderTreeBySlug(slug);
 
   if (!sharedFolder) {
-    notFound()
+    notFound();
   }
 
-  const fallbackFileId = findFirstFileId(sharedFolder.treeItems)
-  const selectedFileId = requestedFileId || fallbackFileId
-  let selectedFile = selectedFileId
-    ? await getPublicFolderFileById(slug, selectedFileId)
-    : null
+  const fallbackFileId = findFirstFileId(sharedFolder.treeItems);
+  const selectedFileId = requestedFileId || fallbackFileId;
+  let selectedFile = selectedFileId ? await getPublicFolderFileById(slug, selectedFileId) : null;
 
   if (!selectedFile && requestedFileId && fallbackFileId && fallbackFileId !== requestedFileId) {
-    selectedFile = await getPublicFolderFileById(slug, fallbackFileId)
+    selectedFile = await getPublicFolderFileById(slug, fallbackFileId);
   }
 
-  const origin = getRequestOrigin(await headers())
-  const siteUrl = getSiteUrl(origin)
-  const folderUrl = createSiteUrl(`/view/folder/${slug}`, origin).toString()
-  const subfolderCount = Math.max(sharedFolder.folders.length - 1, 0)
+  const origin = getRequestOrigin(await headers());
+  const siteUrl = getSiteUrl(origin);
+  const folderUrl = createSiteUrl(`/view/folder/${slug}`, origin).toString();
+  const subfolderCount = Math.max(sharedFolder.folders.length - 1, 0);
   const structuredData = {
-    '@context': 'https://schema.org',
-    '@type': 'CollectionPage',
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
     name: sharedFolder.folder.name,
     description: `Browse the shared folder "${sharedFolder.folder.name}" on Inkdown.`,
     url: folderUrl,
     datePublished: sharedFolder.folder.created_at,
     dateModified: sharedFolder.folder.updated_at,
     publisher: {
-      '@type': 'Organization',
-      name: 'Inkdown',
+      "@type": "Organization",
+      name: "Inkdown",
       url: siteUrl,
       logo: {
-        '@type': 'ImageObject',
-        url: createSiteUrl('/favicon.png', origin).toString(),
+        "@type": "ImageObject",
+        url: createSiteUrl("/favicon.png", origin).toString(),
       },
     },
-  }
+  };
 
   return (
     <div className="min-h-svh bg-background">
@@ -160,5 +147,5 @@ export default async function SharedFolderPage({
         ownerId={sharedFolder.folder.user_id}
       />
     </div>
-  )
+  );
 }

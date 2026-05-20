@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -e
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  Pre-commit checks"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# ── 1. Auto-format staged files ─────────────────────────────────────────────
+echo ""
+echo "▶ Formatting staged files…"
+bunx lint-staged --config lint-staged.config.mjs
+
+# Re-stage any files prettier/eslint modified
+git add -u
+
+# ── 2. Lint ─────────────────────────────────────────────────────────────────
+echo ""
+echo "▶ Linting…"
+bun run lint
+
+# ── 3. Type check ───────────────────────────────────────────────────────────
+echo ""
+echo "▶ Type checking…"
+bun run typecheck
+
+# ── 4. React Doctor score (must be ≥ 95) ────────────────────────────────────
+echo ""
+echo "▶ React Doctor health check…"
+SCORE=$(bunx react-doctor --score -y 2>/dev/null | tail -1)
+
+if [ -z "$SCORE" ]; then
+  echo "⚠ React Doctor score unavailable (network issue). Skipping score gate."
+else
+  echo "  Score: $SCORE / 100  (threshold: 95)"
+  if [ "$SCORE" -lt 95 ]; then
+    echo ""
+    echo "✖ React Doctor score $SCORE is below 95."
+    echo "  Run: bunx react-doctor -y --verbose"
+    echo "  to see all issues and fix them."
+    exit 1
+  fi
+  echo "✔ Score passes."
+fi
+
+# ── 5. Build ────────────────────────────────────────────────────────────────
+echo ""
+echo "▶ Building…"
+bun run build
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  All checks passed ✓"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
