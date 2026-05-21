@@ -28,7 +28,7 @@ export function useCopySharedItemMutation() {
       shareSlug,
       itemType,
       destinationParentId,
-      itemName,
+      itemName: _itemName,
     }: CopySharedItemInput) => {
       const endpoint =
         itemType === "folder"
