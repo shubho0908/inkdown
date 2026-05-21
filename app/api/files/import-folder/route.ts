@@ -153,7 +153,7 @@ export async function POST(request: Request) {
     }
 
     // Create files in batches for better performance
-    const BATCH_SIZE = 100;
+    const BATCH_SIZE = 150;
     const allCreatedFiles: Array<{
       id: string;
       name: string;
