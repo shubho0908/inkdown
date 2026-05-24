@@ -13,7 +13,7 @@ export function DocumentCopy({
 }: DocumentCopyProps): ReactElement {
   const titleLength = title.replace(/\s+/g, " ").trim().length;
   const fontSize =
-    titleLength <= 18 ? "92px" : titleLength <= 30 ? "80px" : titleLength <= 42 ? "70px" : "58px";
+    titleLength <= 18 ? "120px" : titleLength <= 30 ? "108px" : titleLength <= 42 ? "94px" : "78px";
 
   return (
     <div

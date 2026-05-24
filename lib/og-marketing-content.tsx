@@ -13,7 +13,7 @@ export function MarketingContent({
 }: MarketingContentProps): ReactElement {
   const titleLength = title.replace(/\s+/g, " ").trim().length;
   const fontSize =
-    titleLength <= 14 ? "88px" : titleLength <= 24 ? "76px" : titleLength <= 36 ? "66px" : "56px";
+    titleLength <= 14 ? "116px" : titleLength <= 24 ? "104px" : titleLength <= 36 ? "90px" : "74px";
 
   return (
     <div
