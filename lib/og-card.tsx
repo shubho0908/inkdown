@@ -24,7 +24,7 @@ export function OgCard({
   const hostLabel = getHostLabel(safeBaseUrl);
   const displayTitle = clampText(title || "Untitled", 65);
   const displayPreview = clampText(preview, isDoc ? 150 : 160);
-  const ctaText = isDoc ? `Open on ${hostLabel}` : `Get started — ${hostLabel}`;
+  const ctaText = isDoc ? `Open on ${hostLabel}` : `Get started on ${hostLabel}`;
 
   return (
     <div
@@ -76,6 +76,8 @@ export function OgCard({
           style={{
             display: "flex",
             flex: 1,
+            minHeight: 0,
+            overflow: "hidden",
             alignItems: "flex-start",
             justifyContent: "flex-start",
             width: "100%",

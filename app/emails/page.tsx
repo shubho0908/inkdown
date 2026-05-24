@@ -1,20 +1,20 @@
-import { EmailTemplate } from '@/components/email-template'
-import { InkdownLogo } from '@/components/inkdown-logo'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
-import type { Metadata } from 'next'
+import { EmailTemplate } from "@/components/email-template";
+import { InkdownLogo } from "@/components/inkdown-logo";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Email Templates',
-  description: 'Preview Inkdown email templates',
+  title: "Email Templates",
+  description: "Preview Inkdown email templates",
   robots: {
     index: false,
     follow: false,
   },
-}
+};
 
 export default function EmailPreviewPage() {
   return (
@@ -50,25 +50,25 @@ export default function EmailPreviewPage() {
               <TabsTrigger value="password-reset">Password Reset</TabsTrigger>
             </TabsList>
           </div>
-          
+
           <TabsContent value="confirmation" className="overflow-hidden rounded-lg border shadow-sm">
-            <EmailTemplate 
-              type="confirmation" 
-              confirmationUrl="https://inkdown.app/confirm?token=example-token-123" 
+            <EmailTemplate
+              type="confirmation"
+              confirmationUrl="https://inkdown.shubhojeet.com/confirm?token=example-token-123"
             />
           </TabsContent>
-          
+
           <TabsContent value="welcome" className="overflow-hidden rounded-lg border shadow-sm">
-            <EmailTemplate 
-              type="welcome" 
-              userName="Alex" 
-            />
+            <EmailTemplate type="welcome" userName="Alex" />
           </TabsContent>
-          
-          <TabsContent value="password-reset" className="overflow-hidden rounded-lg border shadow-sm">
-            <EmailTemplate 
-              type="password-reset" 
-              resetUrl="https://inkdown.app/reset?token=example-reset-token" 
+
+          <TabsContent
+            value="password-reset"
+            className="overflow-hidden rounded-lg border shadow-sm"
+          >
+            <EmailTemplate
+              type="password-reset"
+              resetUrl="https://inkdown.shubhojeet.com/reset?token=example-reset-token"
             />
           </TabsContent>
         </Tabs>
@@ -76,11 +76,12 @@ export default function EmailPreviewPage() {
         <div className="mt-8 rounded-lg border bg-muted/30 p-4 sm:p-5">
           <h2 className="font-semibold">About these templates</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            These email templates are designed to be responsive and accessible across all email clients. 
-            They use inline styles for maximum compatibility and follow Inkdown&apos;s brand guidelines.
+            These email templates are designed to be responsive and accessible across all email
+            clients. They use inline styles for maximum compatibility and follow Inkdown&apos;s
+            brand guidelines.
           </p>
         </div>
       </main>
     </div>
-  )
+  );
 }

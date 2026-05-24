@@ -1,56 +1,56 @@
-import * as React from 'react'
-import { emailTemplateStyles as styles } from '@/components/email-template-styles'
-import { getSiteUrl } from '@/lib/site-url'
+import * as React from "react";
+import { emailTemplateStyles as styles } from "@/components/email-template-styles";
+import { getSiteUrl } from "@/lib/site-url";
 
 interface EmailTemplateProps {
-  type: 'confirmation' | 'welcome' | 'password-reset'
-  userName?: string
-  confirmationUrl?: string
-  resetUrl?: string
+  type: "confirmation" | "welcome" | "password-reset";
+  userName?: string;
+  confirmationUrl?: string;
+  resetUrl?: string;
 }
 
 const PREHEADER_STYLE = {
-  display: 'none',
-  visibility: 'hidden',
-  msoHide: 'all',
-} as React.CSSProperties
+  display: "none",
+  visibility: "hidden",
+  msoHide: "all",
+} as React.CSSProperties;
 
 export function EmailTemplate({
   type,
-  userName = 'there',
-  confirmationUrl = '#',
-  resetUrl = '#',
+  userName = "there",
+  confirmationUrl = "#",
+  resetUrl = "#",
 }: EmailTemplateProps) {
-  const baseUrl = getSiteUrl()
+  const baseUrl = getSiteUrl();
 
   const templates = {
     confirmation: {
-      subject: 'Confirm your Inkdown account',
-      preheader: 'Click the link to verify your email and start writing.',
-      heading: 'Confirm your email',
-      body: 'Thanks for signing up for Inkdown! Please confirm your email address to start creating and sharing beautiful markdown documents.',
-      buttonText: 'Confirm Email',
+      subject: "Confirm your Inkdown account",
+      preheader: "Click the link to verify your email and start writing.",
+      heading: "Confirm your email",
+      body: "Thanks for signing up for Inkdown! Please confirm your email address to start creating and sharing beautiful markdown documents.",
+      buttonText: "Confirm Email",
       buttonUrl: confirmationUrl,
     },
     welcome: {
-      subject: 'Welcome to Inkdown',
-      preheader: 'Your account is ready. Start writing beautiful markdown.',
+      subject: "Welcome to Inkdown",
+      preheader: "Your account is ready. Start writing beautiful markdown.",
       heading: `Welcome to Inkdown, ${userName}!`,
       body: "Your account has been confirmed and you're all set to start writing. Create your first document and experience the joy of organized markdown.",
-      buttonText: 'Open Inkdown',
+      buttonText: "Open Inkdown",
       buttonUrl: `${baseUrl}/`,
     },
-    'password-reset': {
-      subject: 'Reset your Inkdown password',
-      preheader: 'Click the link to reset your password.',
-      heading: 'Reset your password',
+    "password-reset": {
+      subject: "Reset your Inkdown password",
+      preheader: "Click the link to reset your password.",
+      heading: "Reset your password",
       body: "We received a request to reset your password. Click the button below to create a new password. If you didn't request this, you can safely ignore this email.",
-      buttonText: 'Reset Password',
+      buttonText: "Reset Password",
       buttonUrl: resetUrl,
     },
-  }
+  };
 
-  const content = templates[type]
+  const content = templates[type];
 
   return (
     <html>
@@ -124,10 +124,10 @@ export function EmailTemplate({
                     <tr>
                       <td style={styles.footerCell}>
                         <p style={styles.footerText}>
-                          This email was sent by Inkdown. If you have questions, please
-                          contact us at{' '}
-                          <a href="mailto:support@inkdown.app" style={styles.footerLink}>
-                            support@inkdown.app
+                          This email was sent by Inkdown. If you have questions, please contact us
+                          at{" "}
+                          <a href="mailto:dev@shubhojeet.com" style={styles.footerLink}>
+                            dev@shubhojeet.com
                           </a>
                         </p>
                         <p style={styles.footerMuted}>
@@ -143,5 +143,5 @@ export function EmailTemplate({
         </table>
       </body>
     </html>
-  )
+  );
 }
