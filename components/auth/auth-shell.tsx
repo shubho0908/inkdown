@@ -1,26 +1,16 @@
-import Link from 'next/link'
-import type { ReactNode } from 'react'
-import { InkdownLogo } from '@/components/inkdown-logo'
-import { ThemeToggle } from '@/components/theme-toggle'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { InkdownLogo } from "@/components/inkdown-logo";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 type AuthShellProps = {
-  children: ReactNode
-  description: string
-  title: string
-}
+  children: ReactNode;
+  description: string;
+  title: string;
+};
 
-export function AuthShell({
-  children,
-  description,
-  title,
-}: AuthShellProps) {
+export function AuthShell({ children, description, title }: AuthShellProps) {
   return (
     <div className="relative flex min-h-svh w-full items-center justify-center px-4 py-16 sm:px-6 lg:px-8 bg-background">
       <div className="pointer-events-none absolute inset-0 overflow-hidden flex items-center justify-center opacity-50 dark:opacity-100">
@@ -42,7 +32,7 @@ export function AuthShell({
 
           <Card className="rounded-[20px] border-border/60 bg-background/95 py-6 shadow-sm backdrop-blur-xl sm:py-8">
             <CardHeader className="space-y-1.5 pb-8">
-              <CardTitle className="font-display text-2xl font-medium tracking-tight text-center">
+              <CardTitle className="font-sans text-2xl font-medium tracking-tight text-center">
                 {title}
               </CardTitle>
               <CardDescription className="text-center text-muted-foreground/80">
@@ -54,5 +44,5 @@ export function AuthShell({
         </div>
       </div>
     </div>
-  )
+  );
 }

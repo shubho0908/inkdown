@@ -275,11 +275,13 @@ export function MoveItemDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         key={item.id}
-        className="w-[calc(100%-1rem)] max-w-md gap-0 overflow-hidden p-0 sm:gap-0"
+        className="w-[calc(100%-1rem)] max-w-lg gap-0 overflow-hidden p-0 sm:gap-0"
       >
         <DialogHeader className="border-b px-5 pb-4 pt-5 sm:px-6 sm:pb-4 sm:pt-6">
           <DialogTitle className="pr-8 text-left">
-            <span className="block truncate">Move &ldquo;{item.name}&rdquo;</span>
+            <span className="block truncate" title={item.name}>
+              Move &ldquo;{item.name}&rdquo;
+            </span>
           </DialogTitle>
           <DialogDescription className="text-left">
             Choose a destination folder to move this {itemLabel} to.

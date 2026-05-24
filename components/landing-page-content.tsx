@@ -100,7 +100,7 @@ export function LandingPageContent() {
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="font-display text-4xl sm:text-5xl font-medium tracking-tight text-foreground lg:text-5xl">
+            <h2 className="font-sans text-4xl sm:text-5xl font-medium tracking-tight text-foreground lg:text-5xl">
               Clarity awaits.
             </h2>
             <p className="mx-auto mt-6 max-w-2xl px-2 sm:px-0 text-base sm:text-lg text-muted-foreground tracking-wide leading-relaxed">

@@ -1,36 +1,14 @@
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
+
 const fontCache = new Map<string, Promise<ArrayBuffer>>();
 
-function resolveAssetPath(relativePath: string): string {
-  const cwd = process.cwd();
-
-  if (process.env.NODE_ENV === "production") {
-    const pathsToTry = [
-      `${cwd}/${relativePath}`,
-      `${cwd}/../${relativePath}`,
-      `/var/task/${relativePath}`,
-      `/var/task/../${relativePath}`,
-    ];
-
-    return pathsToTry[0];
-  }
-
-  return `${cwd}/${relativePath}`;
-}
-
-async function getFontPath(relativePath: string): Promise<string> {
-  const { resolve } = await import("path");
-  return resolve(/*turbopackIgnore: true*/ resolveAssetPath(relativePath));
-}
-
 async function loadLocalFont(relativePath: string) {
-  const cacheKey = relativePath;
-
-  if (!fontCache.has(cacheKey)) {
+  if (!fontCache.has(relativePath)) {
     fontCache.set(
-      cacheKey,
+      relativePath,
       (async () => {
-        const { readFile } = await import("node:fs/promises");
-        const fontPath = await getFontPath(relativePath);
+        const fontPath = resolve(/*turbopackIgnore: true*/ process.cwd(), relativePath);
         const font = await readFile(fontPath);
 
         return font.buffer.slice(font.byteOffset, font.byteOffset + font.byteLength);
@@ -38,7 +16,7 @@ async function loadLocalFont(relativePath: string) {
     );
   }
 
-  return fontCache.get(cacheKey)!;
+  return fontCache.get(relativePath)!;
 }
 
 export async function getOgFonts() {
