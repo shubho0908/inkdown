@@ -24,7 +24,7 @@ export function OgCard({
   const hostLabel = getHostLabel(safeBaseUrl);
   const displayTitle = clampText(title || "Untitled", 65);
   const displayPreview = clampText(preview, isDoc ? 150 : 160);
-  const ctaText = isDoc ? `Open on ${hostLabel}` : `Create free account — ${hostLabel}`;
+  const ctaText = isDoc ? `Open on ${hostLabel}` : `Get started — ${hostLabel}`;
 
   return (
     <div
