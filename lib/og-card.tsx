@@ -34,7 +34,7 @@ export function OgCard({
         display: "flex",
         position: "relative",
         overflow: "hidden",
-        background: "#09090b",
+        background: "#18181b",
         color: "#f8fafc",
         fontFamily: "Geist",
       }}
@@ -108,19 +108,19 @@ export function OgCard({
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             <img
               src={logoUrl}
-              width={52}
-              height={52}
+              width={48}
+              height={48}
               alt=""
               style={{
                 display: "block",
-                borderRadius: "13px",
+                borderRadius: "12px",
                 boxShadow: "0 10px 24px rgba(0,0,0,0.25)",
               }}
             />
             <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
               <span
                 style={{
-                  fontSize: "26px",
+                  fontSize: "24px",
                   fontWeight: 800,
                   letterSpacing: "-0.04em",
                   lineHeight: 1.1,
@@ -131,9 +131,9 @@ export function OgCard({
               </span>
               <span
                 style={{
-                  fontSize: "15px",
+                  fontSize: "14px",
                   fontWeight: 500,
-                  color: "rgba(226,232,240,0.55)",
+                  color: "rgba(226,232,240,0.5)",
                 }}
               >
                 Markdown workspace
@@ -147,12 +147,12 @@ export function OgCard({
               alignItems: "center",
               flexShrink: 0,
               borderRadius: "999px",
-              border: "1px solid rgba(255,255,255,0.12)",
-              padding: "12px 26px",
-              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.10)",
+              padding: "11px 24px",
+              background: "rgba(255,255,255,0.05)",
               fontSize: "16px",
               fontWeight: 600,
-              color: "rgba(241,245,249,0.85)",
+              color: "rgba(241,245,249,0.8)",
               letterSpacing: "0.01em",
               whiteSpace: "nowrap",
             }}

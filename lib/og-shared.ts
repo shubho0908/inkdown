@@ -28,7 +28,7 @@ function resolveAssetPath(relativePath: string): string {
 
 async function getLogoPath(): Promise<string> {
   const { resolve } = await import("path");
-  return resolve(/*turbopackIgnore: true*/ resolveAssetPath("public/favicon.png"));
+  return resolve(/*turbopackIgnore: true*/ resolveAssetPath("public/icon.svg"));
 }
 
 export function getOgBaseUrl(origin?: string) {
@@ -43,7 +43,7 @@ export function getOgLogoUrl() {
         const logoPath = await getLogoPath();
         const icon = await readFile(logoPath);
 
-        return `data:image/png;base64,${icon.toString("base64")}`;
+        return `data:image/svg+xml;base64,${icon.toString("base64")}`;
       } catch (error) {
         console.warn("OG logo loading failed, falling back to inline logo.", error);
         return createFallbackLogoUrl();
