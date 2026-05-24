@@ -42,6 +42,7 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
 
   const [renameItem, setRenameItem] = useState<TreeItem | null>(null);
   const [deleteItem, setDeleteItem] = useState<TreeItem | null>(null);
+  const [moveItem, setMoveItem] = useState<TreeItem | null>(null);
   const [shareItem, setShareItem] = useState<TreeItem | null>(null);
   const [shareFile, setShareFile] = useState<File | null>(null);
   const [shareFolder, setShareFolder] = useState<Folder | null>(null);
@@ -166,8 +167,19 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
     }
   };
 
+  const handleMoveClick = (item: TreeItem) => {
+    setMoveItem(item);
+  };
+
   const handleMove = (item: TreeItem, targetFolderId: string | null) => {
-    moveTreeItemMutation.mutate({ item, targetFolderId });
+    moveTreeItemMutation.mutate(
+      { item, targetFolderId },
+      {
+        onSuccess: () => {
+          setMoveItem(null);
+        },
+      },
+    );
   };
 
   const handleShareToggle = (isPublic: boolean) => {
@@ -250,6 +262,7 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
             onMove={handleMove}
             onRename={setRenameItem}
             onDelete={setDeleteItem}
+            onMoveClick={handleMoveClick}
             onTogglePublic={handleTogglePublic}
             onDownloadFile={handleDownloadFile}
             onExportFolder={exportFolder}
@@ -272,6 +285,7 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
           onMove={handleMove}
           onRename={setRenameItem}
           onDelete={setDeleteItem}
+          onMoveClick={handleMoveClick}
           onTogglePublic={handleTogglePublic}
           onDownloadFile={handleDownloadFile}
           onExportFolder={exportFolder}
@@ -282,11 +296,15 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
       <DashboardSidebarDialogs
         renameItem={renameItem}
         deleteItem={deleteItem}
+        moveItem={moveItem}
+        moveFolders={folders}
+        isMoving={moveTreeItemMutation.isPending}
         shareItem={shareItem}
         shareFile={shareFile}
         shareFolder={shareFolder}
         onRenameItemChange={setRenameItem}
         onDeleteItemChange={setDeleteItem}
+        onMoveItemChange={setMoveItem}
         onShareStateChange={(item, file, folder) => {
           setShareItem(item);
           setShareFile(file);
@@ -294,6 +312,7 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
         }}
         onRename={handleRename}
         onDelete={handleDelete}
+        onMove={(targetFolderId) => handleMove(moveItem!, targetFolderId)}
         onTogglePublic={handleShareToggle}
       />
     </>

@@ -22,6 +22,7 @@ interface FileTreeProps {
   onCreateFolder: (parentId: string | null) => void;
   onRename: (item: TreeItem) => void;
   onDelete: (item: TreeItem) => void;
+  onMoveClick: (item: TreeItem) => void;
   onTogglePublic?: (item: TreeItem) => void;
   onDownloadFile?: (item: TreeItem) => void;
   onExportFolder?: (folderId: string, folderName: string) => void;
@@ -88,6 +89,7 @@ export function FileTree({
   onCreateFolder,
   onRename,
   onDelete,
+  onMoveClick,
   onTogglePublic,
   onDownloadFile,
   onExportFolder,
@@ -346,6 +348,7 @@ export function FileTree({
           onCreateFolder={onCreateFolder}
           onRename={onRename}
           onDelete={onDelete}
+          onMoveClick={onMoveClick}
           onTogglePublic={onTogglePublic}
           onDownloadFile={onDownloadFile}
           onExportFolder={onExportFolder}

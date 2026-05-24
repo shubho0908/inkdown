@@ -1,34 +1,39 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { FilePlus, FolderPlus, LogOut, X } from 'lucide-react'
-import { ZipExportButton } from '@/components/zip-export-button'
-import { FileTree } from '@/components/file-tree'
-import { InkdownLogo } from '@/components/inkdown-logo'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
-import type { TreeItem } from '@/lib/types'
+import Link from "next/link";
+import { FilePlus, FolderPlus, LogOut, X } from "lucide-react";
+import { ZipExportButton } from "@/components/zip-export-button";
+import { FileTree } from "@/components/file-tree";
+import { InkdownLogo } from "@/components/inkdown-logo";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { TreeItem } from "@/lib/types";
 
 interface DashboardSidebarContentProps {
-  isLoading: boolean
-  treeItems: TreeItem[]
-  selectedFileId: string | null
-  filesCount: number
-  showCloseAction?: boolean
-  onClose?: () => void
-  onCreateFile: (folderId: string | null) => void
-  onCreateFolder: (parentId: string | null) => void
-  onImportFiles: (files: globalThis.File[], folderId: string | null, items?: DataTransferItemList) => void
-  isImportingFiles?: boolean
-  onSelect: (item: TreeItem) => void
-  onMove: (item: TreeItem, targetFolderId: string | null) => void
-  onRename: (item: TreeItem) => void
-  onDelete: (item: TreeItem) => void
-  onTogglePublic: (item: TreeItem) => void
-  onDownloadFile: (item: TreeItem) => void
-  onExportFolder?: (folderId: string, folderName: string) => void
-  onSignOut: () => void
+  isLoading: boolean;
+  treeItems: TreeItem[];
+  selectedFileId: string | null;
+  filesCount: number;
+  showCloseAction?: boolean;
+  onClose?: () => void;
+  onCreateFile: (folderId: string | null) => void;
+  onCreateFolder: (parentId: string | null) => void;
+  onImportFiles: (
+    files: globalThis.File[],
+    folderId: string | null,
+    items?: DataTransferItemList,
+  ) => void;
+  isImportingFiles?: boolean;
+  onSelect: (item: TreeItem) => void;
+  onMove: (item: TreeItem, targetFolderId: string | null) => void;
+  onRename: (item: TreeItem) => void;
+  onDelete: (item: TreeItem) => void;
+  onMoveClick: (item: TreeItem) => void;
+  onTogglePublic: (item: TreeItem) => void;
+  onDownloadFile: (item: TreeItem) => void;
+  onExportFolder?: (folderId: string, folderName: string) => void;
+  onSignOut: () => void;
 }
 
 export function DashboardSidebarContent({
@@ -46,6 +51,7 @@ export function DashboardSidebarContent({
   onMove,
   onRename,
   onDelete,
+  onMoveClick,
   onTogglePublic,
   onDownloadFile,
   onExportFolder,
@@ -59,12 +65,7 @@ export function DashboardSidebarContent({
         </Link>
         <div className="flex items-center gap-1">
           {showCloseAction && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              aria-label="Close workspace"
-            >
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close workspace">
               <X className="size-4" />
             </Button>
           )}
@@ -114,7 +115,7 @@ export function DashboardSidebarContent({
                   Workspace
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {filesCount} {filesCount === 1 ? 'file' : 'files'}
+                  {filesCount} {filesCount === 1 ? "file" : "files"}
                 </p>
               </div>
               <FileTree
@@ -132,6 +133,7 @@ export function DashboardSidebarContent({
                 onCreateFolder={onCreateFolder}
                 onRename={onRename}
                 onDelete={onDelete}
+                onMoveClick={onMoveClick}
                 onTogglePublic={onTogglePublic}
                 onDownloadFile={onDownloadFile}
                 onExportFolder={onExportFolder}
@@ -153,5 +155,5 @@ export function DashboardSidebarContent({
         </Button>
       </div>
     </div>
-  )
+  );
 }

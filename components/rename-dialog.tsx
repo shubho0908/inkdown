@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +29,13 @@ export function RenameDialog({
   onRename,
 }: RenameDialogProps) {
   const [localName, setLocalName] = useState(currentName);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) {
+      inputRef.current?.focus();
+    }
+  }, [open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +59,7 @@ export function RenameDialog({
               <Label htmlFor="name">Name</Label>
               <Input
                 id="name"
+                ref={inputRef}
                 value={localName}
                 onChange={(e) => setLocalName(e.target.value)}
                 onKeyDown={(e) => {
@@ -59,7 +67,6 @@ export function RenameDialog({
                     handleSubmit(e);
                   }
                 }}
-                autoFocus
               />
             </div>
           </div>
