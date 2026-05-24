@@ -85,27 +85,88 @@ function EditorPreview() {
 
 function WorkspacePreview() {
   return (
-    <div className="grid gap-3">
-      <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/50 px-3 py-2.5 shadow-sm">
-        <div className="flex items-center gap-3">
-          <Folder className="size-4 text-emerald-500" />
-          <span className="text-sm font-medium text-foreground">Marketing Strategy</span>
+    <div className="flex h-full min-h-[420px] w-full flex-col overflow-hidden rounded-lg border border-border bg-background/80 shadow-sm">
+      <div className="flex items-center gap-2 border-b border-border bg-muted/30 px-4 py-3">
+        <div className="hidden gap-1.5 sm:flex">
+          <div className="size-2.5 rounded-full bg-foreground/20" />
+          <div className="size-2.5 rounded-full bg-foreground/20" />
+          <div className="size-2.5 rounded-full bg-foreground/20" />
+        </div>
+        <div className="flex flex-1 items-center gap-2 rounded-md border border-border/60 bg-background/60 px-3 py-1.5 text-xs text-muted-foreground">
+          <svg
+            className="size-3 shrink-0"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <span>Search documents&hellip;</span>
         </div>
       </div>
-      <div className="ml-3 grid gap-1 border-l border-border/50 py-1 pl-6">
-        <div className="flex items-center gap-3 rounded-md px-2 py-1.5">
-          <FileText className="size-3.5 text-muted-foreground" />
-          <span className="text-sm text-foreground/70">Q3 Launch Plan</span>
-        </div>
-        <div className="flex items-center gap-3 rounded-md border border-border bg-background px-2 py-1.5 shadow-sm">
-          <FileText className="size-3.5 text-foreground" />
-          <span className="text-sm font-medium text-foreground">Brand Guidelines</span>
-        </div>
-      </div>
-      <div className="mt-1 flex items-center justify-between rounded-lg border border-transparent px-3 py-2">
-        <div className="flex items-center gap-3">
-          <Lock className="size-3.5 text-muted-foreground/80" />
-          <span className="text-sm font-medium text-foreground/80">Personal Drafts</span>
+
+      <div className="flex-1 overflow-auto p-4">
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5">
+            <Folder className="size-4 shrink-0 text-sky-500" />
+            <span className="text-sm font-medium text-foreground">Marketing</span>
+          </div>
+
+          <div className="ml-4 border-l border-border/60 pl-4 space-y-0.5">
+            <div className="flex items-center gap-2.5 rounded-md bg-muted/60 px-2.5 py-1.5">
+              <FileText className="size-3.5 shrink-0 text-foreground/70" />
+              <span className="text-sm font-medium text-foreground">Brand Guidelines</span>
+            </div>
+            <div className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5">
+              <FileText className="size-3.5 shrink-0 text-muted-foreground" />
+              <span className="text-sm text-foreground/70">Q3 Launch Plan</span>
+            </div>
+            <div className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5">
+              <FileText className="size-3.5 shrink-0 text-muted-foreground" />
+              <span className="text-sm text-foreground/70">Social Media Calendar</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5">
+            <Folder className="size-4 shrink-0 text-emerald-500" />
+            <span className="text-sm font-medium text-foreground">Product</span>
+          </div>
+
+          <div className="ml-4 border-l border-border/60 pl-4 space-y-0.5">
+            <div className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5">
+              <FileText className="size-3.5 shrink-0 text-muted-foreground" />
+              <span className="text-sm text-foreground/70">Roadmap 2026</span>
+            </div>
+            <div className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5">
+              <FileText className="size-3.5 shrink-0 text-muted-foreground" />
+              <span className="text-sm text-foreground/70">Design System Spec</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5">
+            <Folder className="size-4 shrink-0 text-amber-500" />
+            <span className="text-sm font-medium text-foreground">Engineering</span>
+          </div>
+
+          <div className="ml-4 border-l border-border/60 pl-4 space-y-0.5">
+            <div className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5">
+              <FileText className="size-3.5 shrink-0 text-muted-foreground" />
+              <span className="text-sm text-foreground/70">API Migration Notes</span>
+            </div>
+            <div className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5">
+              <FileText className="size-3.5 shrink-0 text-muted-foreground" />
+              <span className="text-sm text-foreground/70">Incident Postmortem</span>
+            </div>
+          </div>
+
+          <div className="mt-3 border-t border-border/40 pt-3">
+            <div className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5">
+              <Lock className="size-3.5 shrink-0 text-muted-foreground/70" />
+              <span className="text-sm text-foreground/60">Personal Drafts</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -122,7 +183,7 @@ function PublishingPreview() {
         <div className="flex-1">
           <div className="text-sm font-medium text-foreground">Shared Successfully</div>
           <p className="text-xs text-muted-foreground">
-            Your markdown is live on the internet — perfectly typeset.
+            Your markdown is live on the internet, perfectly typeset.
           </p>
         </div>
         <div className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-600">

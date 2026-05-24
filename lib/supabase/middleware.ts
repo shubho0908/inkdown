@@ -81,6 +81,7 @@ export async function updateSession(request: NextRequest) {
 
   // Redirect authenticated users away from auth entry pages.
   const AUTH_ENTRY_PATHS = [
+    "/",
     "/auth/login",
     "/auth/sign-up",
     "/auth/forgot-password",

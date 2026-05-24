@@ -239,7 +239,9 @@ export default function PrivacyPage() {
 
       <footer className="border-t py-8">
         <div className="mx-auto max-w-4xl px-4 text-center text-sm text-muted-foreground sm:px-6">
-          <p>&copy; 2025 Inkdown. All rights reserved.</p>
+          <p suppressHydrationWarning>
+            &copy; {new Date().getFullYear()} Inkdown. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>

@@ -2,8 +2,11 @@ import { InkdownLogo } from "@/components/inkdown-logo";
 import { JsonLd } from "@/components/json-ld";
 import { getSiteUrl } from "@/lib/site-url";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { LandingPageContent } from "@/components/landing-page-content";
+import { requireVerifiedUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   alternates: {
@@ -11,7 +14,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient();
+  const authState = await requireVerifiedUser(supabase);
+
+  if (authState.kind === "authenticated") {
+    redirect("/workspace");
+  }
   const siteUrl = getSiteUrl();
   const structuredData = {
     "@context": "https://schema.org",
