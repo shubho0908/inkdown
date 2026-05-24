@@ -13,72 +13,51 @@ export function DocumentCopy({
 }: DocumentCopyProps): ReactElement {
   const titleLength = title.replace(/\s+/g, " ").trim().length;
   const fontSize =
-    titleLength <= 18 ? "102px" : titleLength <= 30 ? "90px" : titleLength <= 42 ? "78px" : "66px";
+    titleLength <= 18 ? "92px" : titleLength <= 30 ? "80px" : titleLength <= 42 ? "70px" : "58px";
 
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
+        alignItems: "flex-start",
+        justifyContent: "flex-start",
         width: "100%",
         minWidth: 0,
-        padding: "0 24px",
       }}
     >
-      <div
+      <h1
         style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "0",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "100%",
+          margin: 0,
+          maxWidth: "940px",
+          fontSize,
+          lineHeight: 0.95,
+          letterSpacing: "-0.06em",
+          fontWeight: 700,
+          color: "#f8fafc",
+          fontFamily: "Geist",
+          whiteSpace: "pre-wrap",
+          textAlign: "left",
         }}
       >
-        <div
+        {title}
+      </h1>
+
+      {username && (
+        <p
           style={{
-            display: "flex",
-            width: "100%",
-            maxWidth: "940px",
-            alignItems: "center",
-            justifyContent: "center",
+            margin: 0,
+            marginTop: "14px",
+            fontSize: "26px",
+            lineHeight: 1.2,
+            fontWeight: 500,
+            color: "rgba(226,232,240,0.6)",
+            fontFamily: "Geist",
           }}
         >
-          <h1
-            style={{
-              margin: 0,
-              maxWidth: "100%",
-              fontSize,
-              lineHeight: 0.92,
-              letterSpacing: "-0.08em",
-              fontWeight: 600,
-              color: "#f8fafc",
-              fontFamily: '"Playfair Display"',
-              whiteSpace: "pre-wrap",
-              textAlign: "center",
-            }}
-          >
-            {title}
-          </h1>
-        </div>
-
-        {username && (
-          <p
-            style={{
-              margin: 0,
-              fontSize: "28px",
-              lineHeight: 1.2,
-              fontWeight: 500,
-              color: "rgba(226,232,240,0.72)",
-              fontFamily: "Geist",
-            }}
-          >
-            {username}
-          </p>
-        )}
-      </div>
+          by {username}
+        </p>
+      )}
     </div>
   );
 }

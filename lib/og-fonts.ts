@@ -21,22 +21,13 @@ async function loadLocalFont(relativePath: string) {
 
 export async function getOgFonts() {
   try {
-    const [regular, playfairExtraBold] = await Promise.all([
-      loadLocalFont("public/fonts/Geist-Regular.ttf"),
-      loadLocalFont("public/fonts/PlayfairDisplay-ExtraBold.ttf"),
-    ]);
+    const regular = await loadLocalFont("public/fonts/Geist-Regular.ttf");
 
     return [
       { name: "Geist", data: regular, weight: 400 as const, style: "normal" as const },
       { name: "Geist", data: regular, weight: 500 as const, style: "normal" as const },
       { name: "Geist", data: regular, weight: 700 as const, style: "normal" as const },
       { name: "Geist", data: regular, weight: 800 as const, style: "normal" as const },
-      {
-        name: "Playfair Display",
-        data: playfairExtraBold,
-        weight: 800 as const,
-        style: "normal" as const,
-      },
     ];
   } catch (error) {
     console.warn("OG font loading failed, falling back to default fonts.", error);

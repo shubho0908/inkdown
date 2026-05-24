@@ -1,12 +1,12 @@
-import type { ReactElement } from 'react'
-import { DocumentCopy } from '@/lib/og-document-copy'
+import type { ReactElement } from "react";
+import { DocumentCopy } from "@/lib/og-document-copy";
 
 interface DocumentContentProps {
-  title: string
-  preview: string
-  username?: string | null
-  hostLabel: string
-  logoUrl: string
+  title: string;
+  preview: string;
+  username?: string | null;
+  hostLabel: string;
+  logoUrl: string;
 }
 
 export function DocumentContent({
@@ -19,26 +19,15 @@ export function DocumentContent({
   return (
     <div
       style={{
-        display: 'flex',
-        flex: 1,
-        width: '100%',
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
         minHeight: 0,
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: "flex-start",
+        justifyContent: "flex-start",
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: 0,
-          width: '100%',
-        }}
-      >
-        <DocumentCopy title={title} preview={preview} username={username} />
-      </div>
+      <DocumentCopy title={title} preview={preview} username={username} />
     </div>
-  )
+  );
 }

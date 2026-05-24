@@ -13,55 +13,35 @@ export function MarketingContent({
 }: MarketingContentProps): ReactElement {
   const titleLength = title.replace(/\s+/g, " ").trim().length;
   const fontSize =
-    titleLength <= 14 ? "96px" : titleLength <= 24 ? "84px" : titleLength <= 36 ? "72px" : "62px";
+    titleLength <= 14 ? "88px" : titleLength <= 24 ? "76px" : titleLength <= 36 ? "66px" : "56px";
 
   return (
     <div
       style={{
         display: "flex",
-        flex: 1,
+        flexDirection: "column",
+        alignItems: "flex-start",
+        justifyContent: "flex-start",
         width: "100%",
-        minHeight: 0,
-        alignItems: "center",
-        justifyContent: "center",
+        minWidth: 0,
       }}
     >
-      <div
+      <h1
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "100%",
-          padding: "0 24px",
+          margin: 0,
+          maxWidth: "940px",
+          fontSize,
+          lineHeight: 0.95,
+          letterSpacing: "-0.06em",
+          fontWeight: 700,
+          color: "#f8fafc",
+          fontFamily: "Geist",
+          whiteSpace: "pre-wrap",
+          textAlign: "left",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            width: "100%",
-            maxWidth: "940px",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <h1
-            style={{
-              margin: 0,
-              maxWidth: "100%",
-              fontSize,
-              lineHeight: 0.94,
-              letterSpacing: "-0.06em",
-              fontWeight: 600,
-              color: "#f8fafc",
-              fontFamily: "Geist",
-              whiteSpace: "pre-wrap",
-              textAlign: "center",
-            }}
-          >
-            {title}
-          </h1>
-        </div>
-      </div>
+        {title}
+      </h1>
     </div>
   );
 }
