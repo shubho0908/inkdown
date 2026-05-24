@@ -105,22 +105,22 @@ export function OgCard({
             marginTop: "16px",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             <img
               src={logoUrl}
-              width={44}
-              height={44}
+              width={52}
+              height={52}
               alt=""
               style={{
                 display: "block",
-                borderRadius: "11px",
+                borderRadius: "13px",
                 boxShadow: "0 10px 24px rgba(0,0,0,0.25)",
               }}
             />
-            <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
               <span
                 style={{
-                  fontSize: "22px",
+                  fontSize: "26px",
                   fontWeight: 800,
                   letterSpacing: "-0.04em",
                   lineHeight: 1.1,
@@ -131,7 +131,7 @@ export function OgCard({
               </span>
               <span
                 style={{
-                  fontSize: "14px",
+                  fontSize: "15px",
                   fontWeight: 500,
                   color: "rgba(226,232,240,0.55)",
                 }}
@@ -148,9 +148,9 @@ export function OgCard({
               flexShrink: 0,
               borderRadius: "999px",
               border: "1px solid rgba(255,255,255,0.12)",
-              padding: "10px 22px",
+              padding: "12px 26px",
               background: "rgba(255,255,255,0.06)",
-              fontSize: "15px",
+              fontSize: "16px",
               fontWeight: 600,
               color: "rgba(241,245,249,0.85)",
               letterSpacing: "0.01em",

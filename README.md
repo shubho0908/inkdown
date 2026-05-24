@@ -160,6 +160,4 @@ Deploy Inkdown to any platform that supports Next.js (Vercel, Docker, self-hoste
 - File sharing uses unique slugs; folders support recursive public browsing with file-level granularity
 - The workspace cache layer uses TanStack Query with optimistic updates for a responsive drag-and-drop experience
 
-## License
 
-MIT
