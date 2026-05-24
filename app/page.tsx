@@ -1,65 +1,44 @@
-import { Button } from '@/components/ui/button'
-import { InkdownLogo } from '@/components/inkdown-logo'
-import { JsonLd } from '@/components/json-ld'
-import { ThemeToggle } from '@/components/theme-toggle'
-import {
-  getEmailVerificationRedirectPath,
-  requireVerifiedUser,
-} from '@/lib/auth'
-import { getSiteUrl } from '@/lib/site-url'
-import { isSupabaseConfigured } from '@/lib/supabase/config'
-import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
-import type { Metadata } from 'next'
-import { LandingPageContent } from '@/components/landing-page-content'
-import { redirect } from 'next/navigation'
+import { InkdownLogo } from "@/components/inkdown-logo";
+import { JsonLd } from "@/components/json-ld";
+import { getSiteUrl } from "@/lib/site-url";
+import Link from "next/link";
+import type { Metadata } from "next";
+import { LandingPageContent } from "@/components/landing-page-content";
 
 export const metadata: Metadata = {
   alternates: {
-    canonical: '/',
+    canonical: "/",
   },
-}
+};
 
-export default async function HomePage() {
-  const authState = isSupabaseConfigured()
-    ? await requireVerifiedUser(await createClient())
-    : null
-
-  if (authState?.kind === 'authenticated') {
-    redirect('/workspace')
-  }
-
-  if (authState?.kind === 'unverified') {
-    redirect(getEmailVerificationRedirectPath(authState.user.email))
-  }
-
-  const siteUrl = getSiteUrl()
+export default function HomePage() {
+  const siteUrl = getSiteUrl();
   const structuredData = {
-    '@context': 'https://schema.org',
-    '@graph': [
+    "@context": "https://schema.org",
+    "@graph": [
       {
-        '@type': 'WebSite',
-        name: 'Inkdown',
+        "@type": "WebSite",
+        name: "Inkdown",
         url: siteUrl,
         description:
-          'Create, organize, and share beautiful markdown documents with live preview and instant sharing.',
+          "Create, organize, and share beautiful markdown documents with live preview and instant sharing.",
       },
       {
-        '@type': 'SoftwareApplication',
-        name: 'Inkdown',
-        applicationCategory: 'BusinessApplication',
-        operatingSystem: 'Web',
+        "@type": "SoftwareApplication",
+        name: "Inkdown",
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Web",
         offers: {
-          '@type': 'Offer',
-          price: '0',
-          priceCurrency: 'USD',
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "USD",
         },
         url: siteUrl,
         description:
-          'A markdown editor and sharing platform with live preview, folder organization, and public publishing.',
+          "A markdown editor and sharing platform with live preview, folder organization, and public publishing.",
       },
     ],
-  }
+  };
 
   return (
     <div className="flex min-h-svh flex-col">
@@ -68,13 +47,18 @@ export default async function HomePage() {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <InkdownLogo size="md" />
           <div className="flex items-center gap-1 sm:gap-2">
-            <ThemeToggle />
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/auth/login">Sign in</Link>
-            </Button>
-            <Button size="sm" asChild className="hidden sm:inline-flex">
-              <Link href="/auth/sign-up">Get started</Link>
-            </Button>
+            <Link
+              href="/auth/login"
+              className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/auth/sign-up"
+              className="hidden h-8 items-center justify-center gap-1.5 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:inline-flex"
+            >
+              Get started
+            </Link>
           </div>
         </div>
       </header>
@@ -91,13 +75,17 @@ export default async function HomePage() {
               Inkdown - Your markdown, beautifully organized.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground md:justify-end">
-              <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+              <Link href="/privacy" className="hover:text-foreground transition-colors">
+                Privacy
+              </Link>
               <span className="text-border">•</span>
-              <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+              <Link href="/terms" className="hover:text-foreground transition-colors">
+                Terms
+              </Link>
             </div>
           </div>
         </div>
       </footer>
     </div>
-  )
+  );
 }

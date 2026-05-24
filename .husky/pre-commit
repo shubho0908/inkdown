@@ -23,7 +23,7 @@ echo ""
 echo "▶ Type checking…"
 bun run typecheck
 
-# ── 4. React Doctor score (must be ≥ 95) ────────────────────────────────────
+# ── 4. React Doctor score (must be 100) ───────────────────────────────────
 echo ""
 echo "▶ React Doctor health check…"
 SCORE=$(bunx react-doctor --score -y 2>/dev/null | tail -1)
@@ -31,10 +31,10 @@ SCORE=$(bunx react-doctor --score -y 2>/dev/null | tail -1)
 if [ -z "$SCORE" ]; then
   echo "⚠ React Doctor score unavailable (network issue). Skipping score gate."
 else
-  echo "  Score: $SCORE / 100  (threshold: 95)"
-  if [ "$SCORE" -lt 95 ]; then
+  echo "  Score: $SCORE / 100  (threshold: 100)"
+  if [ "$SCORE" -lt 100 ]; then
     echo ""
-    echo "✖ React Doctor score $SCORE is below 95."
+    echo "✖ React Doctor score $SCORE is below 100."
     echo "  Run: bunx react-doctor -y --verbose"
     echo "  to see all issues and fix them."
     exit 1

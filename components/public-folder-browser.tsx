@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useRef, useState, type KeyboardEvent } from "react";
-import Link from "next/link";
 import { ChevronDown, ChevronRight, FileText, Folder, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TreeItem } from "@/lib/types";
@@ -94,7 +93,7 @@ function TreeBranch({
   registerItemRef: (itemId: string, node: HTMLElement | null) => void;
 }) {
   return (
-    <div role="group" className="min-w-0 space-y-1">
+    <div className="min-w-0 space-y-1">
       {items.map((item) => {
         const metadata = itemMetadata.get(item.id);
 
@@ -147,7 +146,7 @@ function TreeBranch({
                   aria-label={
                     isFolder ? `${isExpanded ? "Collapse" : "Expand"} ${item.name}` : undefined
                   }
-                  aria-hidden={!isFolder}
+                  aria-hidden={isFolder ? undefined : true}
                   tabIndex={-1}
                   onClick={() => {
                     if (isFolder) {
@@ -170,10 +169,7 @@ function TreeBranch({
                     ref={(node) => registerItemRef(item.id, node)}
                     type="button"
                     className={rowClassName}
-                    role="treeitem"
-                    aria-level={metadata.level + 1}
                     aria-expanded={isExpanded}
-                    aria-selected={isSelected || undefined}
                     tabIndex={isActive ? 0 : -1}
                     onFocus={() => onMoveFocus(item.id)}
                     onKeyDown={(event) => onTreeKeyDown(event, item.id)}
@@ -187,9 +183,7 @@ function TreeBranch({
                     ref={(node) => registerItemRef(item.id, node)}
                     type="button"
                     className={rowClassName}
-                    role="treeitem"
-                    aria-level={metadata.level + 1}
-                    aria-selected={isSelected || undefined}
+                    aria-current={isSelected ? "page" : undefined}
                     tabIndex={isActive ? 0 : -1}
                     onFocus={() => onMoveFocus(item.id)}
                     onKeyDown={(event) => onTreeKeyDown(event, item.id)}
@@ -199,21 +193,18 @@ function TreeBranch({
                     {rowContent}
                   </button>
                 ) : (
-                  <Link
+                  <a
                     ref={(node) => registerItemRef(item.id, node)}
-                    href={`/view/folder/${shareSlug}?file=${item.id}`}
-                    scroll={false}
+                    href={`/view/folder/${shareSlug}/file/${item.id}`}
                     className={rowClassName}
-                    role="treeitem"
-                    aria-level={metadata.level + 1}
-                    aria-selected={isSelected || undefined}
+                    aria-current={isSelected ? "page" : undefined}
                     tabIndex={isActive ? 0 : -1}
                     onFocus={() => onMoveFocus(item.id)}
                     onKeyDown={(event) => onTreeKeyDown(event, item.id)}
                     title={item.name}
                   >
                     {rowContent}
-                  </Link>
+                  </a>
                 )}
               </div>
 
@@ -413,10 +404,9 @@ export function PublicFolderBrowser({
       </div>
 
       <div
-        role="tree"
         aria-label="Shared workspace files"
         aria-describedby="shared-workspace-tree-help"
-        className="min-w-0 rounded-2xl [content-visibility:auto]"
+        className="min-w-0 rounded-2xl"
       >
         <TreeBranch
           items={items}

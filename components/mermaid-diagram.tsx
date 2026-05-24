@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import { useTheme } from "@/components/theme-provider";
+import { themeChangeEvent } from "@/components/theme-toggle";
+import { isTheme, THEME_STORAGE_KEY, type ResolvedTheme } from "@/lib/theme";
 
 interface MermaidDiagramProps {
   chart: string;
@@ -9,11 +10,31 @@ interface MermaidDiagramProps {
 }
 
 export function MermaidDiagram({ chart, theme }: MermaidDiagramProps) {
-  const { resolvedTheme } = useTheme();
   const diagramId = useId().replace(/:/g, "");
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
   const [svg, setSvg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const mermaidTheme = theme ?? (resolvedTheme === "dark" ? "dark" : "light");
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const syncTheme = () => {
+      const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+      const selectedTheme = isTheme(storedTheme) ? storedTheme : "system";
+      setResolvedTheme(
+        selectedTheme === "system" ? (mediaQuery.matches ? "dark" : "light") : selectedTheme,
+      );
+    };
+
+    syncTheme();
+    mediaQuery.addEventListener("change", syncTheme);
+    window.addEventListener(themeChangeEvent, syncTheme);
+
+    return () => {
+      mediaQuery.removeEventListener("change", syncTheme);
+      window.removeEventListener(themeChangeEvent, syncTheme);
+    };
+  }, []);
 
   useEffect(() => {
     let isCancelled = false;

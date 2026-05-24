@@ -1,18 +1,7 @@
-'use client'
+"use client";
 
-import { Toaster as Sonner, type ToasterProps } from 'sonner'
-import { useTheme } from '@/components/theme-provider'
+import { Toaster as Sonner, type ToasterProps } from "sonner";
 
 export function Toaster(props: ToasterProps) {
-  const { resolvedTheme } = useTheme()
-
-  return (
-    <Sonner
-      theme={resolvedTheme}
-      position="bottom-right"
-      richColors
-      closeButton
-      {...props}
-    />
-  )
+  return <Sonner theme="system" position="bottom-right" richColors closeButton {...props} />;
 }

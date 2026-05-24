@@ -1,5 +1,5 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
+@import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -77,18 +77,11 @@
 }
 
 @theme inline {
-  --font-sans: var(--app-font-sans), system-ui, sans-serif;
-  --font-display: var(--app-font-display), ui-serif, Georgia, serif;
+  --font-sans: system-ui, sans-serif;
+  --font-display: ui-serif, Georgia, serif;
   --font-mono:
-    ui-monospace,
-    'SFMono-Regular',
-    'SF Mono',
-    Menlo,
-    Monaco,
-    Consolas,
-    'Liberation Mono',
-    'Courier New',
-    monospace;
+    ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -210,7 +203,7 @@
 
 .inkdown-code-block .hljs-comment,
 .inkdown-code-block .hljs-quote {
-  color: oklch(0.56 0.02 250);
+  color: #56616d;
   font-style: italic;
 }
 
@@ -219,7 +212,7 @@
 .inkdown-code-block .hljs-literal,
 .inkdown-code-block .hljs-section,
 .inkdown-code-block .hljs-link {
-  color: oklch(0.57 0.16 255);
+  color: #1f64b5;
 }
 
 .inkdown-code-block .hljs-title,
@@ -227,14 +220,14 @@
 .inkdown-code-block .hljs-title.function_,
 .inkdown-code-block .hljs-type,
 .inkdown-code-block .hljs-built_in {
-  color: oklch(0.52 0.14 225);
+  color: #1d6a8f;
 }
 
 .inkdown-code-block .hljs-string,
 .inkdown-code-block .hljs-regexp,
 .inkdown-code-block .hljs-bullet,
 .inkdown-code-block .hljs-symbol {
-  color: oklch(0.6 0.17 145);
+  color: #16703b;
 }
 
 .inkdown-code-block .hljs-number,
@@ -242,7 +235,7 @@
 .inkdown-code-block .hljs-attribute,
 .inkdown-code-block .hljs-variable,
 .inkdown-code-block .hljs-template-variable {
-  color: oklch(0.64 0.17 55);
+  color: #8f5200;
 }
 
 .inkdown-code-block .hljs-subst {
@@ -255,4 +248,40 @@
 
 .inkdown-code-block .hljs-strong {
   font-weight: 700;
+}
+
+.dark .inkdown-code-block .hljs-comment,
+.dark .inkdown-code-block .hljs-quote {
+  color: #a6b0bb;
+}
+
+.dark .inkdown-code-block .hljs-keyword,
+.dark .inkdown-code-block .hljs-selector-tag,
+.dark .inkdown-code-block .hljs-literal,
+.dark .inkdown-code-block .hljs-section,
+.dark .inkdown-code-block .hljs-link {
+  color: #7db7ff;
+}
+
+.dark .inkdown-code-block .hljs-title,
+.dark .inkdown-code-block .hljs-title.class_,
+.dark .inkdown-code-block .hljs-title.function_,
+.dark .inkdown-code-block .hljs-type,
+.dark .inkdown-code-block .hljs-built_in {
+  color: #69d2ff;
+}
+
+.dark .inkdown-code-block .hljs-string,
+.dark .inkdown-code-block .hljs-regexp,
+.dark .inkdown-code-block .hljs-bullet,
+.dark .inkdown-code-block .hljs-symbol {
+  color: #78d990;
+}
+
+.dark .inkdown-code-block .hljs-number,
+.dark .inkdown-code-block .hljs-meta,
+.dark .inkdown-code-block .hljs-attribute,
+.dark .inkdown-code-block .hljs-variable,
+.dark .inkdown-code-block .hljs-template-variable {
+  color: #f1bd69;
 }

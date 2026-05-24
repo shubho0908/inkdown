@@ -1,4 +1,3 @@
-import { memo } from "react";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
@@ -7,19 +6,16 @@ import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import type { Components } from "react-markdown";
-import { CodeBlock } from "@/components/code-block";
-import { MermaidDiagram } from "@/components/mermaid-diagram";
+import { StaticCodeBlock } from "@/components/static-code-block";
 import { extractLanguageFromClassName } from "@/lib/code-block";
 import { normalizeMarkdownContent } from "@/lib/markdown-normalization";
 
-interface MarkdownPreviewProps {
+interface PublicMarkdownPreviewProps {
   content: string;
-  headingBaseLevel?: 1 | 2 | 3;
-  mode?: "interactive" | "print";
+  headingBaseLevel: 2 | 3;
 }
 
 const OPTIMIZED_IMAGE_HOSTS = new Set(["cdn.designfast.io", "pbs.twimg.com"]);
-
 const defaultSchemaAttributes = defaultSchema.attributes ?? {};
 
 const markdownSanitizeSchema = {
@@ -45,9 +41,7 @@ const markdownSanitizeSchema = {
 function normalizeUrl(value?: string) {
   const trimmed = value?.trim();
 
-  if (!trimmed) {
-    return null;
-  }
+  if (!trimmed) return null;
 
   if (
     trimmed.startsWith("/") ||
@@ -112,20 +106,10 @@ function canOptimizeImage(src: string) {
   }
 }
 
-function normalizeHeadingLevel(level: number, minHeadingLevel: number | null, baseLevel: number) {
-  if (!minHeadingLevel) {
-    return level;
-  }
-
-  return Math.min(6, Math.max(baseLevel, level + baseLevel - minHeadingLevel));
-}
-
 function getFenceOpener(line: string) {
   const match = /^[ \t]{0,3}(`{3,}|~{3,})/.exec(line);
 
-  if (!match) {
-    return null;
-  }
+  if (!match) return null;
 
   return {
     markerChar: match[1][0],
@@ -147,19 +131,16 @@ function getMinimumHeadingLevel(content: string) {
       if (isFenceCloser(line, activeFence.markerChar, activeFence.markerLength)) {
         activeFence = null;
       }
-
       continue;
     }
 
     const opener = getFenceOpener(line);
-
     if (opener) {
       activeFence = opener;
       continue;
     }
 
     const match = /^[ \t]{0,3}(#{1,6})(?:[ \t]+|$)/.exec(line);
-
     if (match) {
       const level = match[1].length;
       minHeadingLevel = minHeadingLevel ? Math.min(minHeadingLevel, level) : level;
@@ -169,24 +150,23 @@ function getMinimumHeadingLevel(content: string) {
   return minHeadingLevel;
 }
 
+function normalizeHeadingLevel(level: number, minHeadingLevel: number | null, baseLevel: number) {
+  if (!minHeadingLevel) return level;
+  return Math.min(6, Math.max(baseLevel, level + baseLevel - minHeadingLevel));
+}
+
 function normalizeMarkdownHeadings(
   content: string,
-  baseLevel: MarkdownPreviewProps["headingBaseLevel"],
+  baseLevel: PublicMarkdownPreviewProps["headingBaseLevel"],
 ) {
-  const resolvedBaseLevel = baseLevel ?? 1;
-
-  if (resolvedBaseLevel === 1) {
-    return content;
-  }
-
   const minHeadingLevel = getMinimumHeadingLevel(content);
 
-  if (!minHeadingLevel || minHeadingLevel === resolvedBaseLevel) {
+  if (!minHeadingLevel || minHeadingLevel === baseLevel) {
     return content;
   }
 
   let activeFence: { markerChar: string; markerLength: number } | null = null;
-  let previousHeadingLevel = resolvedBaseLevel - 1;
+  let previousHeadingLevel = baseLevel - 1;
 
   return content
     .split("\n")
@@ -195,23 +175,17 @@ function normalizeMarkdownHeadings(
         if (isFenceCloser(line, activeFence.markerChar, activeFence.markerLength)) {
           activeFence = null;
         }
-
         return line;
       }
 
       const opener = getFenceOpener(line);
-
       if (opener) {
         activeFence = opener;
         return line;
       }
 
       return line.replace(/^([ \t]{0,3})(#{1,6})([ \t]+.*)$/u, (match, indent, marks, rest) => {
-        const normalizedLevel = normalizeHeadingLevel(
-          marks.length,
-          minHeadingLevel,
-          resolvedBaseLevel,
-        );
+        const normalizedLevel = normalizeHeadingLevel(marks.length, minHeadingLevel, baseLevel);
         const level = Math.min(normalizedLevel, previousHeadingLevel + 1);
         previousHeadingLevel = level;
         return `${indent}${"#".repeat(level)}${rest}`;
@@ -246,13 +220,11 @@ function getCodeBlockDataFromNode(node?: {
   }
 
   const className = Array.isArray(codeNode.properties?.className)
-    ? codeNode.properties?.className.join(" ")
+    ? codeNode.properties.className.join(" ")
     : codeNode.properties?.className;
 
   const code = (codeNode.children || [])
-    .reduce((acc, child) => {
-      return child.type === "text" ? acc + (child.value || "") : acc;
-    }, "")
+    .reduce((acc, child) => (child.type === "text" ? acc + (child.value || "") : acc), "")
     .replace(/\n$/, "");
 
   return {
@@ -261,16 +233,11 @@ function getCodeBlockDataFromNode(node?: {
   };
 }
 
-export const MarkdownPreview = memo(function MarkdownPreview({
-  content,
-  headingBaseLevel = 1,
-  mode = "interactive",
-}: MarkdownPreviewProps) {
+export function PublicMarkdownPreview({ content, headingBaseLevel }: PublicMarkdownPreviewProps) {
   const normalizedContent = normalizeMarkdownHeadings(
     normalizeMarkdownContent(content),
     headingBaseLevel,
   );
-  const isPrintMode = mode === "print";
   const firstImageSrc = findFirstImageSrc(normalizedContent);
 
   const components: Components = {
@@ -336,17 +303,7 @@ export const MarkdownPreview = memo(function MarkdownPreview({
         return <pre className="overflow-x-auto rounded-lg bg-muted p-4">{children}</pre>;
       }
 
-      if (codeBlock.language === "mermaid") {
-        return <MermaidDiagram chart={codeBlock.code} theme={isPrintMode ? "light" : undefined} />;
-      }
-
-      return (
-        <CodeBlock
-          code={codeBlock.code}
-          language={codeBlock.language}
-          showCopyButton={!isPrintMode}
-        />
-      );
+      return <StaticCodeBlock code={codeBlock.code} language={codeBlock.language} />;
     },
     a: ({ href, children }) => {
       const safeHref = normalizeUrl(href);
@@ -393,7 +350,7 @@ export const MarkdownPreview = memo(function MarkdownPreview({
       const isPriorityImage = safeSrc === firstImageSrc;
 
       return (
-        <span className="my-4 block overflow-hidden rounded-lg border">
+        <span className="my-4 block overflow-hidden rounded-lg border bg-muted/20">
           {dimensions && canOptimizeImage(safeSrc) ? (
             <Image
               src={safeSrc}
@@ -404,17 +361,18 @@ export const MarkdownPreview = memo(function MarkdownPreview({
               quality={60}
               loading={isPriorityImage ? "eager" : "lazy"}
               fetchPriority={isPriorityImage ? "high" : "auto"}
-              className="h-auto w-full max-w-full"
+              className="mx-auto h-auto max-h-20 w-auto max-w-full object-contain sm:max-h-64"
             />
           ) : (
-            <img
+            <Image
               src={safeSrc}
               alt={alt || ""}
-              width="1200"
-              height="675"
+              width={1200}
+              height={675}
+              unoptimized
               loading={isPriorityImage ? "eager" : "lazy"}
               fetchPriority={isPriorityImage ? "high" : "auto"}
-              className="h-auto w-full max-w-full"
+              className="mx-auto h-auto max-h-20 w-auto max-w-full object-contain sm:max-h-64"
             />
           )}
         </span>
@@ -455,13 +413,7 @@ export const MarkdownPreview = memo(function MarkdownPreview({
   };
 
   return (
-    <article
-      className={
-        isPrintMode
-          ? "prose prose-neutral min-w-0 w-full max-w-none overflow-x-visible break-words text-[13px] leading-7 sm:text-[15px]"
-          : "prose prose-neutral dark:prose-invert min-w-0 w-full max-w-full overflow-x-hidden break-words text-sm sm:text-base"
-      }
-    >
+    <article className="prose prose-neutral dark:prose-invert min-w-0 w-full max-w-full overflow-x-hidden break-words text-sm sm:text-base">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeRaw, [rehypeSanitize, markdownSanitizeSchema], rehypeKatex]}
@@ -471,4 +423,4 @@ export const MarkdownPreview = memo(function MarkdownPreview({
       </ReactMarkdown>
     </article>
   );
-});
+}
