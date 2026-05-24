@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source srcset="public/logo.webp" type="image/webp">
-    <img src="public/logo.png" alt="Inkdown" width="80" height="80" style="border-radius: 18px;">
+    <img src="public/logo.png" alt="Inkdown" width="80" height="80" style="">
   </picture>
 </p>
 

@@ -115,7 +115,6 @@ export function OgCard({
               alt=""
               style={{
                 display: "block",
-                borderRadius: "12px",
                 boxShadow: "0 10px 24px rgba(0,0,0,0.25)",
               }}
             />
