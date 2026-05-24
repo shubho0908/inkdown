@@ -19,14 +19,14 @@ const nextConfig = {
     ],
   },
   outputFileTracingIncludes: {
-    "/opengraph-image": ["./public/fonts/**/*", "./public/apple-icon.png"],
-    "/twitter-image": ["./public/fonts/**/*", "./public/apple-icon.png"],
-    "/view/*": ["./public/fonts/**/*", "./public/apple-icon.png"],
-    "/view/*/opengraph-image": ["./public/fonts/**/*", "./public/apple-icon.png"],
-    "/view/*/twitter-image": ["./public/fonts/**/*", "./public/apple-icon.png"],
-    "/view/folder/*": ["./public/fonts/**/*", "./public/apple-icon.png"],
-    "/view/folder/*/opengraph-image": ["./public/fonts/**/*", "./public/apple-icon.png"],
-    "/view/folder/*/twitter-image": ["./public/fonts/**/*", "./public/apple-icon.png"],
+    "/opengraph-image": ["./public/fonts/**/*", "./public/logo.png"],
+    "/twitter-image": ["./public/fonts/**/*", "./public/logo.png"],
+    "/view/*": ["./public/fonts/**/*", "./public/logo.png"],
+    "/view/*/opengraph-image": ["./public/fonts/**/*", "./public/logo.png"],
+    "/view/*/twitter-image": ["./public/fonts/**/*", "./public/logo.png"],
+    "/view/folder/*": ["./public/fonts/**/*", "./public/logo.png"],
+    "/view/folder/*/opengraph-image": ["./public/fonts/**/*", "./public/logo.png"],
+    "/view/folder/*/twitter-image": ["./public/fonts/**/*", "./public/logo.png"],
   },
   async headers() {
     return [

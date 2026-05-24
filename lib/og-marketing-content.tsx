@@ -24,12 +24,13 @@ export function MarketingContent({
         justifyContent: "flex-start",
         width: "100%",
         minWidth: 0,
+        overflow: "hidden",
       }}
     >
       <h1
         style={{
           margin: 0,
-          maxWidth: "940px",
+          maxWidth: "100%",
           fontSize,
           lineHeight: 0.95,
           letterSpacing: "-0.06em",

@@ -1,11 +1,12 @@
-import OpenGraphImage, {
-  alt,
-  contentType,
-  size,
-} from '@/app/opengraph-image'
+import { createOgImageResponse, OG_IMAGE_SIZE } from "@/lib/og-image-response";
 
-export { alt, contentType, size }
+export const alt = "Inkdown - Create, organize, and share markdown documents";
+export const size = OG_IMAGE_SIZE;
+export const contentType = "image/png";
+export const runtime = "nodejs";
 
-export const runtime = 'nodejs'
-
-export default OpenGraphImage
+export default async function Image() {
+  return createOgImageResponse({
+    title: "Your markdown,\nbeautifully organized.",
+  });
+}

@@ -22,7 +22,7 @@ export function OgCard({
 }: OgCardProps): ReactElement {
   const safeBaseUrl = getOgBaseUrl(baseUrl);
   const hostLabel = getHostLabel(safeBaseUrl);
-  const displayTitle = clampText(title || "Untitled", 80);
+  const displayTitle = clampText(title || "Untitled", 65);
   const displayPreview = clampText(preview, isDoc ? 150 : 160);
   const ctaText = isDoc ? `Open on ${hostLabel}` : `Create free account — ${hostLabel}`;
 

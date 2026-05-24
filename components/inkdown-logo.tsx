@@ -19,7 +19,7 @@ export function InkdownLogo({ size = "md", showText = true, className }: Inkdown
   return (
     <div className={cn("flex shrink-0 items-center gap-2", className)}>
       <Image
-        src="/icon.svg"
+        src="/logo.webp"
         alt="Inkdown"
         width={icon}
         height={icon}

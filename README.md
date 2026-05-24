@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="public/favicon.png" alt="Inkdown" width="80" height="80" style="border-radius: 18px;">
+  <picture>
+    <source srcset="public/logo.webp" type="image/webp">
+    <img src="public/logo.png" alt="Inkdown" width="80" height="80" style="border-radius: 18px;">
+  </picture>
 </p>
 
 <h1 align="center">Inkdown</h1>
@@ -159,5 +162,3 @@ Deploy Inkdown to any platform that supports Next.js (Vercel, Docker, self-hoste
 - OG images are generated at runtime using `@vercel/og` (Satori) with the Geist font
 - File sharing uses unique slugs; folders support recursive public browsing with file-level granularity
 - The workspace cache layer uses TanStack Query with optimistic updates for a responsive drag-and-drop experience
-
-

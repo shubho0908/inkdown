@@ -44,11 +44,8 @@ export const metadata: Metadata = {
     images: rootSocialImages.twitter,
   },
   icons: {
-    icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
-      { url: "/icon-light-32x32.png", sizes: "32x32", type: "image/png" },
-    ],
-    apple: "/apple-icon.png",
+    icon: [{ url: "/icon-32x32.webp", sizes: "32x32", type: "image/webp" }],
+    apple: "/apple-icon.webp",
   },
 };
 
