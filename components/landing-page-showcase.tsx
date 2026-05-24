@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { Edit3, FileText, Folder, FolderTree, Lock, Share2 } from "lucide-react";
 
 const scenarios = [
@@ -19,7 +22,7 @@ const scenarios = [
     description:
       "Publish flawlessly. One click transforms your markdown into a perfectly typeset web page.",
   },
-];
+] as const;
 
 function EditorPreview() {
   return (
@@ -109,7 +112,52 @@ function WorkspacePreview() {
   );
 }
 
+function PublishingPreview() {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-3 rounded-lg border border-border bg-background p-4 shadow-sm">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+          <Share2 className="size-5" />
+        </div>
+        <div className="flex-1">
+          <div className="text-sm font-medium text-foreground">Shared Successfully</div>
+          <p className="text-xs text-muted-foreground">
+            Your markdown is live on the internet — perfectly typeset.
+          </p>
+        </div>
+        <div className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-600">
+          Live
+        </div>
+      </div>
+      <div className="flex h-full min-h-[180px] w-full flex-col overflow-hidden rounded-lg border border-border bg-background/80 shadow-sm">
+        <div className="flex items-center gap-2 border-b border-border bg-muted/30 px-4 py-2.5">
+          <div className="hidden gap-1.5 sm:flex">
+            <div className="size-2 rounded-full bg-foreground/20" />
+            <div className="size-2 rounded-full bg-foreground/20" />
+            <div className="size-2 rounded-full bg-foreground/20" />
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="rounded bg-muted-foreground/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600">
+              PUBLIC
+            </span>
+            inkdown.io/view/brand-guidelines
+          </div>
+        </div>
+        <div className="bg-background/40 p-5 text-sm text-foreground">
+          <div className="text-lg font-semibold tracking-tight">Brand Guidelines</div>
+          <p className="mt-2 leading-relaxed text-foreground/80">Overview of our core aesthetic.</p>
+          <blockquote className="mt-3 border-l-2 border-muted/30 py-1 pl-4 text-muted-foreground italic">
+            &quot;Design is how it works.&quot;
+          </blockquote>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function LandingPageShowcase() {
+  const [selectedIdx, setSelectedIdx] = useState(0);
+
   return (
     <div className="relative z-20 mx-auto mt-16 max-w-[1050px] px-4 sm:mt-24 sm:px-6">
       <h2 className="sr-only">Inkdown writing workflow</h2>
@@ -117,12 +165,15 @@ export function LandingPageShowcase() {
         <div className="grid content-center gap-3 sm:gap-4 lg:col-span-5">
           {scenarios.map((scenario, idx) => {
             const Icon = scenario.icon;
+            const isSelected = idx === selectedIdx;
 
             return (
-              <article
+              <button
                 key={scenario.title}
+                type="button"
+                onClick={() => setSelectedIdx(idx)}
                 className={`group flex flex-col items-start gap-3 rounded-lg border p-5 text-left shadow-sm transition-colors sm:p-6 ${
-                  idx === 0
+                  isSelected
                     ? "border-border/50 bg-muted/40"
                     : "border-transparent bg-transparent hover:border-border/30 hover:bg-muted/20"
                 }`}
@@ -130,7 +181,7 @@ export function LandingPageShowcase() {
                 <div className="flex w-full items-center gap-4">
                   <div
                     className={`flex size-11 shrink-0 items-center justify-center rounded-lg border sm:size-12 ${
-                      idx === 0
+                      isSelected
                         ? "border-transparent bg-foreground text-background"
                         : "border-border bg-background text-muted-foreground group-hover:border-foreground/20 group-hover:text-foreground/80"
                     }`}
@@ -139,7 +190,7 @@ export function LandingPageShowcase() {
                   </div>
                   <h3
                     className={`text-lg font-medium tracking-tight transition-colors sm:text-xl ${
-                      idx === 0
+                      isSelected
                         ? "text-foreground"
                         : "text-foreground/60 group-hover:text-foreground/80"
                     }`}
@@ -150,25 +201,15 @@ export function LandingPageShowcase() {
                 <p className="pl-[60px] text-sm leading-relaxed text-muted-foreground sm:pl-[64px]">
                   {scenario.description}
                 </p>
-              </article>
+              </button>
             );
           })}
         </div>
 
         <div className="grid gap-4 lg:col-span-7">
-          <EditorPreview />
-          <div className="grid gap-4 rounded-lg border border-border bg-background/70 p-4 shadow-sm sm:grid-cols-[1fr_auto] sm:p-5 lg:hidden">
-            <WorkspacePreview />
-            <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-foreground text-background">
-                <Share2 className="size-4" />
-              </div>
-              <div>
-                <div className="text-sm font-medium text-foreground">Shared Successfully</div>
-                <p className="text-xs text-muted-foreground">Live securely on the internet.</p>
-              </div>
-            </div>
-          </div>
+          {selectedIdx === 0 && <EditorPreview />}
+          {selectedIdx === 1 && <WorkspacePreview />}
+          {selectedIdx === 2 && <PublishingPreview />}
         </div>
       </div>
     </div>
