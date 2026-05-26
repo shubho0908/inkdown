@@ -6,6 +6,7 @@ import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import type { Components } from "react-markdown";
+import { MermaidDiagram } from "@/components/mermaid-diagram";
 import { StaticCodeBlock } from "@/components/static-code-block";
 import { extractLanguageFromClassName } from "@/lib/code-block";
 import { normalizeMarkdownContent } from "@/lib/markdown-normalization";
@@ -301,6 +302,10 @@ export function PublicMarkdownPreview({ content, headingBaseLevel }: PublicMarkd
 
       if (!codeBlock) {
         return <pre className="overflow-x-auto rounded-lg bg-muted p-4">{children}</pre>;
+      }
+
+      if (codeBlock.language === "mermaid") {
+        return <MermaidDiagram chart={codeBlock.code} />;
       }
 
       return <StaticCodeBlock code={codeBlock.code} language={codeBlock.language} />;
