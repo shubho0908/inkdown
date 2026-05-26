@@ -5,6 +5,7 @@ import { InkdownLogo } from "@/components/inkdown-logo";
 import { JsonLd } from "@/components/json-ld";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { getPublicFolderFileById, getPublicFolderTreeBySlug } from "@/lib/public-folders";
+import { createClient } from "@/lib/supabase/server";
 import { createSiteUrl, getSiteUrl } from "@/lib/site-url";
 import type { TreeItem } from "@/lib/types";
 import { notFound } from "next/navigation";
@@ -33,11 +34,19 @@ export async function SharedFolderPageContent({
   slug,
   requestedFileId,
 }: SharedFolderPageContentProps) {
-  const sharedFolder = await getPublicFolderTreeBySlug(slug);
+  const [sharedFolder, supabase] = await Promise.all([
+    getPublicFolderTreeBySlug(slug),
+    createClient(),
+  ]);
 
   if (!sharedFolder) {
     notFound();
   }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isOwner = Boolean(user && user.id === sharedFolder.folder.user_id);
 
   const fallbackFileId = findFirstFileId(sharedFolder.treeItems);
   const selectedFileId = requestedFileId || fallbackFileId;
@@ -100,6 +109,7 @@ export async function SharedFolderPageContent({
         initialFile={selectedFile}
         fallbackFileId={fallbackFileId}
         ownerId={sharedFolder.folder.user_id}
+        isOwner={isOwner}
       />
     </div>
   );

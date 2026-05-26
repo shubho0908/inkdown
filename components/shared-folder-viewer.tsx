@@ -15,6 +15,7 @@ interface SharedFolderViewerProps {
   initialFile: PublicFolderFileRecord | null;
   fallbackFileId: string | null;
   ownerId: string | null;
+  isOwner: boolean;
 }
 
 export function SharedFolderViewer({
@@ -26,6 +27,7 @@ export function SharedFolderViewer({
   initialFile,
   fallbackFileId,
   ownerId: _ownerId,
+  isOwner,
 }: SharedFolderViewerProps) {
   const selectedFileId = initialFile?.id ?? fallbackFileId;
 
@@ -58,12 +60,14 @@ export function SharedFolderViewer({
               </p>
             </div>
           </div>
-          <SharedCopyButton
-            shareSlug={shareSlug}
-            itemName={folderName}
-            itemType="folder"
-            className="mt-3 h-9 w-full"
-          />
+          {!isOwner && (
+            <SharedCopyButton
+              shareSlug={shareSlug}
+              itemName={folderName}
+              itemType="folder"
+              className="mt-3 h-9 w-full"
+            />
+          )}
         </div>
 
         <div className="min-w-0 p-3 lg:max-h-[calc(100svh-14rem)] lg:overflow-y-auto lg:overscroll-contain">
