@@ -11,6 +11,7 @@ import { extractMarkdownSummary } from "@/lib/markdown-summary";
 import { getPublicFileBySlug, listPublicFilesForSitemap } from "@/lib/public-files";
 import { createSiteUrl, getSiteUrl, getSiteUrlObject } from "@/lib/site-url";
 import { createSocialImageSet } from "@/lib/social-metadata";
+import { createClient } from "@/lib/supabase/server";
 
 interface ViewPageProps {
   params: Promise<{ slug: string }>;
@@ -85,11 +86,16 @@ export async function generateMetadata({ params }: ViewPageProps): Promise<Metad
 
 export default async function ViewPage({ params }: ViewPageProps) {
   const { slug } = await params;
-  const file = await getPublicFileBySlug(slug);
+  const [file, supabase] = await Promise.all([getPublicFileBySlug(slug), createClient()]);
 
   if (!file) {
     notFound();
   }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isOwner = Boolean(user && user.id === file.user_id);
 
   const title = file.name.replace(/\.md$/, "");
   const description = extractMarkdownSummary(file.content, {
@@ -154,13 +160,15 @@ export default async function ViewPage({ params }: ViewPageProps) {
                 </h1>
                 <p className="mt-2 text-sm text-muted-foreground">Last updated on {updatedAt}</p>
               </div>
-              <SharedCopyButton
-                shareSlug={slug}
-                itemName={file.name}
-                itemType="file"
-                label="full"
-                className="w-full shrink-0 sm:w-auto"
-              />
+              {!isOwner && (
+                <SharedCopyButton
+                  shareSlug={slug}
+                  itemName={file.name}
+                  itemType="file"
+                  label="full"
+                  className="w-full shrink-0 sm:w-auto"
+                />
+              )}
             </div>
           </header>
           <PublicMarkdownPreview content={file.content} headingBaseLevel={2} />
