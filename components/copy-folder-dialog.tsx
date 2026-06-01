@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -87,7 +88,7 @@ function FolderTreeItem({
         {hasChildren ? (
           <button
             type="button"
-            className="flex size-5 items-center justify-center rounded hover:bg-accent"
+            className="flex size-5 shrink-0 items-center justify-center rounded hover:bg-accent"
             onClick={(e) => {
               e.stopPropagation();
               onToggleFolder(node.folder.id);
@@ -100,7 +101,7 @@ function FolderTreeItem({
             )}
           </button>
         ) : (
-          <span className="size-5" />
+          <span className="size-5 shrink-0" />
         )}
         <button
           type="button"
@@ -112,7 +113,7 @@ function FolderTreeItem({
           ) : (
             <Folder className="size-4 shrink-0 text-muted-foreground" />
           )}
-          <span className="flex-1 truncate">{node.folder.name}</span>
+          <span className="min-w-0 flex-1 truncate">{node.folder.name}</span>
         </button>
       </div>
       {isExpanded && hasChildren && (
@@ -140,6 +141,7 @@ export function CopyFolderDialog({
   itemName,
   itemType = "folder",
 }: CopyFolderDialogProps) {
+  const { push } = useRouter();
   const { data: folders, isLoading } = useFoldersQuery();
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(new Set());
@@ -172,6 +174,7 @@ export function CopyFolderDialog({
         onSuccess: () => {
           onOpenChange(false);
           setSelectedFolderId(null);
+          push("/workspace");
         },
       },
     );
@@ -186,59 +189,65 @@ export function CopyFolderDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="w-[calc(100%-1rem)] max-w-md gap-5 p-4 sm:p-6">
-        <DialogHeader>
-          <DialogTitle className="pr-8 text-left break-words">
-            Copy &quot;{itemName}&quot;
+      <DialogContent className="w-[calc(100%-1rem)] max-w-lg gap-0 overflow-hidden p-0 sm:gap-0">
+        <DialogHeader className="min-w-0 overflow-hidden border-b px-5 pb-4 pt-5 sm:px-6 sm:pb-4 sm:pt-6">
+          <DialogTitle className="min-w-0 overflow-hidden pr-8 text-left">
+            <span className="block truncate" title={itemName}>
+              Copy &quot;{itemName}&quot;
+            </span>
           </DialogTitle>
           <DialogDescription className="text-left">
             Choose a destination folder in your workspace to copy this shared {itemType}.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-3">
-          <div className="space-y-2">
-            <Label>Destination Folder</Label>
-            <div className="max-h-[min(320px,45svh)] overflow-y-auto rounded-lg border bg-background p-2">
-              {isLoading ? (
-                <div className="text-sm text-muted-foreground text-center py-4">
-                  Loading folders…
-                </div>
-              ) : folders && folders.length > 0 ? (
-                <div className="space-y-1" role="tree" aria-label="Destination folders">
-                  <button
-                    type="button"
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none",
-                      selectedFolderId === null && "bg-accent text-accent-foreground",
-                    )}
-                    onClick={() => setSelectedFolderId(null)}
-                  >
-                    <span className="size-5" />
-                    <Folder className="size-4 text-muted-foreground" />
-                    <span className="flex-1 truncate">Root</span>
-                  </button>
-                  {folderTree.map((node) => (
-                    <FolderTreeItem
-                      key={node.folder.id}
-                      node={node}
-                      selectedFolderId={selectedFolderId}
-                      onSelectFolder={setSelectedFolderId}
-                      expandedFolderIds={expandedFolderIds}
-                      onToggleFolder={toggleFolder}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-sm text-muted-foreground text-center py-4">
-                  No folders in workspace. The {itemType} will be copied to root.
-                </div>
-              )}
+        <div className="px-5 pb-1 pt-4 sm:px-6 sm:pt-5">
+          <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/80">
+            Destination
+          </Label>
+        </div>
+        <div className="max-h-[min(280px,40svh)] overflow-y-auto px-5 pb-4 sm:px-6 sm:pb-5">
+          {isLoading ? (
+            <div className="flex min-h-20 items-center justify-center rounded-lg border border-dashed bg-muted/20 px-3 py-6 text-center text-sm text-muted-foreground">
+              Loading folders…
             </div>
-          </div>
+          ) : folders && folders.length > 0 ? (
+            <div
+              className="space-y-0.5 rounded-lg border bg-background p-1.5"
+              role="tree"
+              aria-label="Destination folders"
+            >
+              <button
+                type="button"
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none",
+                  selectedFolderId === null && "bg-accent text-accent-foreground",
+                )}
+                onClick={() => setSelectedFolderId(null)}
+              >
+                <span className="size-5 shrink-0" />
+                <Folder className="size-4 shrink-0 text-muted-foreground" />
+                <span className="min-w-0 flex-1 truncate">Root</span>
+              </button>
+              {folderTree.map((node) => (
+                <FolderTreeItem
+                  key={node.folder.id}
+                  node={node}
+                  selectedFolderId={selectedFolderId}
+                  onSelectFolder={setSelectedFolderId}
+                  expandedFolderIds={expandedFolderIds}
+                  onToggleFolder={toggleFolder}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex min-h-20 items-center justify-center rounded-lg border border-dashed bg-muted/20 px-3 py-6 text-center text-sm text-muted-foreground">
+              No folders in workspace. The {itemType} will be copied to root.
+            </div>
+          )}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="flex-col-reverse gap-2 border-t px-5 py-4 sm:flex-row sm:items-end sm:gap-2 sm:px-6">
           <Button
             type="button"
             variant="outline"

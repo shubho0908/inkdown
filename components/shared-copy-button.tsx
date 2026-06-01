@@ -4,6 +4,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Copy } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { QueryProvider } from "@/components/query-provider";
 
 const CopyFolderDialog = dynamic(
   () => import("@/components/copy-folder-dialog").then((mod) => mod.CopyFolderDialog),
@@ -76,13 +77,15 @@ export function SharedCopyButton({
         </p>
       ) : null}
       {copyDialogOpen ? (
-        <CopyFolderDialog
-          open={copyDialogOpen}
-          onOpenChange={setCopyDialogOpen}
-          shareSlug={shareSlug}
-          itemName={itemName}
-          itemType={itemType}
-        />
+        <QueryProvider>
+          <CopyFolderDialog
+            open={copyDialogOpen}
+            onOpenChange={setCopyDialogOpen}
+            shareSlug={shareSlug}
+            itemName={itemName}
+            itemType={itemType}
+          />
+        </QueryProvider>
       ) : null}
     </>
   );

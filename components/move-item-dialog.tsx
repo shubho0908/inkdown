@@ -273,7 +273,10 @@ export function MoveItemDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent key={item.id} className="max-w-lg gap-0 overflow-hidden p-0 sm:gap-0">
+      <DialogContent
+        key={item.id}
+        className="w-[calc(100%-1rem)] max-w-lg gap-0 overflow-hidden p-0 sm:gap-0"
+      >
         <DialogHeader className="min-w-0 overflow-hidden border-b px-5 pb-4 pt-5 sm:px-6 sm:pb-4 sm:pt-6">
           <DialogTitle className="min-w-0 overflow-hidden pr-8 text-left">
             <span className="block truncate" title={item.name}>
