@@ -1,5 +1,6 @@
 "use client";
-import { type DragEvent } from "react";
+
+import { memo, useRef, type MutableRefObject } from "react";
 import {
   ChevronDown,
   ChevronRight,
@@ -26,7 +27,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { canMoveTreeItem } from "@/lib/folder-tree";
+import { isExternalFileDragEvent, type FolderRef } from "@/lib/drag-utils";
 import type { TreeItem } from "@/lib/types";
+
+const AUTO_EXPAND_DELAY = 500;
+
+// ─── Interface ───────────────────────────────────────────────────────────────
 
 interface TreeNodeProps {
   item: TreeItem;
@@ -36,8 +43,9 @@ interface TreeNodeProps {
   draggedItemId: string | null;
   dropTargetId: string | "root" | null;
   externalDropTargetId: string | "root" | null;
-  draggedItem?: TreeItem;
-  canDropIntoFolder: (draggedItem: TreeItem | undefined, targetFolderId: string | null) => boolean;
+  draggedItemIdRef: MutableRefObject<string | null>;
+  itemIndexRef: MutableRefObject<Map<string, TreeItem>>;
+  folderIndexRef: MutableRefObject<FolderRef>;
   onDragStart: (itemId: string) => void;
   onDragEnd: () => void;
   onDropTargetChange: (targetId: string | "root" | null) => void;
@@ -63,7 +71,9 @@ interface TreeNodeProps {
   onExportFolder?: (folderId: string, folderName: string) => void;
 }
 
-export function TreeNode({
+// ─── Component ───────────────────────────────────────────────────────────────
+
+export const TreeNode = memo(function TreeNode({
   item,
   level,
   selectedId,
@@ -71,8 +81,9 @@ export function TreeNode({
   draggedItemId,
   dropTargetId,
   externalDropTargetId,
-  draggedItem,
-  canDropIntoFolder,
+  draggedItemIdRef,
+  itemIndexRef,
+  folderIndexRef,
   onDragStart,
   onDragEnd,
   onDropTargetChange,
@@ -98,16 +109,31 @@ export function TreeNode({
   const isDragging = draggedItemId === item.id;
   const isDropTarget = dropTargetId === item.id;
   const isExternalDropTarget = externalDropTargetId === item.id;
-  const canDropOnThisFolder = isFolder && canDropIntoFolder(draggedItem, item.id);
 
-  const handleDrop = () => {
-    if (!canDropOnThisFolder || !draggedItem) return;
-    onMove(draggedItem, item.id);
-    onDragEnd();
+  const expandTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Real-time validation using refs — never stale, never depends on render cycle
+  const canDropHere = (): boolean => {
+    if (!isFolder) return false;
+    const id = draggedItemIdRef.current;
+    if (!id || id === item.id) return false;
+    const dragged = itemIndexRef.current.get(id);
+    if (!dragged) return false;
+    return canMoveTreeItem(folderIndexRef.current, dragged, item.id);
   };
 
-  const isExternalFileDragEvent = (event: DragEvent<HTMLElement>) => {
-    return Array.from(event.dataTransfer.types).includes("Files");
+  const scheduleExpand = () => {
+    if (isExpanded || expandTimerRef.current) return;
+    expandTimerRef.current = setTimeout(() => {
+      expandTimerRef.current = null;
+      onExpand(item.id);
+    }, AUTO_EXPAND_DELAY);
+  };
+
+  const cancelExpand = () => {
+    if (!expandTimerRef.current) return;
+    clearTimeout(expandTimerRef.current);
+    expandTimerRef.current = null;
   };
 
   return (
@@ -119,9 +145,10 @@ export function TreeNode({
           isSelected && "border-border bg-accent/80 shadow-xs",
           isDragging && "cursor-grabbing opacity-55",
           isDropTarget &&
-            canDropOnThisFolder &&
+            isFolder &&
             "border-primary/60 bg-primary/10 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]",
           isExternalDropTarget &&
+            isFolder &&
             "border-primary/60 bg-primary/10 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]",
         )}
         style={{ paddingLeft: `${level * 12 + 8}px` }}
@@ -130,26 +157,24 @@ export function TreeNode({
             event.stopPropagation();
             event.preventDefault();
             onExternalDragActiveChange(true);
-            if (!isExpanded) {
-              onExpand(item.id);
-            }
-            if (externalDropTargetId !== item.id) {
-              onExternalDropTargetChange(item.id);
-            }
+            scheduleExpand();
+            if (externalDropTargetId !== item.id) onExternalDropTargetChange(item.id);
             return;
           }
 
-          if (!canDropOnThisFolder) return;
-          event.stopPropagation();
-          event.preventDefault();
-          if (!isExpanded) {
-            onExpand(item.id);
+          if (isFolder && canDropHere()) {
+            event.stopPropagation();
+            event.preventDefault();
+            scheduleExpand();
+            if (dropTargetId !== item.id) onDropTargetChange(item.id);
+            return;
           }
-          if (dropTargetId !== item.id) {
-            onDropTargetChange(item.id);
-          }
+
+          // Non-folder or invalid target: let event bubble to parent
         }}
         onDragLeave={(event) => {
+          cancelExpand();
+
           if (isExternalDropTarget) {
             event.stopPropagation();
             if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
@@ -157,32 +182,40 @@ export function TreeNode({
             return;
           }
 
-          if (!canDropOnThisFolder) return;
+          if (!isFolder) return;
           event.stopPropagation();
           if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
-          if (dropTargetId === item.id) {
-            onDropTargetChange(null);
-          }
+          if (dropTargetId === item.id) onDropTargetChange(null);
         }}
         onDrop={(event) => {
+          cancelExpand();
+
           if (isFolder && isExternalFileDragEvent(event)) {
             event.stopPropagation();
             event.preventDefault();
             onExternalDragActiveChange(false);
             onExternalDropTargetChange(null);
-
             const files = Array.from(event.dataTransfer.files);
-            const items = event.dataTransfer.items;
-            if (files.length > 0) {
-              onImportFiles(files, item.id, items);
-            }
+            const transferItems = event.dataTransfer.items;
+            if (files.length > 0) onImportFiles(files, item.id, transferItems);
             return;
           }
 
-          if (!canDropOnThisFolder) return;
-          event.stopPropagation();
-          event.preventDefault();
-          handleDrop();
+          if (isFolder && canDropHere()) {
+            event.stopPropagation();
+            event.preventDefault();
+            // Resolve dragged item and execute move
+            const dragged = itemIndexRef.current.get(draggedItemIdRef.current!);
+            if (dragged) onMove(dragged, item.id);
+            onDragEnd();
+            return;
+          }
+
+          // Always prevent default for internal drags to stop browser from
+          // navigating to or downloading the dataTransfer text/plain content
+          if (draggedItemIdRef.current) {
+            event.preventDefault();
+          }
         }}
       >
         <button
@@ -192,7 +225,10 @@ export function TreeNode({
             event.dataTransfer.setData("text/plain", item.id);
             onDragStart(item.id);
           }}
-          onDragEnd={onDragEnd}
+          onDragEnd={() => {
+            cancelExpand();
+            onDragEnd();
+          }}
           className="flex h-6 w-5 shrink-0 cursor-grab items-center justify-center text-muted-foreground/55 transition-colors hover:text-muted-foreground"
           aria-label={`Drag ${item.name}`}
         >
@@ -222,7 +258,6 @@ export function TreeNode({
               onToggleExpanded(item.id);
               return;
             }
-
             onSelect(item);
           }}
           className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden text-left"
@@ -325,8 +360,9 @@ export function TreeNode({
               draggedItemId={draggedItemId}
               dropTargetId={dropTargetId}
               externalDropTargetId={externalDropTargetId}
-              draggedItem={draggedItem}
-              canDropIntoFolder={canDropIntoFolder}
+              draggedItemIdRef={draggedItemIdRef}
+              itemIndexRef={itemIndexRef}
+              folderIndexRef={folderIndexRef}
               onDragStart={onDragStart}
               onDragEnd={onDragEnd}
               onDropTargetChange={onDropTargetChange}
@@ -352,4 +388,4 @@ export function TreeNode({
       )}
     </div>
   );
-}
+});
