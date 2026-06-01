@@ -23,7 +23,12 @@ echo ""
 echo "▶ Type checking…"
 bun run typecheck
 
-# ── 4. React Doctor score (must be 100) ───────────────────────────────────
+# ── 4. Build ────────────────────────────────────────────────────────────────
+echo ""
+echo "▶ Building…"
+bun run build
+
+# ── 5. React Doctor score (must be 100) ───────────────────────────────────
 echo ""
 echo "▶ React Doctor health check…"
 SCORE=$(bunx react-doctor --score -y 2>/dev/null | tail -1)
@@ -41,11 +46,6 @@ else
   fi
   echo "✔ Score passes."
 fi
-
-# ── 5. Build ────────────────────────────────────────────────────────────────
-echo ""
-echo "▶ Building…"
-bun run build
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
