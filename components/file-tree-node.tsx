@@ -40,6 +40,7 @@ interface TreeNodeProps {
   level: number;
   selectedId: string | null;
   isExpanded: boolean;
+  expandedFolderIds: Set<string>;
   draggedItemId: string | null;
   dropTargetId: string | "root" | null;
   externalDropTargetId: string | "root" | null;
@@ -56,7 +57,6 @@ interface TreeNodeProps {
     folderId: string | null,
     items?: DataTransferItemList,
   ) => void;
-  isFolderExpanded: (itemId: string) => boolean;
   onToggleExpanded: (itemId: string) => void;
   onExpand: (itemId: string) => void;
   onSelect: (item: TreeItem) => void;
@@ -78,6 +78,7 @@ export const TreeNode = memo(function TreeNode({
   level,
   selectedId,
   isExpanded,
+  expandedFolderIds,
   draggedItemId,
   dropTargetId,
   externalDropTargetId,
@@ -90,7 +91,6 @@ export const TreeNode = memo(function TreeNode({
   onExternalDropTargetChange,
   onExternalDragActiveChange,
   onImportFiles,
-  isFolderExpanded,
   onToggleExpanded,
   onExpand,
   onSelect,
@@ -356,7 +356,8 @@ export const TreeNode = memo(function TreeNode({
               item={child}
               level={level + 1}
               selectedId={selectedId}
-              isExpanded={isFolderExpanded(child.id)}
+              isExpanded={expandedFolderIds.has(child.id)}
+              expandedFolderIds={expandedFolderIds}
               draggedItemId={draggedItemId}
               dropTargetId={dropTargetId}
               externalDropTargetId={externalDropTargetId}
@@ -369,7 +370,6 @@ export const TreeNode = memo(function TreeNode({
               onExternalDropTargetChange={onExternalDropTargetChange}
               onExternalDragActiveChange={onExternalDragActiveChange}
               onImportFiles={onImportFiles}
-              isFolderExpanded={isFolderExpanded}
               onToggleExpanded={onToggleExpanded}
               onExpand={onExpand}
               onSelect={onSelect}

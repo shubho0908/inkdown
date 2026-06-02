@@ -154,19 +154,6 @@ export function FileTree({
     folderIndexRef.current = folderIndex;
   }, [folderIndex]);
 
-  // Ref for expandedFolderIds so TreeNode can check expansion without
-  // receiving a callback that changes identity on every expand/collapse
-  const expandedRef = useRef(expandedFolderIds);
-  useEffect(() => {
-    expandedRef.current = expandedFolderIds;
-  }, [expandedFolderIds]);
-
-  // Stable function — reads from ref, never changes identity
-  const isFolderExpanded = useCallback(
-    (itemId: string) => expandedRef.current.has(itemId),
-    [],
-  );
-
   // Event-time validation (uses refs, never stale)
   const canDropRealtime = useCallback((targetFolderId: string | null) => {
     const id = draggedItemIdRef.current;
@@ -357,6 +344,7 @@ export function FileTree({
           level={0}
           selectedId={selectedId}
           isExpanded={expandedFolderIds.has(item.id)}
+          expandedFolderIds={expandedFolderIds}
           draggedItemId={draggedItemId}
           dropTargetId={dropTargetId}
           externalDropTargetId={externalDropTargetId}
@@ -369,7 +357,6 @@ export function FileTree({
           onExternalDropTargetChange={setExternalDropTargetId}
           onExternalDragActiveChange={setIsExternalDragging}
           onImportFiles={onImportFiles}
-          isFolderExpanded={isFolderExpanded}
           onToggleExpanded={handleToggleFolder}
           onExpand={handleExpandFolder}
           onSelect={onSelect}
