@@ -27,9 +27,9 @@ export function StaticCodeBlock({ code, language }: StaticCodeBlockProps) {
           {label}
         </span>
       </div>
-      <pre className="max-h-16 overflow-hidden p-4 text-xs leading-5 sm:max-h-40 sm:text-sm sm:leading-6">
+      <pre className="overflow-x-auto p-4 text-xs leading-5 sm:text-sm sm:leading-6">
         <code
-          className="hljs block max-h-16 min-w-full overflow-hidden bg-transparent p-0 font-mono sm:max-h-40"
+          className="hljs block min-w-full bg-transparent p-0 font-mono"
           dangerouslySetInnerHTML={{ __html: highlightedCode }}
         />
       </pre>
