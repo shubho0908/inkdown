@@ -1,10 +1,11 @@
-const KIB = 1024;
-const MIB = 1024 * KIB;
-
-export const MARKDOWN_IMPORT_MAX_FILES = 500;
-export const MARKDOWN_IMPORT_MAX_FILE_BYTES = 2 * MIB;
-export const MARKDOWN_IMPORT_MAX_TOTAL_BYTES = 20 * MIB;
-export const MARKDOWN_IMPORT_READ_CONCURRENCY = 4;
+import {
+  MARKDOWN_IMPORT_MAX_FILES,
+  MARKDOWN_IMPORT_MAX_FILE_BYTES,
+  MARKDOWN_IMPORT_MAX_TOTAL_BYTES,
+  formatMarkdownImportBytes,
+  isMarkdownFileName,
+  normalizeMarkdownImportFileName,
+} from "@/lib/markdown-import-constants";
 
 export interface MarkdownImportSourceFile {
   name: string;
@@ -25,15 +26,6 @@ export interface MarkdownImportSelection {
   accepted: MarkdownImportSourceFile[];
   rejected: MarkdownImportRejection[];
   totalBytes: number;
-}
-
-export function normalizeMarkdownImportFileName(name: string) {
-  return name.split(/[/\\]/).pop()?.trim() ?? "";
-}
-
-export function isMarkdownFileName(name: string) {
-  const normalizedName = normalizeMarkdownImportFileName(name);
-  return normalizedName.length > 0 && normalizedName.toLowerCase().endsWith(".md");
 }
 
 export function splitMarkdownImportSelection(
@@ -57,7 +49,7 @@ export function splitMarkdownImportSelection(
     if (file.size > MARKDOWN_IMPORT_MAX_FILE_BYTES) {
       rejected.push({
         name: normalizedName,
-        reason: `File exceeds the ${formatBytes(MARKDOWN_IMPORT_MAX_FILE_BYTES)} limit.`,
+        reason: `File exceeds the ${formatMarkdownImportBytes(MARKDOWN_IMPORT_MAX_FILE_BYTES)} limit.`,
       });
       continue;
     }
@@ -94,45 +86,7 @@ export function validateMarkdownImportSelection(selection: MarkdownImportSelecti
   }
 
   if (selection.totalBytes > MARKDOWN_IMPORT_MAX_TOTAL_BYTES) {
-    return `Imported markdown files must stay under ${formatBytes(MARKDOWN_IMPORT_MAX_TOTAL_BYTES)} total.`;
-  }
-
-  return null;
-}
-
-export function validateMarkdownImportPayload(files: MarkdownImportPayloadFile[]) {
-  if (!Array.isArray(files) || files.length === 0) {
-    return "No markdown files were provided.";
-  }
-
-  if (files.length > MARKDOWN_IMPORT_MAX_FILES) {
-    return `You can import up to ${MARKDOWN_IMPORT_MAX_FILES} markdown files at once.`;
-  }
-
-  let totalBytes = 0;
-  const encoder = new TextEncoder();
-
-  for (const file of files) {
-    const normalizedName = normalizeMarkdownImportFileName(file.name);
-
-    if (!isMarkdownFileName(normalizedName)) {
-      return `"${normalizedName || "Unnamed file"}" is not a supported markdown file.`;
-    }
-
-    if (typeof file.content !== "string") {
-      return `File "${normalizedName}" has invalid content.`;
-    }
-
-    const bytes = encoder.encode(file.content).byteLength;
-    if (bytes > MARKDOWN_IMPORT_MAX_FILE_BYTES) {
-      return `"${normalizedName}" exceeds the ${formatBytes(MARKDOWN_IMPORT_MAX_FILE_BYTES)} limit.`;
-    }
-
-    totalBytes += bytes;
-  }
-
-  if (totalBytes > MARKDOWN_IMPORT_MAX_TOTAL_BYTES) {
-    return `Imported markdown files must stay under ${formatBytes(MARKDOWN_IMPORT_MAX_TOTAL_BYTES)} total.`;
+    return `Imported markdown files must stay under ${formatMarkdownImportBytes(MARKDOWN_IMPORT_MAX_TOTAL_BYTES)} total.`;
   }
 
   return null;
@@ -148,16 +102,4 @@ export function formatMarkdownImportSkipMessage(rejected: MarkdownImportRejectio
   }
 
   return `Skipped ${rejected.length} files that were not valid .md imports.`;
-}
-
-function formatBytes(bytes: number) {
-  if (bytes >= MIB) {
-    return `${Math.round((bytes / MIB) * 10) / 10} MB`;
-  }
-
-  if (bytes >= KIB) {
-    return `${Math.round(bytes / KIB)} KB`;
-  }
-
-  return `${bytes} B`;
 }

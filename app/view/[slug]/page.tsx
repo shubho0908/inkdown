@@ -11,7 +11,7 @@ import { extractMarkdownSummary } from "@/lib/markdown-summary";
 import { getPublicFileBySlug, listPublicFilesForSitemap } from "@/lib/public-files";
 import { createSiteUrl, getSiteUrl, getSiteUrlObject } from "@/lib/site-url";
 import { createSocialImageSet } from "@/lib/social-metadata";
-import { createClient } from "@/lib/supabase/server";
+import { getServerSession } from "@/lib/auth/session";
 
 interface ViewPageProps {
   params: Promise<{ slug: string }>;
@@ -86,15 +86,13 @@ export async function generateMetadata({ params }: ViewPageProps): Promise<Metad
 
 export default async function ViewPage({ params }: ViewPageProps) {
   const { slug } = await params;
-  const [file, supabase] = await Promise.all([getPublicFileBySlug(slug), createClient()]);
+  const [file, session] = await Promise.all([getPublicFileBySlug(slug), getServerSession()]);
 
   if (!file) {
     notFound();
   }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = session?.user;
   const isOwner = Boolean(user && user.id === file.user_id);
 
   const title = file.name.replace(/\.md$/, "");

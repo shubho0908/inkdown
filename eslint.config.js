@@ -12,58 +12,70 @@ const eslintConfig = [
     },
   },
 
-  // Next.js recommended rules (React, React Hooks, @next/next)
   ...nextCoreWebVitals,
-
-  // TypeScript-aware rules via typescript-eslint
   ...nextTypescript,
 
-  // Project-level overrides
   {
     rules: {
-      // React Doctor currently bridges linting through Oxlint, which does not
-      // understand this jsx-a11y rule name from the Next.js preset.
-      "jsx-a11y/no-noninteractive-element-interactions": "off",
-      // Unused vars: allow underscore-prefixed names as intentional placeholders
       "@typescript-eslint/no-unused-vars": [
-        "warn",
+        "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
-      // Explicit `any` is discouraged but not a hard block while migrating
-      "@typescript-eslint/no-explicit-any": "warn",
-      // Prefer const over let when the binding is never reassigned
+      "@typescript-eslint/no-explicit-any": "error",
       "prefer-const": "error",
-      // Allow console.warn / console.error for intentional logging
-      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "no-console": ["error", { allow: ["warn", "error"] }],
     },
   },
 
-  // These files render HTML in contexts where Next.js <Image /> is not a fit:
-  // OG image generation uses ImageResponse markup and markdown preview accepts
-  // arbitrary user-provided image URLs and unknown intrinsic sizes.
   {
-    files: [
-      "components/markdown-preview.tsx",
-      "lib/og-card.tsx",
-      "lib/og-document-paper.tsx",
-      "lib/og-footer-pill.tsx",
-    ],
+    files: ["**/*.{ts,tsx}"],
+    ignores: ["hooks/use-client-search-params.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "next/navigation",
+              importNames: ["useSearchParams"],
+              message:
+                "Use useClientSearchParams or useClientSearchParam from @/hooks/use-client-search-params instead.",
+            },
+          ],
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "VariableDeclarator[init.callee.name='useSearchParams'] > ObjectPattern",
+          message:
+            "Do not destructure useSearchParams(). Use useClientSearchParams() from @/hooks/use-client-search-params.",
+        },
+        {
+          selector:
+            "VariableDeclarator[init.name='searchParams'] > ObjectPattern > Property[key.name=/^(get|has|getAll|entries|keys|values|forEach|toString)$/]",
+          message:
+            "Do not destructure URLSearchParams methods. Call them on the instance or use useClientSearchParams().",
+        },
+      ],
+    },
+  },
+
+  {
+    files: ["components/markdown-preview.tsx", "lib/og-card.tsx"],
     rules: {
       "@next/next/no-img-element": "off",
     },
   },
 
-  // Email templates render full HTML documents, so Next.js app-router HTML
-  // restrictions do not apply there.
   {
-    files: ["components/email-template.tsx"],
+    files: ["lib/email/auth-email-template.tsx"],
     rules: {
       "@next/next/no-head-element": "off",
       "@next/next/no-img-element": "off",
     },
   },
 
-  // Ignore auto-generated and build artefacts
   {
     ignores: [
       ".next/**",

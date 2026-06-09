@@ -1,87 +1,69 @@
-import { requireVerifiedUser } from "@/lib/auth";
+import { requireVerifiedUser } from "@/lib/auth/session";
 import { createAuthErrorResponse } from "@/lib/auth/server";
+import { getPublicFileBySlug, createFile } from "@/lib/db/files";
 import {
   collectPublicFolderShareSlugsForFileChange,
   listOwnedFolderShareState,
   revalidatePublicFolderShares,
 } from "@/lib/public-share-cache";
-import { createClient } from "@/lib/supabase/server";
+import { parseJsonBody } from "@/lib/validation/parse";
+import { copySharedItemBodySchema } from "@/lib/validation/requests";
 import { NextResponse } from "next/server";
 
-interface CopyFileRequest {
-  destination_parent_id: string | null;
-}
-
 export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const supabase = await createClient();
-  const { slug } = await params;
-
-  const authState = await requireVerifiedUser(supabase);
+  const authState = await requireVerifiedUser();
   if (authState.kind !== "authenticated") {
     return createAuthErrorResponse(authState);
   }
 
-  const body: CopyFileRequest = await request.json();
-  const { destination_parent_id } = body;
+  const [{ slug }, parsed] = await Promise.all([
+    params,
+    parseJsonBody(request, copySharedItemBodySchema),
+  ]);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
 
-  let folderShareState = [] as Awaited<ReturnType<typeof listOwnedFolderShareState>>;
+  const { destination_parent_id } = parsed.data;
+
   try {
-    folderShareState = await listOwnedFolderShareState(supabase, authState.user.id);
+    const folderShareState = await listOwnedFolderShareState(authState.user.id);
+
+    if (destination_parent_id) {
+      const parentFolder = folderShareState.find((folder) => folder.id === destination_parent_id);
+      if (!parentFolder) {
+        return NextResponse.json({ error: "Invalid destination folder" }, { status: 400 });
+      }
+    }
+
+    const sharedFile = await getPublicFileBySlug(slug);
+    if (!sharedFile) {
+      return NextResponse.json({ error: "Shared document not found" }, { status: 404 });
+    }
+
+    const affectedShareSlugs = collectPublicFolderShareSlugsForFileChange(
+      folderShareState,
+      destination_parent_id,
+      destination_parent_id,
+    );
+
+    const file = await createFile({
+      userId: authState.user.id,
+      name: sharedFile.name,
+      folderId: destination_parent_id,
+      content: sharedFile.content,
+    });
+
+    revalidatePublicFolderShares(affectedShareSlugs);
+
+    return NextResponse.json({
+      success: true,
+      fileId: file.id,
+    });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Could not load folders" },
+      { error: error instanceof Error ? error.message : "Failed to copy document" },
       { status: 500 },
     );
   }
-
-  if (destination_parent_id) {
-    const parentFolder = folderShareState.find((folder) => folder.id === destination_parent_id);
-    if (!parentFolder) {
-      return NextResponse.json({ error: "Invalid destination folder" }, { status: 400 });
-    }
-  }
-
-  const { data: sharedFile, error: fetchError } = await supabase
-    .from("files")
-    .select("*")
-    .eq("slug", slug)
-    .eq("is_public", true)
-    .single();
-
-  if (fetchError || !sharedFile) {
-    return NextResponse.json({ error: "Shared document not found" }, { status: 404 });
-  }
-
-  const affectedShareSlugs = collectPublicFolderShareSlugsForFileChange(
-    folderShareState,
-    destination_parent_id || null,
-    destination_parent_id || null,
-  );
-
-  const { data: file, error } = await supabase
-    .from("files")
-    .insert({
-      name: sharedFile.name,
-      folder_id: destination_parent_id || null,
-      content: sharedFile.content,
-      user_id: authState.user.id,
-      is_public: false,
-      slug: null,
-    })
-    .select()
-    .single();
-
-  if (error || !file) {
-    return NextResponse.json(
-      { error: error?.message || "Failed to copy document" },
-      { status: 500 },
-    );
-  }
-
-  revalidatePublicFolderShares(affectedShareSlugs);
-
-  return NextResponse.json({
-    success: true,
-    fileId: file.id,
-  });
 }

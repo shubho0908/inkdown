@@ -4,10 +4,10 @@ import { SharedFolderViewer } from "@/components/shared-folder-viewer";
 import { InkdownLogo } from "@/components/inkdown-logo";
 import { JsonLd } from "@/components/json-ld";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { getPublicFolderFileById, getPublicFolderTreeBySlug } from "@/lib/public-folders";
-import { createClient } from "@/lib/supabase/server";
+import { getPublicFolderFileById, getPublicFolderTreeBySlug } from "@/lib/db/public-folders";
+import { getServerSession } from "@/lib/auth/session";
 import { createSiteUrl, getSiteUrl } from "@/lib/site-url";
-import type { TreeItem } from "@/lib/types";
+import type { TreeItem } from "@/lib/validation/models";
 import { notFound } from "next/navigation";
 
 interface SharedFolderPageContentProps {
@@ -34,18 +34,16 @@ export async function SharedFolderPageContent({
   slug,
   requestedFileId,
 }: SharedFolderPageContentProps) {
-  const [sharedFolder, supabase] = await Promise.all([
+  const [sharedFolder, session] = await Promise.all([
     getPublicFolderTreeBySlug(slug),
-    createClient(),
+    getServerSession(),
   ]);
 
   if (!sharedFolder) {
     notFound();
   }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = session?.user;
   const isOwner = Boolean(user && user.id === sharedFolder.folder.user_id);
 
   const fallbackFileId = findFirstFileId(sharedFolder.treeItems);

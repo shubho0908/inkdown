@@ -389,34 +389,25 @@ export const MarkdownPreview = memo(function MarkdownPreview({
         );
       }
 
-      const dimensions = getOptimizedImageDimensions(safeSrc);
+      const isOptimizable = canOptimizeImage(safeSrc);
+      const dimensions = getOptimizedImageDimensions(safeSrc) ?? { width: 1200, height: 675 };
       const isPriorityImage = safeSrc === firstImageSrc;
 
       return (
         <span className="my-4 block overflow-hidden rounded-lg border">
-          {dimensions && canOptimizeImage(safeSrc) ? (
-            <Image
-              src={safeSrc}
-              alt={alt || ""}
-              width={dimensions.width}
-              height={dimensions.height}
-              sizes="(max-width: 768px) calc(100vw - 2rem), 768px"
-              quality={60}
-              loading={isPriorityImage ? "eager" : "lazy"}
-              fetchPriority={isPriorityImage ? "high" : "auto"}
-              className="h-auto w-full max-w-full"
-            />
-          ) : (
-            <img
-              src={safeSrc}
-              alt={alt || ""}
-              width="1200"
-              height="675"
-              loading={isPriorityImage ? "eager" : "lazy"}
-              fetchPriority={isPriorityImage ? "high" : "auto"}
-              className="h-auto w-full max-w-full"
-            />
-          )}
+          <Image
+            src={safeSrc}
+            alt={alt || ""}
+            width={dimensions.width}
+            height={dimensions.height}
+            sizes={isOptimizable ? "(max-width: 768px) calc(100vw - 2rem), 768px" : undefined}
+            quality={isOptimizable ? 60 : undefined}
+            unoptimized={!isOptimizable}
+            loader={isOptimizable ? undefined : ({ src }) => src}
+            loading={isPriorityImage ? "eager" : "lazy"}
+            fetchPriority={isPriorityImage ? "high" : "auto"}
+            className="h-auto w-full max-w-full"
+          />
         </span>
       );
     },

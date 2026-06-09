@@ -2,33 +2,26 @@
 
 import {
   getEmailVerificationRedirectPath,
-  isEmailVerificationError,
-  isUserEmailVerified,
-} from "@/lib/auth";
-import { createClient } from "@/lib/supabase/client";
-import { ensureSessionPersistence } from "@/lib/supabase/persistence";
+  getPostVerificationCallbackUrl,
+  isEmailNotVerifiedAuthError,
+  VERIFICATION_RESEND_SOURCE,
+} from "@/lib/auth/email-verification-flow";
+import { authClient } from "@/lib/auth/client";
+import { normalizeAuthClientError } from "@/lib/auth/normalize-auth-client-error";
+import { AuthErrorAlert } from "@/components/auth/auth-error-alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthShell } from "@/components/auth/auth-shell";
 import Link from "next/link";
+import { parseValue } from "@/lib/validation/parse";
+import { signInBodySchema } from "@/lib/validation/requests";
+import { useClientSearchParams } from "@/hooks/use-client-search-params";
+import { getSafeNextPath } from "@/lib/auth/safe-next-path";
 import { useState, useTransition } from "react";
 
-async function isProfileEmailVerified(supabase: ReturnType<typeof createClient>, userId: string) {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("email_verified")
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) {
-    return false;
-  }
-
-  return Boolean(data?.email_verified);
-}
-
 export function LoginForm() {
+  const searchParams = useClientSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -36,49 +29,44 @@ export function LoginForm() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const supabase = createClient();
     setError(null);
 
     startTransition(async () => {
+      const parsed = parseValue(signInBodySchema, { email, password });
+      if (!parsed.success) {
+        setError(parsed.error);
+        return;
+      }
+
       try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+        const { error: signInError } = await authClient.signIn.email({
+          email: parsed.data.email,
+          password: parsed.data.password,
+          callbackURL: getPostVerificationCallbackUrl(),
         });
 
-        if (error) {
-          if (isEmailVerificationError(error)) {
-            window.location.replace(getEmailVerificationRedirectPath(email));
+        if (signInError) {
+          if (isEmailNotVerifiedAuthError(signInError)) {
+            window.location.replace(
+              getEmailVerificationRedirectPath(parsed.data.email, {
+                resend: VERIFICATION_RESEND_SOURCE.GATE,
+              }),
+            );
             return;
           }
 
-          throw error;
+          throw new Error(normalizeAuthClientError(signInError, "sign-in"));
         }
 
-        if (!isUserEmailVerified(data.user)) {
-          await supabase.auth.signOut();
-          window.location.replace(getEmailVerificationRedirectPath(data.user?.email ?? email));
-          return;
-        }
-
-        const hasVerifiedProfile = await isProfileEmailVerified(supabase, data.user.id);
-
-        if (!hasVerifiedProfile) {
-          await supabase.auth.signOut();
-          window.location.replace(getEmailVerificationRedirectPath(data.user?.email ?? email));
-          return;
-        }
-
-        await ensureSessionPersistence(supabase);
-        window.location.replace("/workspace");
-      } catch (error: unknown) {
-        setError(error instanceof Error ? error.message : "An error occurred");
+        window.location.replace(getSafeNextPath(searchParams.get("next")));
+      } catch (loginError: unknown) {
+        setError(loginError instanceof Error ? loginError.message : "An error occurred");
       }
     });
   };
 
   return (
-    <AuthShell title="Welcome back" description="Sign in to access your workspace">
+    <AuthShell title="Welcome back" description="Sign in to your Inkdown workspace">
       <form onSubmit={handleLogin}>
         <div className="flex flex-col gap-4">
           <div className="grid gap-2">
@@ -90,32 +78,36 @@ export function LoginForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={isPending}
+              autoComplete="email"
             />
           </div>
           <div className="grid gap-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              <Link
-                href="/auth/forgot-password"
-                className="text-xs text-primary hover:underline underline-offset-4"
-              >
-                Forgot password?
-              </Link>
-            </div>
+            <Label htmlFor="password">Password</Label>
             <Input
               id="password"
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={isPending}
+              autoComplete="current-password"
             />
           </div>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {error ? <AuthErrorAlert message={error} /> : null}
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? "Signing in…" : "Sign in"}
           </Button>
         </div>
         <div className="mt-4 text-center text-sm text-muted-foreground">
+          <Link
+            href="/auth/forgot-password"
+            className="text-primary underline underline-offset-4 hover:text-primary/80"
+          >
+            Forgot password?
+          </Link>
+        </div>
+        <div className="mt-2 text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
           <Link
             href="/auth/sign-up"

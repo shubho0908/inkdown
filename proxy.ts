@@ -1,5 +1,5 @@
-import { updateSession } from "@/lib/supabase/middleware";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { updateSession } from "@/lib/auth/middleware";
+import { isDatabaseConfigured } from "@/lib/db/client";
 import { acceptsMarkdown, countMarkdownTokens, htmlToMarkdown } from "@/lib/markdown-negotiation";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -22,7 +22,32 @@ const BLOCKED_PATHS = [
   "/api/secrets",
 ];
 
-const API_RATE_LIMIT_PATHS = ["/api/export", "/api/files", "/api/folders"];
+type ApiRateLimitRule = {
+  prefix: string;
+  methods?: ReadonlySet<string>;
+  windowMs: number;
+  max: number;
+};
+
+/** Edge burst protection — durable limits live in route handlers and Better Auth. */
+const API_RATE_LIMIT_RULES: ApiRateLimitRule[] = [
+  { prefix: "/api/export", windowMs: 60_000, max: 10 },
+  { prefix: "/api/files/import", windowMs: 60_000, max: 20 },
+  { prefix: "/api/files", windowMs: 60_000, max: 100 },
+  { prefix: "/api/folders", windowMs: 60_000, max: 100 },
+  {
+    prefix: "/api/public",
+    methods: new Set(["POST", "PATCH", "DELETE"]),
+    windowMs: 60_000,
+    max: 30,
+  },
+  {
+    prefix: "/api/auth/check-email",
+    methods: new Set(["POST"]),
+    windowMs: 60_000,
+    max: 10,
+  },
+];
 const MARKDOWN_BYPASS_HEADER = "x-inkdown-markdown-bypass";
 const HOMEPAGE_LINK_HEADER = [
   '</.well-known/api-catalog>; rel="api-catalog"; type="application/json"',
@@ -48,15 +73,31 @@ function isApiPath(path: string): boolean {
   return path.startsWith("/api/");
 }
 
-function isApiRateLimited(path: string): boolean {
-  return API_RATE_LIMIT_PATHS.some((apiPath) => path.startsWith(apiPath));
+function getApiRateLimitRule(path: string, method: string): ApiRateLimitRule | null {
+  for (const rule of API_RATE_LIMIT_RULES) {
+    if (!path.startsWith(rule.prefix)) {
+      continue;
+    }
+
+    if (rule.methods && !rule.methods.has(method)) {
+      continue;
+    }
+
+    return rule;
+  }
+
+  return null;
 }
 
 function shouldRefreshSession(path: string) {
+  // API routes authenticate themselves — skip duplicate getSession in the proxy.
+  if (path.startsWith("/api/")) {
+    return false;
+  }
+
   return (
-    isSupabaseConfigured() &&
-    (path.startsWith("/api/") ||
-      path.startsWith("/auth/") ||
+    isDatabaseConfigured() &&
+    (path.startsWith("/auth/") ||
       path === "/dashboard" ||
       path.startsWith("/dashboard/") ||
       path === "/workspace" ||
@@ -64,10 +105,12 @@ function shouldRefreshSession(path: string) {
   );
 }
 
-function checkGlobalRateLimit(identifier: string): { allowed: boolean; retryAfter?: number } {
+function checkGlobalRateLimit(
+  identifier: string,
+  rule: ApiRateLimitRule,
+): { allowed: boolean; retryAfter?: number } {
   const now = Date.now();
-  const windowMs = 60000;
-  const maxRequests = 100;
+  const { windowMs, max: maxRequests } = rule;
 
   const entry = rateLimitMap.get(identifier);
 
@@ -125,10 +168,10 @@ function shouldCachePublicViewPath(path: string): boolean {
 function appendVary(response: Response, value: string) {
   const existing = response.headers.get("Vary");
   const values = new Set(
-    existing
-      ?.split(",")
-      .map((item) => item.trim())
-      .filter(Boolean),
+    existing?.split(",").flatMap((item) => {
+      const trimmed = item.trim();
+      return trimmed ? [trimmed] : [];
+    }),
   );
   values.add(value);
   response.headers.set("Vary", Array.from(values).join(", "));
@@ -299,9 +342,10 @@ export async function proxy(request: NextRequest) {
       );
     }
 
-    if (isApiRateLimited(pathname)) {
-      const clientId = getClientIdentifier(request);
-      const rateLimit = checkGlobalRateLimit(clientId);
+    const rateLimitRule = getApiRateLimitRule(pathname, request.method);
+    if (rateLimitRule) {
+      const clientId = `${getClientIdentifier(request)}:${rateLimitRule.prefix}`;
+      const rateLimit = checkGlobalRateLimit(clientId, rateLimitRule);
 
       if (!rateLimit.allowed) {
         console.warn(`[SECURITY] Rate limit exceeded: ${clientId}`);

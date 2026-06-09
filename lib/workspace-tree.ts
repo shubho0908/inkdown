@@ -1,68 +1,68 @@
-import type { File, Folder, TreeItem } from '@/lib/types'
+import type { File, Folder, TreeItem } from "@/lib/validation/models";
 
 export function buildTree(folders: Folder[], files: File[]): TreeItem[] {
-  const folderMap = new Map<string, TreeItem>()
-  const rootItems: TreeItem[] = []
+  const folderMap = new Map<string, TreeItem>();
+  const rootItems: TreeItem[] = [];
 
   folders.forEach((folder) => {
     folderMap.set(folder.id, {
       id: folder.id,
       name: folder.name,
-      type: 'folder',
+      type: "folder",
       parent_id: folder.parent_id,
       is_public: folder.is_public,
       slug: folder.slug,
       children: [],
-    })
-  })
+    });
+  });
 
   folders.forEach((folder) => {
-    const item = folderMap.get(folder.id)
+    const item = folderMap.get(folder.id);
 
     if (!item) {
-      return
+      return;
     }
 
     if (folder.parent_id && folderMap.has(folder.parent_id)) {
-      folderMap.get(folder.parent_id)?.children?.push(item)
-      return
+      folderMap.get(folder.parent_id)?.children?.push(item);
+      return;
     }
 
-    rootItems.push(item)
-  })
+    rootItems.push(item);
+  });
 
   files.forEach((file) => {
     const fileItem: TreeItem = {
       id: file.id,
       name: file.name,
-      type: 'file',
+      type: "file",
       parent_id: file.folder_id,
       is_public: file.is_public,
       slug: file.slug,
-    }
+    };
 
     if (file.folder_id && folderMap.has(file.folder_id)) {
-      folderMap.get(file.folder_id)?.children?.push(fileItem)
-      return
+      folderMap.get(file.folder_id)?.children?.push(fileItem);
+      return;
     }
 
-    rootItems.push(fileItem)
-  })
+    rootItems.push(fileItem);
+  });
 
-  sortTreeItems(rootItems)
+  sortTreeItems(rootItems);
 
-  return rootItems
+  return rootItems;
 }
 
 function sortTreeItems(items: TreeItem[]) {
   items.sort((a, b) => {
-    if (a.type !== b.type) return a.type === 'folder' ? -1 : 1
-    return a.name.localeCompare(b.name)
-  })
+    if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
 
   items.forEach((item) => {
     if (item.children) {
-      sortTreeItems(item.children)
+      sortTreeItems(item.children);
     }
-  })
+  });
 }

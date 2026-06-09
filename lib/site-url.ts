@@ -9,10 +9,6 @@ function normalizeSiteUrl(url: string) {
   return url.replace(/\/$/, "");
 }
 
-function isLocalOrigin(origin: string) {
-  return LOCALHOST_HOSTNAMES.has(new URL(origin).hostname);
-}
-
 function getForwardedHeaderValue(value: string | null) {
   return value?.split(",")[0]?.trim() || null;
 }
@@ -52,21 +48,4 @@ export function getSiteUrlObject(origin?: string) {
 
 export function createSiteUrl(path = "/", origin?: string) {
   return new URL(path, `${getSiteUrl(origin)}/`);
-}
-
-export function getAuthRedirectUrl(path = "/auth/callback", origin?: string) {
-  const developmentRedirectOrigin =
-    process.env.NODE_ENV === "development"
-      ? process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL
-      : undefined;
-
-  if (origin && !isLocalOrigin(origin)) {
-    return createSiteUrl(path, origin).toString();
-  }
-
-  if (developmentRedirectOrigin) {
-    return createSiteUrl(path, developmentRedirectOrigin).toString();
-  }
-
-  return createSiteUrl(path).toString();
 }

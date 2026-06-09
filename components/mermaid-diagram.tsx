@@ -1,48 +1,64 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
-import { themeChangeEvent } from "@/components/theme-toggle";
-import { isTheme, THEME_STORAGE_KEY, type ResolvedTheme } from "@/lib/theme";
+import { useEffect, useId, useReducer, useRef } from "react";
+import { useResolvedTheme } from "@/hooks/use-theme";
 
 interface MermaidDiagramProps {
   chart: string;
   theme?: "light" | "dark";
 }
 
+type DiagramState = {
+  svg: string | null;
+  error: string | null;
+  renderKey: number;
+};
+
+type DiagramAction =
+  | { type: "reset" }
+  | { type: "success"; svg: string }
+  | { type: "error"; error: string };
+
+function diagramReducer(state: DiagramState, action: DiagramAction): DiagramState {
+  switch (action.type) {
+    case "reset":
+      return { svg: null, error: null, renderKey: state.renderKey };
+    case "success":
+      return { svg: action.svg, error: null, renderKey: state.renderKey };
+    case "error":
+      return { svg: null, error: action.error, renderKey: state.renderKey };
+    default:
+      return state;
+  }
+}
+
 export function MermaidDiagram({ chart, theme }: MermaidDiagramProps) {
   const diagramId = useId().replace(/:/g, "");
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
-  const [svg, setSvg] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const mermaidTheme = theme ?? (resolvedTheme === "dark" ? "dark" : "light");
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const syncTheme = () => {
-      const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-      const selectedTheme = isTheme(storedTheme) ? storedTheme : "system";
-      setResolvedTheme(
-        selectedTheme === "system" ? (mediaQuery.matches ? "dark" : "light") : selectedTheme,
-      );
-    };
-
-    syncTheme();
-    mediaQuery.addEventListener("change", syncTheme);
-    window.addEventListener(themeChangeEvent, syncTheme);
-
-    return () => {
-      mediaQuery.removeEventListener("change", syncTheme);
-      window.removeEventListener(themeChangeEvent, syncTheme);
-    };
-  }, []);
+  const diagramRef = useRef<HTMLDivElement>(null);
+  const resolvedTheme = useResolvedTheme();
+  const [diagramState, dispatch] = useReducer(diagramReducer, {
+    svg: null,
+    error: null,
+    renderKey: 0,
+  });
+  const mermaidTheme = theme ?? resolvedTheme;
 
   useEffect(() => {
     let isCancelled = false;
 
     async function renderDiagram() {
-      try {
-        const mermaid = (await import("mermaid")).default;
+      if (isCancelled) {
+        return;
+      }
 
+      dispatch({ type: "reset" });
+
+      try {
+        if (isCancelled) {
+          return;
+        }
+
+        const mermaid = (await import("mermaid")).default;
         mermaid.initialize({
           startOnLoad: false,
           securityLevel: "strict",
@@ -53,14 +69,13 @@ export function MermaidDiagram({ chart, theme }: MermaidDiagramProps) {
           },
         });
 
-        const { svg: renderedSvg } = await mermaid.render(`mermaid-${diagramId}`, chart);
-
         if (isCancelled) {
           return;
         }
 
-        setSvg(renderedSvg);
-        setError(null);
+        const { svg: renderedSvg } = await mermaid.render(`mermaid-${diagramId}`, chart);
+
+        dispatch({ type: "success", svg: renderedSvg });
       } catch (cause) {
         if (isCancelled) {
           return;
@@ -69,19 +84,31 @@ export function MermaidDiagram({ chart, theme }: MermaidDiagramProps) {
         const message =
           cause instanceof Error ? cause.message : "Unable to render this Mermaid diagram.";
 
-        setError(message);
-        setSvg(null);
+        dispatch({ type: "error", error: message });
       }
     }
 
-    setSvg(null);
-    setError(null);
     void renderDiagram();
 
     return () => {
       isCancelled = true;
     };
-  }, [chart, diagramId, mermaidTheme]);
+  }, [chart, diagramId, mermaidTheme, diagramState.renderKey]);
+
+  const { svg, error } = diagramState;
+
+  useEffect(() => {
+    if (!diagramRef.current) {
+      return;
+    }
+
+    if (svg) {
+      diagramRef.current.innerHTML = svg;
+      return;
+    }
+
+    diagramRef.current.innerHTML = "";
+  }, [svg]);
 
   if (error) {
     return (
@@ -99,16 +126,13 @@ export function MermaidDiagram({ chart, theme }: MermaidDiagramProps) {
 
   return (
     <div className="my-4 overflow-hidden rounded-xl border bg-card">
-      <div
-        className="mermaid-diagram min-h-24 overflow-x-auto p-4 sm:p-5"
-        dangerouslySetInnerHTML={svg ? { __html: svg } : undefined}
-      >
-        {!svg ? (
-          <div className="flex min-h-24 items-center justify-center text-sm text-muted-foreground">
-            Rendering diagram…
-          </div>
-        ) : null}
-      </div>
+      {svg ? (
+        <div ref={diagramRef} className="mermaid-diagram min-h-24 overflow-x-auto p-4 sm:p-5" />
+      ) : (
+        <div className="mermaid-diagram flex min-h-24 items-center justify-center overflow-x-auto p-4 text-sm text-muted-foreground sm:p-5">
+          Rendering diagram…
+        </div>
+      )}
     </div>
   );
 }

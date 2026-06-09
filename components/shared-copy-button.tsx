@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Copy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QueryProvider } from "@/components/query-provider";
+import { authClient } from "@/lib/auth/client";
+import { getSafeNextPath } from "@/lib/auth/safe-next-path";
 
 const CopyFolderDialog = dynamic(
   () => import("@/components/copy-folder-dialog").then((mod) => mod.CopyFolderDialog),
@@ -26,23 +30,24 @@ export function SharedCopyButton({
   label = "full",
   className,
 }: SharedCopyButtonProps) {
+  const pathname = usePathname();
   const [isCheckingAuth, setIsCheckingAuth] = useState(false);
   const [copyDialogOpen, setCopyDialogOpen] = useState(false);
+  const [needsSignIn, setNeedsSignIn] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  const loginHref = `/auth/login?next=${encodeURIComponent(getSafeNextPath(pathname))}`;
 
   const handleCopyToWorkspace = async () => {
     setMessage(null);
+    setNeedsSignIn(false);
     setIsCheckingAuth(true);
 
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const session = await authClient.getSession();
 
-      if (!session?.user) {
-        setMessage(`Sign in to copy this ${itemType} to your workspace.`);
+      if (!session.data?.user) {
+        setNeedsSignIn(true);
         return;
       }
 
@@ -58,7 +63,7 @@ export function SharedCopyButton({
     <>
       <button
         type="button"
-        onClick={handleCopyToWorkspace}
+        onClick={() => void handleCopyToWorkspace()}
         disabled={isCheckingAuth}
         className={cn(
           "inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border bg-background px-3 text-sm font-medium shadow-xs outline-none transition-all hover:bg-accent hover:text-accent-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
@@ -71,6 +76,17 @@ export function SharedCopyButton({
           {isCheckingAuth ? "Checking..." : label === "full" ? "Copy to Workspace" : "Copy"}
         </span>
       </button>
+      {needsSignIn ? (
+        <p className="mt-2 text-sm text-muted-foreground" role="status">
+          <Link
+            href={loginHref}
+            className="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
+          >
+            Sign in
+          </Link>{" "}
+          to copy this {itemType} to your workspace.
+        </p>
+      ) : null}
       {message ? (
         <p className="mt-2 text-sm text-muted-foreground" role="status">
           {message}

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SharedFolderPageContent } from "@/components/shared-folder-page-content";
 import { extractMarkdownSummary } from "@/lib/markdown-summary";
-import { getPublicFolderBySlug, getPublicFolderFileById } from "@/lib/public-folders";
+import { getPublicFolderBySlug, getPublicFolderFileById } from "@/lib/db/public-folders";
 import { createSiteUrl, getSiteUrlObject } from "@/lib/site-url";
 import { createSocialImageSet } from "@/lib/social-metadata";
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useReducer } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { DashboardMobileHeader } from "@/components/dashboard-mobile-header";
 import { DashboardSidebarContent } from "@/components/dashboard-sidebar-content";
@@ -9,22 +10,24 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import {
   useCreateFileMutation,
   useImportMarkdownFilesMutation,
-  useToggleFilePublicMutation,
 } from "@/hooks/workspace/use-file-mutations";
-import {
-  useCreateFolderMutation,
-  useToggleFolderPublicMutation,
-} from "@/hooks/workspace/use-folder-mutations";
+import { useCreateFolderMutation } from "@/hooks/workspace/use-folder-mutations";
+import { useShareVisibilityActions } from "@/hooks/workspace/use-share-visibility-actions";
 import {
   useDeleteTreeItemMutation,
   useMoveTreeItemMutation,
   useRenameTreeItemMutation,
 } from "@/hooks/workspace/use-tree-item-mutations";
+import {
+  fetchCachedFileContent,
+  usePrefetchFileContent,
+} from "@/hooks/workspace/prefetch-file-content";
 import { useFilesQuery, useFoldersQuery } from "@/hooks/workspace/use-workspace-queries";
 import { downloadMarkdownFile } from "@/lib/file-export";
 import { useZipExport } from "@/hooks/use-zip-export";
-import { createClient } from "@/lib/supabase/client";
-import type { File, Folder, TreeItem } from "@/lib/types";
+import { authClient } from "@/lib/auth/client";
+
+import type { TreeItem } from "@/lib/validation/models";
 import { buildTree } from "@/lib/workspace-tree";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -34,26 +37,65 @@ interface DashboardSidebarProps {
   onFileSelect: (fileId: string | null) => void;
 }
 
+type SidebarState = {
+  renameItem: TreeItem | null;
+  deleteItem: TreeItem | null;
+  moveItem: TreeItem | null;
+  shareItem: TreeItem | null;
+  mobileOpen: boolean;
+};
+
+type SidebarAction =
+  | { type: "set_rename_item"; item: TreeItem | null }
+  | { type: "set_delete_item"; item: TreeItem | null }
+  | { type: "set_move_item"; item: TreeItem | null }
+  | { type: "set_share_item"; item: TreeItem | null }
+  | { type: "set_mobile_open"; open: boolean }
+  | { type: "close_mobile" };
+
+function sidebarReducer(state: SidebarState, action: SidebarAction): SidebarState {
+  switch (action.type) {
+    case "set_rename_item":
+      return { ...state, renameItem: action.item };
+    case "set_delete_item":
+      return { ...state, deleteItem: action.item };
+    case "set_move_item":
+      return { ...state, moveItem: action.item };
+    case "set_share_item":
+      return { ...state, shareItem: action.item };
+    case "set_mobile_open":
+      return { ...state, mobileOpen: action.open };
+    case "close_mobile":
+      return { ...state, mobileOpen: false };
+    default:
+      return state;
+  }
+}
+
 export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSidebarProps) {
   const { push } = useRouter();
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
+  const prefetchFileContent = usePrefetchFileContent();
   const { data: folders = [], isLoading: foldersLoading } = useFoldersQuery();
   const { data: files = [], isLoading: filesLoading } = useFilesQuery();
 
-  const [renameItem, setRenameItem] = useState<TreeItem | null>(null);
-  const [deleteItem, setDeleteItem] = useState<TreeItem | null>(null);
-  const [moveItem, setMoveItem] = useState<TreeItem | null>(null);
-  const [shareItem, setShareItem] = useState<TreeItem | null>(null);
-  const [shareFile, setShareFile] = useState<File | null>(null);
-  const [shareFolder, setShareFolder] = useState<Folder | null>(null);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarState, dispatch] = useReducer(sidebarReducer, {
+    renameItem: null,
+    deleteItem: null,
+    moveItem: null,
+    shareItem: null,
+    mobileOpen: false,
+  });
   const { exportFolder } = useZipExport();
+
+  const { renameItem, deleteItem, moveItem, shareItem, mobileOpen } = sidebarState;
 
   const createFileMutation = useCreateFileMutation({
     onSuccess: (file) => {
       onFileSelect(file.id);
       if (isMobile) {
-        setMobileOpen(false);
+        dispatch({ type: "close_mobile" });
       }
     },
   });
@@ -66,7 +108,7 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
 
       onFileSelect(importedFiles[0].id);
       if (isMobile) {
-        setMobileOpen(false);
+        dispatch({ type: "close_mobile" });
       }
     },
   });
@@ -79,12 +121,18 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
       }
     },
   });
-  const toggleFilePublicMutation = useToggleFilePublicMutation();
-  const toggleFolderPublicMutation = useToggleFolderPublicMutation();
+  const { toggle: toggleShareVisibility, isPendingFor: isShareTogglePendingFor } =
+    useShareVisibilityActions();
 
   const isLoading = foldersLoading || filesLoading;
   const treeItems = useMemo(() => buildTree(folders, files), [folders, files]);
   const selectedFile = files.find((file) => file.id === selectedFileId) ?? null;
+  const shareFile =
+    shareItem?.type === "file" ? (files.find((file) => file.id === shareItem.id) ?? null) : null;
+  const shareFolder =
+    shareItem?.type === "folder"
+      ? (folders.find((folder) => folder.id === shareItem.id) ?? null)
+      : null;
 
   const getFileFromTreeItem = (item: TreeItem) => {
     if (item.type !== "file") {
@@ -118,38 +166,17 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
   const handleRename = (newName: string) => {
     if (!renameItem) return;
     renameTreeItemMutation.mutate({ item: renameItem, newName });
-    setRenameItem(null);
+    dispatch({ type: "set_rename_item", item: null });
   };
 
   const handleDelete = () => {
     if (!deleteItem) return;
     deleteTreeItemMutation.mutate({ item: deleteItem });
-    setDeleteItem(null);
+    dispatch({ type: "set_delete_item", item: null });
   };
 
   const handleTogglePublic = (item: TreeItem) => {
-    setShareItem(item);
-
-    if (item.type === "file") {
-      const file = getFileFromTreeItem(item);
-      if (!file) {
-        setShareItem(null);
-        return;
-      }
-
-      setShareFile(file);
-      setShareFolder(null);
-      return;
-    }
-
-    const folder = folders.find((candidate) => candidate.id === item.id);
-    if (!folder) {
-      setShareItem(null);
-      return;
-    }
-
-    setShareFile(null);
-    setShareFolder(folder);
+    dispatch({ type: "set_share_item", item });
   };
 
   const handleDownloadFile = (item: TreeItem) => {
@@ -159,16 +186,19 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
       return;
     }
 
-    try {
-      downloadMarkdownFile(file.name, file.content);
-      toast.success(`Downloaded "${file.name}"`);
-    } catch {
-      toast.error("Could not download the markdown file");
-    }
+    void (async () => {
+      try {
+        const fullFile = await fetchCachedFileContent(queryClient, file.id);
+        downloadMarkdownFile(fullFile.name, fullFile.content ?? "");
+        toast.success(`Downloaded "${fullFile.name}"`);
+      } catch {
+        toast.error("Could not download the markdown file");
+      }
+    })();
   };
 
   const handleMoveClick = (item: TreeItem) => {
-    setMoveItem(item);
+    dispatch({ type: "set_move_item", item });
   };
 
   const handleMove = (item: TreeItem, targetFolderId: string | null) => {
@@ -176,7 +206,7 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
       { item, targetFolderId },
       {
         onSuccess: () => {
-          setMoveItem(null);
+          dispatch({ type: "set_move_item", item: null });
         },
       },
     );
@@ -184,27 +214,13 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
 
   const handleShareToggle = (isPublic: boolean) => {
     if (shareFile) {
-      toggleFilePublicMutation.mutate(
-        { file: shareFile, isPublic },
-        {
-          onSuccess: (updated) => {
-            setShareFile(updated);
-          },
-        },
-      );
+      toggleShareVisibility({ type: "file", file: shareFile, isPublic });
       return;
     }
 
-    if (!shareFolder) return;
-
-    toggleFolderPublicMutation.mutate(
-      { folder: shareFolder, isPublic },
-      {
-        onSuccess: (updated) => {
-          setShareFolder(updated);
-        },
-      },
-    );
+    if (shareFolder) {
+      toggleShareVisibility({ type: "folder", folder: shareFolder, isPublic });
+    }
   };
 
   const handleSelect = (item: TreeItem) => {
@@ -214,14 +230,13 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
 
     onFileSelect(item.id);
     if (isMobile) {
-      setMobileOpen(false);
+      dispatch({ type: "close_mobile" });
     }
   };
 
   const handleSignOut = async () => {
     try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
+      await authClient.signOut();
       push("/auth/login");
     } catch {
       // Even if signOut fails, redirect to login
@@ -233,11 +248,11 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
     <>
       <DashboardMobileHeader
         selectedFileName={selectedFile?.name}
-        onOpenWorkspace={() => setMobileOpen(true)}
+        onOpenWorkspace={() => dispatch({ type: "set_mobile_open", open: true })}
         onCreateFile={() => handleCreateFile(null)}
       />
 
-      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+      <Sheet open={mobileOpen} onOpenChange={(open) => dispatch({ type: "set_mobile_open", open })}>
         <SheetContent
           side="left"
           showCloseButton={false}
@@ -253,19 +268,20 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
             selectedFileId={selectedFileId}
             filesCount={files.length}
             showCloseAction
-            onClose={() => setMobileOpen(false)}
+            onClose={() => dispatch({ type: "close_mobile" })}
             onCreateFile={handleCreateFile}
             onCreateFolder={handleCreateFolder}
             onImportFiles={handleImportMarkdownFiles}
             isImportingFiles={importMarkdownFilesMutation.isPending}
             onSelect={handleSelect}
             onMove={handleMove}
-            onRename={setRenameItem}
-            onDelete={setDeleteItem}
+            onRename={(item) => dispatch({ type: "set_rename_item", item })}
+            onDelete={(item) => dispatch({ type: "set_delete_item", item })}
             onMoveClick={handleMoveClick}
             onTogglePublic={handleTogglePublic}
             onDownloadFile={handleDownloadFile}
             onExportFolder={exportFolder}
+            onPrefetchFile={prefetchFileContent}
             onSignOut={handleSignOut}
           />
         </SheetContent>
@@ -283,12 +299,13 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
           isImportingFiles={importMarkdownFilesMutation.isPending}
           onSelect={handleSelect}
           onMove={handleMove}
-          onRename={setRenameItem}
-          onDelete={setDeleteItem}
+          onRename={(item) => dispatch({ type: "set_rename_item", item })}
+          onDelete={(item) => dispatch({ type: "set_delete_item", item })}
           onMoveClick={handleMoveClick}
           onTogglePublic={handleTogglePublic}
           onDownloadFile={handleDownloadFile}
           onExportFolder={exportFolder}
+          onPrefetchFile={prefetchFileContent}
           onSignOut={handleSignOut}
         />
       </aside>
@@ -302,14 +319,11 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
         shareItem={shareItem}
         shareFile={shareFile}
         shareFolder={shareFolder}
-        onRenameItemChange={setRenameItem}
-        onDeleteItemChange={setDeleteItem}
-        onMoveItemChange={setMoveItem}
-        onShareStateChange={(item, file, folder) => {
-          setShareItem(item);
-          setShareFile(file);
-          setShareFolder(folder);
-        }}
+        isShareTogglePending={shareItem ? isShareTogglePendingFor(shareItem.id) : false}
+        onRenameItemChange={(item) => dispatch({ type: "set_rename_item", item })}
+        onDeleteItemChange={(item) => dispatch({ type: "set_delete_item", item })}
+        onMoveItemChange={(item) => dispatch({ type: "set_move_item", item })}
+        onShareItemChange={(item) => dispatch({ type: "set_share_item", item })}
         onRename={handleRename}
         onDelete={handleDelete}
         onMove={(targetFolderId) => handleMove(moveItem!, targetFolderId)}

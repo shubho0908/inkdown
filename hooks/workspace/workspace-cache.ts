@@ -2,7 +2,7 @@
 
 import type { QueryClient } from "@tanstack/react-query";
 import { workspaceKeys } from "@/lib/query-keys";
-import type { File, Folder } from "@/lib/types";
+import type { File, Folder } from "@/lib/validation/models";
 
 export interface MutationCallbacks<TData> {
   onSuccess?: (data: TData) => void;
@@ -13,7 +13,7 @@ export interface WorkspaceSnapshot {
   folders: Folder[];
 }
 
-export function sortByName<T extends { name: string }>(items: T[]) {
+function sortByName<T extends { name: string }>(items: T[]) {
   return items.toSorted((a, b) => a.name.localeCompare(b.name));
 }
 
@@ -49,6 +49,7 @@ export function optimisticFile(input: {
     content: input.content || "# New Document\n\nStart writing here...",
     slug: null,
     is_public: false,
+    content_size: 0,
     created_at: now,
     updated_at: now,
   };

@@ -16,7 +16,7 @@ import { Folder, FolderOpen, ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFoldersQuery } from "@/hooks/workspace/use-workspace-queries";
 import { useCopySharedItemMutation } from "@/hooks/workspace/use-copy-shared-item";
-import type { Folder as FolderType } from "@/lib/types";
+import type { Folder as FolderType } from "@/lib/validation/models";
 
 interface CopyFolderDialogProps {
   open: boolean;
@@ -117,7 +117,7 @@ function FolderTreeItem({
         </button>
       </div>
       {isExpanded && hasChildren && (
-        <div role="group">
+        <div>
           {node.children.map((child) => (
             <FolderTreeItem
               key={child.folder.id}

@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthShell } from "@/components/auth/auth-shell";
-import { fetchJson, ApiError } from "@/lib/api";
+import { authClient } from "@/lib/auth/client";
+import { normalizeAuthClientError } from "@/lib/auth/normalize-auth-client-error";
+import { AuthErrorAlert } from "@/components/auth/auth-error-alert";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
@@ -27,26 +29,18 @@ export function ForgotPasswordForm() {
 
     startTransition(async () => {
       try {
-        await fetchJson("/api/auth/forgot-password", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email: email.toLowerCase().trim() }),
+        const { error } = await authClient.requestPasswordReset({
+          email: email.toLowerCase().trim(),
+          redirectTo: `${window.location.origin}/auth/reset-password`,
         });
+
+        if (error) {
+          throw new Error(normalizeAuthClientError(error, "password-reset"));
+        }
+
         setSuccess(true);
       } catch (error) {
-        if (error instanceof ApiError) {
-          if (error.status === 429) {
-            setError("Too many attempts. Please wait a moment and try again.");
-          } else if (error.status >= 500) {
-            setError("Server error. Please try again in a few moments.");
-          } else {
-            setError(error.message || "Failed to send reset link. Please try again.");
-          }
-        } else {
-          setError("An unexpected error occurred. Please try again.");
-        }
+        setError(error instanceof Error ? error.message : "An unexpected error occurred");
       }
     });
   };
@@ -87,10 +81,7 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <AuthShell
-      title="Reset your password"
-      description="Enter your email and we'll send you a reset link"
-    >
+    <AuthShell title="Forgot password" description="Enter your email to receive a reset link">
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-4">
           <div className="grid gap-2">
@@ -106,9 +97,9 @@ export function ForgotPasswordForm() {
               autoComplete="email"
             />
           </div>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {error ? <AuthErrorAlert message={error} /> : null}
           <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? "Sending..." : "Send reset link"}
+            {isPending ? "Sending…" : "Send reset link"}
           </Button>
         </div>
         <div className="mt-4 text-center text-sm text-muted-foreground">

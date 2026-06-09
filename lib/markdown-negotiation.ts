@@ -1,3 +1,12 @@
+const HEADING_REGEXES: Record<number, RegExp> = {
+  1: /<h1\b[^>]*>([\s\S]*?)<\/h1>/gi,
+  2: /<h2\b[^>]*>([\s\S]*?)<\/h2>/gi,
+  3: /<h3\b[^>]*>([\s\S]*?)<\/h3>/gi,
+  4: /<h4\b[^>]*>([\s\S]*?)<\/h4>/gi,
+  5: /<h5\b[^>]*>([\s\S]*?)<\/h5>/gi,
+  6: /<h6\b[^>]*>([\s\S]*?)<\/h6>/gi,
+};
+
 const HTML_ENTITY_MAP: Record<string, string> = {
   amp: "&",
   apos: "'",
@@ -42,9 +51,9 @@ function normalizeHref(href: string) {
 function extractMainHtml(html: string) {
   const mainMatches = Array.from(html.matchAll(/<main\b[^>]*>([\s\S]*?)<\/main>/gi));
   if (mainMatches.length > 0) {
-    return mainMatches
-      .map((match) => match[1] ?? "")
-      .sort((a, b) => stripTags(b).length - stripTags(a).length)[0];
+    const contents = mainMatches.map((match) => match[1] ?? "");
+    const maxLength = Math.max(...contents.map((content) => stripTags(content).length));
+    return contents.find((content) => stripTags(content).length === maxLength) ?? "";
   }
 
   const bodyMatch = html.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i);
@@ -89,7 +98,7 @@ export function htmlToMarkdown(html: string) {
   for (let level = 6; level >= 1; level -= 1) {
     const marker = "#".repeat(level);
     content = content.replace(
-      new RegExp(`<h${level}\\b[^>]*>([\\s\\S]*?)<\\/h${level}>`, "gi"),
+      HEADING_REGEXES[level],
       (_match, heading: string) => `\n\n${marker} ${stripTags(heading)}\n\n`,
     );
   }

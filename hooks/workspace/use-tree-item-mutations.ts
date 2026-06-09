@@ -4,7 +4,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { canMoveTreeItem, collectDescendantFolderIds } from "@/lib/folder-tree";
 import { fetchJson } from "@/lib/api";
 import { workspaceKeys } from "@/lib/query-keys";
-import type { File, Folder, TreeItem } from "@/lib/types";
+import { isFile } from "@/lib/type-guards";
+import type { File, Folder, TreeItem } from "@/lib/validation/models";
+import { fileSchema, folderSchema, successResponseSchema } from "@/lib/validation/responses";
 import { toast } from "sonner";
 import {
   cancelWorkspaceQueries,
@@ -69,26 +71,58 @@ function getCurrentTreeItemForMove(
     : item;
 }
 
+async function renameTreeItem(item: TreeItem, newName: string) {
+  if (item.type === "folder") {
+    return fetchJson(`/api/folders/${item.id}`, folderSchema, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newName }),
+    });
+  }
+
+  return fetchJson(`/api/files/${item.id}`, fileSchema, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: newName }),
+  });
+}
+
+async function moveTreeItem(item: TreeItem, targetFolderId: string | null) {
+  if (item.type === "folder") {
+    return fetchJson(`/api/folders/${item.id}`, folderSchema, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ parent_id: targetFolderId }),
+    });
+  }
+
+  return fetchJson(`/api/files/${item.id}`, fileSchema, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ folder_id: targetFolderId }),
+  });
+}
+
 export function useRenameTreeItemMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ item, newName }: RenameTreeItemInput) =>
-      fetchJson<File | Folder>(`/api/${item.type === "folder" ? "folders" : "files"}/${item.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName }),
-      }),
+    mutationFn: ({ item, newName }: RenameTreeItemInput) => renameTreeItem(item, newName),
     onMutate: async ({ item, newName }) => {
       await cancelWorkspaceQueries(queryClient, item.type === "file" ? item.id : undefined);
 
       const snapshot = getWorkspaceSnapshot(queryClient);
 
       if (item.type === "file") {
+        const file = snapshot.files.find((candidate) => candidate.id === item.id);
+        if (!file) {
+          return snapshot;
+        }
+
         queryClient.setQueryData<File[]>(
           workspaceKeys.files(),
           replaceFile(snapshot.files, {
-            ...(snapshot.files.find((file) => file.id === item.id) as File),
+            ...file,
             name: newName,
           }),
         );
@@ -101,10 +135,15 @@ export function useRenameTreeItemMutation() {
           });
         }
       } else {
+        const folder = snapshot.folders.find((candidate) => candidate.id === item.id);
+        if (!folder) {
+          return snapshot;
+        }
+
         queryClient.setQueryData<Folder[]>(
           workspaceKeys.folders(),
           replaceFolder(snapshot.folders, {
-            ...(snapshot.folders.find((folder) => folder.id === item.id) as Folder),
+            ...folder,
             name: newName,
           }),
         );
@@ -124,11 +163,11 @@ export function useRenameTreeItemMutation() {
       }
       toast.error(error.message || `Could not rename ${getItemLabel(variables.item)}`);
     },
-    onSuccess: (result, variables) => {
-      if (variables.item.type === "file") {
-        syncFile(queryClient, result as File);
+    onSuccess: (result) => {
+      if (isFile(result)) {
+        syncFile(queryClient, result);
       } else {
-        syncFolder(queryClient, result as Folder);
+        syncFolder(queryClient, result);
       }
       toast.success(`Renamed "${result.name}"`);
     },
@@ -140,8 +179,9 @@ export function useDeleteTreeItemMutation(options?: MutationCallbacks<{ item: Tr
 
   return useMutation({
     mutationFn: ({ item }: DeleteTreeItemInput) =>
-      fetchJson<{ success: true }>(
+      fetchJson(
         `/api/${item.type === "folder" ? "folders" : "files"}/${item.id}`,
+        successResponseSchema,
         { method: "DELETE" },
       ),
     onMutate: async ({ item }) => {
@@ -193,14 +233,7 @@ export function useMoveTreeItemMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ item, targetFolderId }: MoveTreeItemInput) =>
-      fetchJson<File | Folder>(`/api/${item.type === "folder" ? "folders" : "files"}/${item.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          item.type === "folder" ? { parent_id: targetFolderId } : { folder_id: targetFolderId },
-        ),
-      }),
+    mutationFn: ({ item, targetFolderId }: MoveTreeItemInput) => moveTreeItem(item, targetFolderId),
     onMutate: async ({ item, targetFolderId }) => {
       await cancelWorkspaceQueries(queryClient, item.type === "file" ? item.id : undefined);
 
@@ -209,7 +242,8 @@ export function useMoveTreeItemMutation() {
       const canMove = canMoveTreeItem(snapshot.folders, currentItem, targetFolderId);
 
       if (!canMove) {
-        return { snapshot, skipped: true } satisfies MoveTreeItemContext;
+        const context: MoveTreeItemContext = { snapshot, skipped: true };
+        return context;
       }
 
       if (item.type === "file") {
@@ -233,7 +267,8 @@ export function useMoveTreeItemMutation() {
         );
       }
 
-      return { snapshot, skipped: false } satisfies MoveTreeItemContext;
+      const context: MoveTreeItemContext = { snapshot, skipped: false };
+      return context;
     },
     onError: (error, variables, context) => {
       if (!context) return;
@@ -252,12 +287,12 @@ export function useMoveTreeItemMutation() {
         return;
       }
 
-      if (variables.item.type === "file") {
-        syncFile(queryClient, result as File);
+      if (isFile(result)) {
+        syncFile(queryClient, result);
         return;
       }
 
-      syncFolder(queryClient, result as Folder);
+      syncFolder(queryClient, result);
     },
   });
 }

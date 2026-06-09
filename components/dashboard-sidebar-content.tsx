@@ -8,7 +8,7 @@ import { InkdownLogo } from "@/components/inkdown-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { TreeItem } from "@/lib/types";
+import type { TreeItem } from "@/lib/validation/models";
 
 interface DashboardSidebarContentProps {
   isLoading: boolean;
@@ -33,6 +33,7 @@ interface DashboardSidebarContentProps {
   onTogglePublic: (item: TreeItem) => void;
   onDownloadFile: (item: TreeItem) => void;
   onExportFolder?: (folderId: string, folderName: string) => void;
+  onPrefetchFile?: (fileId: string) => void;
   onSignOut: () => void;
 }
 
@@ -55,6 +56,7 @@ export function DashboardSidebarContent({
   onTogglePublic,
   onDownloadFile,
   onExportFolder,
+  onPrefetchFile,
   onSignOut,
 }: DashboardSidebarContentProps) {
   return (
@@ -137,6 +139,7 @@ export function DashboardSidebarContent({
                 onTogglePublic={onTogglePublic}
                 onDownloadFile={onDownloadFile}
                 onExportFolder={onExportFolder}
+                onPrefetchFile={onPrefetchFile}
               />
             </div>
           )}

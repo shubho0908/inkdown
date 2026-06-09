@@ -1,126 +1,112 @@
-import 'server-only'
+import "server-only";
 
-import { revalidateTag } from 'next/cache'
-import type { createClient } from '@/lib/supabase/server'
+import { revalidateTag } from "next/cache";
+import { listFolderShareState } from "@/lib/db/folders";
 
 export interface FolderShareState {
-  id: string
-  parent_id: string | null
-  slug: string | null
-  is_public: boolean
+  id: string;
+  parent_id: string | null;
+  slug: string | null;
+  is_public: boolean;
 }
 
-type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
-
-export function getPublicFolderShareTag(slug: string) {
-  return `public-folder:${slug}`
+function getPublicFolderShareTag(slug: string) {
+  return `public-folder:${slug}`;
 }
 
-export function getPublicFileShareTag(slug: string) {
-  return `public-file:${slug}`
+function getPublicFileShareTag(slug: string) {
+  return `public-file:${slug}`;
 }
 
 function addShareSlug(slugs: Set<string>, slug: string | null | undefined) {
   if (slug) {
-    slugs.add(slug)
+    slugs.add(slug);
   }
 }
 
-export async function listOwnedFolderShareState(
-  supabase: SupabaseServerClient,
-  userId: string,
-) {
-  const { data, error } = await supabase
-    .from('folders')
-    .select('id, parent_id, slug, is_public')
-    .eq('user_id', userId)
-
-  if (error) {
-    throw error
-  }
-
-  return (data ?? []) as FolderShareState[]
+export async function listOwnedFolderShareState(userId: string) {
+  return listFolderShareState(userId);
 }
 
-export function collectAncestorPublicFolderShareSlugs(
+function collectAncestorPublicFolderShareSlugs(
   folders: FolderShareState[],
   folderId: string | null | undefined,
 ) {
-  const slugs = new Set<string>()
+  const slugs = new Set<string>();
 
   if (!folderId) {
-    return slugs
+    return slugs;
   }
 
-  const foldersById = new Map(folders.map((folder) => [folder.id, folder]))
-  const visited = new Set<string>()
-  let currentFolderId: string | null = folderId
+  const foldersById = new Map(folders.map((folder) => [folder.id, folder]));
+  const visited = new Set<string>();
+  let currentFolderId: string | null = folderId;
 
   while (currentFolderId && !visited.has(currentFolderId)) {
-    visited.add(currentFolderId)
+    visited.add(currentFolderId);
 
-    const currentFolder = foldersById.get(currentFolderId)
+    const currentFolder = foldersById.get(currentFolderId);
     if (!currentFolder) {
-      break
+      break;
     }
 
     if (currentFolder.is_public && currentFolder.slug) {
-      slugs.add(currentFolder.slug)
+      slugs.add(currentFolder.slug);
     }
 
-    currentFolderId = currentFolder.parent_id
+    currentFolderId = currentFolder.parent_id;
   }
 
-  return slugs
+  return slugs;
 }
 
 export function collectPublicFolderShareSlugsForFolderCreate(
   folders: FolderShareState[],
   parentFolderId: string | null | undefined,
 ) {
-  return collectAncestorPublicFolderShareSlugs(folders, parentFolderId)
+  return collectAncestorPublicFolderShareSlugs(folders, parentFolderId);
 }
 
-export function collectDescendantPublicFolderShareSlugs(
+function collectDescendantPublicFolderShareSlugs(
   folders: FolderShareState[],
   rootFolderId: string,
 ) {
-  const slugs = new Set<string>()
-  const childFolderIdsByParentId = new Map<string, string[]>()
+  const slugs = new Set<string>();
+  const childFolderIdsByParentId = new Map<string, string[]>();
 
   folders.forEach((folder) => {
     if (!folder.parent_id) {
-      return
+      return;
     }
 
-    const siblingIds = childFolderIdsByParentId.get(folder.parent_id) ?? []
-    siblingIds.push(folder.id)
-    childFolderIdsByParentId.set(folder.parent_id, siblingIds)
-  })
+    const siblingIds = childFolderIdsByParentId.get(folder.parent_id) ?? [];
+    siblingIds.push(folder.id);
+    childFolderIdsByParentId.set(folder.parent_id, siblingIds);
+  });
 
-  const foldersById = new Map(folders.map((folder) => [folder.id, folder]))
-  const pendingFolderIds = [rootFolderId]
-  const visited = new Set<string>()
+  const foldersById = new Map(folders.map((folder) => [folder.id, folder]));
+  const pendingFolderIds = [rootFolderId];
+  const visited = new Set<string>();
 
   while (pendingFolderIds.length > 0) {
-    const folderId = pendingFolderIds.pop()
+    const folderId = pendingFolderIds.pop();
 
     if (!folderId || visited.has(folderId)) {
-      continue
+      continue;
     }
 
-    visited.add(folderId)
+    visited.add(folderId);
 
-    const folder = foldersById.get(folderId)
+    const folder = foldersById.get(folderId);
     if (folder?.is_public && folder.slug) {
-      slugs.add(folder.slug)
+      slugs.add(folder.slug);
     }
 
-    const childFolderIds = childFolderIdsByParentId.get(folderId) ?? []
-    pendingFolderIds.push(...childFolderIds)
+    const childFolderIds = childFolderIdsByParentId.get(folderId) ?? [];
+    pendingFolderIds.push(...childFolderIds);
   }
 
-  return slugs
+  return slugs;
 }
 
 export function collectPublicFolderShareSlugsForFolderUpdate(
@@ -131,18 +117,12 @@ export function collectPublicFolderShareSlugsForFolderUpdate(
   const slugs = new Set<string>([
     ...collectAncestorPublicFolderShareSlugs(previousFolders, folderId),
     ...collectAncestorPublicFolderShareSlugs(nextFolders, folderId),
-  ])
+  ]);
 
-  addShareSlug(
-    slugs,
-    previousFolders.find((folder) => folder.id === folderId)?.slug,
-  )
-  addShareSlug(
-    slugs,
-    nextFolders.find((folder) => folder.id === folderId)?.slug,
-  )
+  addShareSlug(slugs, previousFolders.find((folder) => folder.id === folderId)?.slug);
+  addShareSlug(slugs, nextFolders.find((folder) => folder.id === folderId)?.slug);
 
-  return slugs
+  return slugs;
 }
 
 export function collectPublicFolderShareSlugsForFolderDelete(
@@ -152,14 +132,11 @@ export function collectPublicFolderShareSlugsForFolderDelete(
   const slugs = new Set<string>([
     ...collectAncestorPublicFolderShareSlugs(folders, folderId),
     ...collectDescendantPublicFolderShareSlugs(folders, folderId),
-  ])
+  ]);
 
-  addShareSlug(
-    slugs,
-    folders.find((folder) => folder.id === folderId)?.slug,
-  )
+  addShareSlug(slugs, folders.find((folder) => folder.id === folderId)?.slug);
 
-  return slugs
+  return slugs;
 }
 
 export function collectPublicFolderShareSlugsForFileChange(
@@ -170,27 +147,27 @@ export function collectPublicFolderShareSlugsForFileChange(
   return new Set<string>([
     ...collectAncestorPublicFolderShareSlugs(folders, previousFolderId),
     ...collectAncestorPublicFolderShareSlugs(folders, nextFolderId),
-  ])
+  ]);
 }
 
 export function collectPublicFileShareSlugs(...slugsToMerge: Array<string | null | undefined>) {
-  const slugs = new Set<string>()
+  const slugs = new Set<string>();
 
   for (const slug of slugsToMerge) {
-    addShareSlug(slugs, slug)
+    addShareSlug(slugs, slug);
   }
 
-  return slugs
+  return slugs;
 }
 
 export function revalidatePublicFolderShares(slugs: Iterable<string>) {
   for (const slug of new Set(slugs)) {
-    revalidateTag(getPublicFolderShareTag(slug), 'max')
+    revalidateTag(getPublicFolderShareTag(slug), "max");
   }
 }
 
 export function revalidatePublicFileShares(slugs: Iterable<string>) {
   for (const slug of new Set(slugs)) {
-    revalidateTag(getPublicFileShareTag(slug), 'max')
+    revalidateTag(getPublicFileShareTag(slug), "max");
   }
 }

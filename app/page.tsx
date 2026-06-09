@@ -5,8 +5,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { LandingPageContent } from "@/components/landing-page-content";
-import { requireVerifiedUser } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { requireVerifiedUser } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
   alternates: {
@@ -15,8 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const supabase = await createClient();
-  const authState = await requireVerifiedUser(supabase);
+  const authState = await requireVerifiedUser();
 
   if (authState.kind === "authenticated") {
     redirect("/workspace");

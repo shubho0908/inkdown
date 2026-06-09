@@ -4,7 +4,7 @@ import { DeleteDialog } from "@/components/delete-dialog";
 import { MoveItemDialog } from "@/components/move-item-dialog";
 import { RenameDialog } from "@/components/rename-dialog";
 import { ShareDialog } from "@/components/share-dialog";
-import type { File, Folder, TreeItem } from "@/lib/types";
+import type { File, Folder, TreeItem } from "@/lib/validation/models";
 
 interface DashboardSidebarDialogsProps {
   renameItem: TreeItem | null;
@@ -15,10 +15,11 @@ interface DashboardSidebarDialogsProps {
   shareItem: TreeItem | null;
   shareFile: File | null;
   shareFolder: Folder | null;
+  isShareTogglePending: boolean;
   onRenameItemChange: (item: TreeItem | null) => void;
   onDeleteItemChange: (item: TreeItem | null) => void;
   onMoveItemChange: (item: TreeItem | null) => void;
-  onShareStateChange: (item: TreeItem | null, file: File | null, folder: Folder | null) => void;
+  onShareItemChange: (item: TreeItem | null) => void;
   onRename: (newName: string) => void;
   onDelete: () => void;
   onMove: (targetFolderId: string | null) => void;
@@ -34,10 +35,11 @@ export function DashboardSidebarDialogs({
   shareItem,
   shareFile,
   shareFolder,
+  isShareTogglePending,
   onRenameItemChange,
   onDeleteItemChange,
   onMoveItemChange,
-  onShareStateChange,
+  onShareItemChange,
   onRename,
   onDelete,
   onMove,
@@ -81,13 +83,14 @@ export function DashboardSidebarDialogs({
           open={!!shareItem}
           onOpenChange={(open) => {
             if (!open) {
-              onShareStateChange(null, null, null);
+              onShareItemChange(null);
             }
           }}
           itemName={shareFile?.name ?? shareFolder?.name ?? shareItem.name}
           itemType={shareItem.type}
           isPublic={shareFile?.is_public ?? shareFolder?.is_public ?? false}
           slug={shareFile?.slug ?? shareFolder?.slug ?? null}
+          isPending={isShareTogglePending}
           onTogglePublic={onTogglePublic}
         />
       )}

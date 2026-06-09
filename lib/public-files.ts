@@ -1,60 +1,46 @@
-import 'server-only'
+import "server-only";
 
-import { cache } from 'react'
-import { getPublicFileShareTag } from '@/lib/public-share-cache'
-import { fetchProfileUsername, fetchRestRows } from '@/lib/public-share-utils'
+import { cache } from "react";
 
-export interface PublicFileRecord {
-  user_id: string
-  slug: string
-  name: string
-  content: string
-  created_at: string
-  updated_at: string
-  username: string | null
-}
+import {
+  getPublicFileBySlug as fetchPublicFileBySlug,
+  listPublicFileRowsForSitemap,
+} from "@/lib/db/files";
+import { getProfileUsername } from "@/lib/db/profiles";
+import { toFileMetadata } from "@/lib/db/rows";
+import { readFileContent } from "@/lib/storage/content";
+import type { File } from "@/lib/validation/models";
 
-const PUBLIC_FILE_SELECT = 'user_id,slug,name,content,created_at,updated_at'
-
-async function fetchPublicFiles(
-  searchParams: Record<string, string>,
-  tags?: string[],
-): Promise<
-  Array<Omit<PublicFileRecord, 'username'>>
-> {
-  return fetchRestRows<Omit<PublicFileRecord, 'username'>>('/rest/v1/files', searchParams, {
-    tags,
-  })
-}
+export type PublicFileRecord = File & {
+  slug: string;
+  content: string;
+  username: string | null;
+};
 
 export const getPublicFileBySlug = cache(async (slug: string): Promise<PublicFileRecord | null> => {
-  const [data] = await fetchPublicFiles({
-    select: PUBLIC_FILE_SELECT,
-    slug: `eq.${slug}`,
-    is_public: 'eq.true',
-    limit: '1',
-  }, [getPublicFileShareTag(slug)])
-
-  if (!data) {
-    return null
-  }
+  const file = await fetchPublicFileBySlug(slug);
+  if (!file || !file.slug) return null;
 
   return {
-    ...data,
-    username: await fetchProfileUsername(data.user_id),
-  }
-})
+    ...file,
+    slug: file.slug,
+    content: file.content ?? "",
+    username: await getProfileUsername(file.user_id),
+  };
+});
 
 export async function listPublicFilesForSitemap(): Promise<PublicFileRecord[]> {
-  const files = await fetchPublicFiles({
-    select: PUBLIC_FILE_SELECT,
-    is_public: 'eq.true',
-    slug: 'not.is.null',
-    order: 'updated_at.desc',
-  })
+  const rows = await listPublicFileRowsForSitemap();
 
-  return files.map((file) => ({
-    ...file,
-    username: null,
-  }))
+  return Promise.all(
+    rows.map(async (row) => {
+      const content = await readFileContent(row.userId, row.id, row.contentKey);
+      return {
+        ...toFileMetadata(row),
+        slug: row.slug ?? "",
+        content,
+        username: null,
+      };
+    }),
+  );
 }

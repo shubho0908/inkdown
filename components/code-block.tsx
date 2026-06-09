@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import hljs from "highlight.js/lib/common";
 import { Check, Copy } from "lucide-react";
+import { HighlightedHtml } from "@/components/highlighted-html";
 import { Button } from "@/components/ui/button";
 import { escapeHtml, formatLanguageLabel, resolveLanguage } from "@/lib/code-block";
 
@@ -82,9 +83,10 @@ export function CodeBlock({ code, language, showCopyButton = true }: CodeBlockPr
         ) : null}
       </div>
       <pre className="overflow-x-auto p-4 text-sm leading-6">
-        <code
+        <HighlightedHtml
+          as="code"
+          html={highlightedCode}
           className="hljs block min-w-full bg-transparent p-0 font-mono"
-          dangerouslySetInnerHTML={{ __html: highlightedCode }}
         />
       </pre>
     </div>

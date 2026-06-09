@@ -1,23 +1,21 @@
 {
+  "diff": false,
+  "failOn": "warning",
   "ignore": {
-    "rules": [
-      "react-doctor/no-inline-exhaustive-style",
-      "react-doctor/no-react19-deprecated-apis",
-      "react-doctor/nextjs-no-img-element",
-      "react/no-danger",
-      "react-doctor/nextjs-no-use-search-params-without-suspense",
-      "jsx-a11y/html-has-lang",
-      "react-doctor/no-giant-component",
-      "react-doctor/prefer-useReducer",
-      "react-doctor/no-cascading-set-state",
-      "react-doctor/no-derived-useState",
-      "react-doctor/server-sequential-independent-await",
-      "react-doctor/async-await-in-loop",
-      "react-doctor/rendering-hydration-no-flicker",
-      "react-doctor/async-defer-await",
-      "react-doctor/rerender-state-only-in-handlers",
-      "react-doctor/no-array-index-as-key"
-    ],
-    "files": ["app/auth/sign-up/page.tsx"]
+    "overrides": [
+      {
+        "files": [
+          "app/opengraph-image.tsx",
+          "app/twitter-image.tsx",
+          "app/view/**/opengraph-image.tsx",
+          "app/view/**/twitter-image.tsx"
+        ],
+        "rules": ["react-doctor/only-export-components"]
+      },
+      {
+        "files": ["lib/email/auth-email-template.tsx"],
+        "rules": ["react-doctor/nextjs-no-img-element"]
+      }
+    ]
   }
 }

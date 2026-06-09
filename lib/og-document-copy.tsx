@@ -1,5 +1,17 @@
 import type { ReactElement } from "react";
 
+const TITLE_BASE_STYLE = {
+  margin: 0,
+  maxWidth: "100%",
+  lineHeight: 0.95,
+  letterSpacing: "-0.06em",
+  fontWeight: 600,
+  color: "#f8fafc",
+  fontFamily: "Geist",
+  whiteSpace: "pre-wrap" as const,
+  textAlign: "left" as const,
+};
+
 interface DocumentCopyProps {
   title: string;
   preview: string;
@@ -27,22 +39,7 @@ export function DocumentCopy({
         overflow: "hidden",
       }}
     >
-      <h1
-        style={{
-          margin: 0,
-          maxWidth: "100%",
-          fontSize,
-          lineHeight: 0.95,
-          letterSpacing: "-0.06em",
-          fontWeight: 700,
-          color: "#f8fafc",
-          fontFamily: "Geist",
-          whiteSpace: "pre-wrap",
-          textAlign: "left",
-        }}
-      >
-        {title}
-      </h1>
+      <h1 style={{ ...TITLE_BASE_STYLE, fontSize }}>{title}</h1>
 
       {username && (
         <p

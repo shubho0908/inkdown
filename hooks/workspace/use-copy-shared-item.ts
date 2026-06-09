@@ -3,7 +3,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchJson } from "@/lib/api";
 import { workspaceKeys } from "@/lib/query-keys";
-import type { File, Folder } from "@/lib/types";
+import type { File, Folder } from "@/lib/validation/models";
+import { copySharedItemResponseSchema } from "@/lib/validation/responses";
 import { toast } from "sonner";
 import {
   getWorkspaceSnapshot,
@@ -35,7 +36,7 @@ export function useCopySharedItemMutation() {
           ? `/api/public/folders/${shareSlug}/copy`
           : `/api/public/files/${shareSlug}/copy`;
 
-      return fetchJson<{ success: true; fileId?: string; folderId?: string }>(endpoint, {
+      return fetchJson(endpoint, copySharedItemResponseSchema, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ destination_parent_id: destinationParentId }),

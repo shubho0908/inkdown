@@ -1,4 +1,4 @@
-import { EmailTemplate } from "@/components/email-template";
+import { AuthEmailTemplate } from "@/lib/email/auth-email-template";
 import { InkdownLogo } from "@/components/inkdown-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -52,21 +52,21 @@ export default function EmailPreviewPage() {
           </div>
 
           <TabsContent value="confirmation" className="overflow-hidden rounded-lg border shadow-sm">
-            <EmailTemplate
+            <AuthEmailTemplate
               type="confirmation"
               confirmationUrl="https://inkdown.shubhojeet.com/confirm?token=example-token-123"
             />
           </TabsContent>
 
           <TabsContent value="welcome" className="overflow-hidden rounded-lg border shadow-sm">
-            <EmailTemplate type="welcome" userName="Alex" />
+            <AuthEmailTemplate type="welcome" userName="Alex" />
           </TabsContent>
 
           <TabsContent
             value="password-reset"
             className="overflow-hidden rounded-lg border shadow-sm"
           >
-            <EmailTemplate
+            <AuthEmailTemplate
               type="password-reset"
               resetUrl="https://inkdown.shubhojeet.com/reset?token=example-reset-token"
             />

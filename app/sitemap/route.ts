@@ -1,4 +1,4 @@
-import { listPublicFoldersForSitemap } from "@/lib/public-folders";
+import { listPublicFoldersForSitemap } from "@/lib/db/public-folders";
 import { listPublicFilesForSitemap } from "@/lib/public-files";
 import { createSiteUrl } from "@/lib/site-url";
 

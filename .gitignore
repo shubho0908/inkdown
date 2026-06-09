@@ -10,6 +10,9 @@ next.user-config.*
 # Environment variables
 .env*.local
 
+# Database backups (contain user data — never commit)
+backups/
+
 # Common ignores
 node_modules
 .next/

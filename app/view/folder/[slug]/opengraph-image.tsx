@@ -1,5 +1,5 @@
 import { createOgImageResponse, OG_IMAGE_SIZE } from "@/lib/og-image-response";
-import { getPublicFolderBySlug } from "@/lib/public-folders";
+import { getPublicFolderBySlug } from "@/lib/db/public-folders";
 import { getSiteUrl } from "@/lib/site-url";
 
 export const alt = "Inkdown shared folder preview";

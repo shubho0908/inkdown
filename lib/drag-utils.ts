@@ -1,6 +1,8 @@
 import type { DragEvent } from "react";
 
-export type FolderRef = { id: string; parent_id: string | null }[];
+import type { Folder } from "@/lib/validation/models";
+
+export type FolderRef = Pick<Folder, "id" | "parent_id">[];
 
 export function isExternalFileDragEvent(event: DragEvent): boolean {
   return event.dataTransfer?.types?.includes("Files") ?? false;

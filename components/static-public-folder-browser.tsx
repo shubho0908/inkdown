@@ -1,6 +1,6 @@
 import { FileText, Folder, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { TreeItem } from "@/lib/types";
+import type { TreeItem } from "@/lib/validation/models";
 
 interface StaticPublicFolderBrowserProps {
   shareSlug: string;

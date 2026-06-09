@@ -1,4 +1,4 @@
-import { getPublicFolderFileById } from "@/lib/public-folders";
+import { getPublicFolderFileById } from "@/lib/db/public-folders";
 import { NextResponse } from "next/server";
 
 export async function GET(

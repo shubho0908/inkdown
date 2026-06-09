@@ -13,39 +13,30 @@ bunx lint-staged --config lint-staged.config.mjs
 # Re-stage any files prettier/eslint modified
 git add -u
 
-# ── 2. Lint ─────────────────────────────────────────────────────────────────
+# ── 2. API guardrails ───────────────────────────────────────────────────────
+echo ""
+echo "▶ API guardrails…"
+bun run guard:api
+
+# ── 3. Lint ─────────────────────────────────────────────────────────────────
 echo ""
 echo "▶ Linting…"
 bun run lint
 
-# ── 3. Type check ───────────────────────────────────────────────────────────
+# ── 4. Type check ───────────────────────────────────────────────────────────
 echo ""
 echo "▶ Type checking…"
 bun run typecheck
 
-# ── 4. Build ────────────────────────────────────────────────────────────────
+# ── 5. Build ────────────────────────────────────────────────────────────────
 echo ""
 echo "▶ Building…"
 bun run build
 
-# ── 5. React Doctor score (must be 100) ───────────────────────────────────
+# ── 6. React Doctor score (must be 100) ───────────────────────────────────
 echo ""
 echo "▶ React Doctor health check…"
-SCORE=$(bunx react-doctor --score -y 2>/dev/null | tail -1)
-
-if [ -z "$SCORE" ]; then
-  echo "⚠ React Doctor score unavailable (network issue). Skipping score gate."
-else
-  echo "  Score: $SCORE / 100  (threshold: 100)"
-  if [ "$SCORE" -lt 100 ]; then
-    echo ""
-    echo "✖ React Doctor score $SCORE is below 100."
-    echo "  Run: bunx react-doctor -y --verbose"
-    echo "  to see all issues and fix them."
-    exit 1
-  fi
-  echo "✔ Score passes."
-fi
+bun scripts/check-react-doctor-score.mjs
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

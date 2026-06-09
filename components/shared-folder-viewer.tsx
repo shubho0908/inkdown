@@ -3,8 +3,8 @@ import { FileText, FolderOpen, Share2 } from "lucide-react";
 import { PublicMarkdownPreview } from "@/components/public-markdown-preview";
 import { SharedCopyButton } from "@/components/shared-copy-button";
 import { StaticPublicFolderBrowser } from "@/components/static-public-folder-browser";
-import type { PublicFolderFileRecord } from "@/lib/public-folders";
-import type { TreeItem } from "@/lib/types";
+import type { PublicFolderFileRecord } from "@/lib/db/public-folders";
+import type { TreeItem } from "@/lib/validation/models";
 
 interface SharedFolderViewerProps {
   shareSlug: string;

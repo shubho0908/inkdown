@@ -1,6 +1,10 @@
-import { requireVerifiedUser } from "@/lib/auth";
+import { requireVerifiedUser } from "@/lib/auth/session";
 import { createAuthErrorResponse } from "@/lib/auth/server";
-import { createClient } from "@/lib/supabase/server";
+import { listFileExportRowsByUserId } from "@/lib/db/files";
+import { listFoldersByUserId } from "@/lib/db/folders";
+import { readFileContent } from "@/lib/storage/content";
+import { parseJsonBody } from "@/lib/validation/parse";
+import { exportZipBodySchema } from "@/lib/validation/requests";
 import { NextResponse } from "next/server";
 import archiver from "archiver";
 import { PassThrough } from "node:stream";
@@ -69,12 +73,12 @@ function createErrorResponse(message: string, status: number): NextResponse {
 }
 
 async function readExportFolderId(request: Request) {
-  try {
-    const body = (await request.json()) as { folderId?: unknown };
-    return typeof body.folderId === "string" && body.folderId.trim() ? body.folderId : null;
-  } catch {
+  const parsed = await parseJsonBody(request, exportZipBodySchema);
+  if (!parsed.success) {
     return null;
   }
+
+  return parsed.data.folderId ?? null;
 }
 
 export async function GET() {
@@ -82,30 +86,32 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-
-  const authState = await requireVerifiedUser(supabase);
+  const authState = await requireVerifiedUser();
   if (authState.kind !== "authenticated") {
     return createAuthErrorResponse(authState);
   }
 
   try {
     const folderId = await readExportFolderId(request);
+    const userId = authState.user.id;
 
-    const [{ data: files }, { data: folders }] = await Promise.all([
-      supabase
-        .from("files")
-        .select("id, name, content, folder_id, updated_at")
-        .eq("user_id", authState.user.id)
-        .order("name"),
-      supabase
-        .from("folders")
-        .select("id, name, parent_id, updated_at")
-        .eq("user_id", authState.user.id)
-        .order("name"),
+    const [files, folders] = await Promise.all([
+      listFileExportRowsByUserId(userId),
+      listFoldersByUserId(userId),
     ]);
 
-    const folderMap = new Map((folders || []).map((f) => [f.id, f]));
+    const folderMap = new Map(folders.map((f) => [f.id, f]));
+    const archive = archiver("zip", { zlib: { level: 6 } });
+    const passThrough = new PassThrough();
+    archive.pipe(passThrough);
+
+    async function appendFile(file: (typeof files)[number], fullPath: string) {
+      const content = await readFileContent(userId, file.id, file.contentKey);
+      archive.append(content || "# Empty Document\n", {
+        name: fullPath,
+        date: file.updatedAt ? new Date(file.updatedAt) : new Date(),
+      });
+    }
 
     if (folderId) {
       const folder = folderMap.get(folderId);
@@ -114,34 +120,27 @@ export async function POST(request: Request) {
       }
 
       const descendants = getFolderDescendants(folderId, folderMap);
-      const folderFiles = (files || []).filter((f) => f.folder_id && descendants.has(f.folder_id));
+      const folderFiles = files.filter((f) => f.folderId && descendants.has(f.folderId));
 
       if (folderFiles.length === 0) {
         return createErrorResponse("Folder is empty", 400);
       }
 
-      const archive = archiver("zip", { zlib: { level: 6 } });
-      const passThrough = new PassThrough();
-      archive.pipe(passThrough);
-
       const basePath = buildFolderPath(folderId, folderMap);
 
-      for (const file of folderFiles) {
-        const relativePath = buildFolderPath(file.folder_id, folderMap).slice(basePath.length + 1);
-        const fileName = ensureMarkdownExtension(file.name);
-        const fullPath = relativePath ? `${relativePath}/${fileName}` : fileName;
-
-        archive.append(file.content || "# Empty Document\n", {
-          name: fullPath,
-          date: file.updated_at ? new Date(file.updated_at) : new Date(),
-        });
-      }
+      await Promise.all(
+        folderFiles.map((file) => {
+          const relativePath = buildFolderPath(file.folderId, folderMap).slice(basePath.length + 1);
+          const fileName = ensureMarkdownExtension(file.name);
+          const fullPath = relativePath ? `${relativePath}/${fileName}` : fileName;
+          return appendFile(file, fullPath);
+        }),
+      );
 
       archive.finalize();
 
       const timestamp = new Date().toISOString().split("T")[0];
-      const folderName = sanitizeFileName(folder.name);
-      const downloadName = `${folderName}-${timestamp}.zip`;
+      const downloadName = `${sanitizeFileName(folder.name)}-${timestamp}.zip`;
 
       return new Response(passThrough as unknown as ReadableStream, {
         status: 200,
@@ -153,57 +152,35 @@ export async function POST(request: Request) {
       });
     }
 
-    if ((!files || files.length === 0) && (!folders || folders.length === 0)) {
+    if (files.length === 0 && folders.length === 0) {
       return createErrorResponse("No files to export", 400);
     }
 
-    const archive = archiver("zip", {
-      zlib: { level: 6 },
-    });
-
-    archive.on("warning", (err) => {
-      if (err.code === "ENOENT") {
-        console.warn("Zip export warning:", err.message);
-      } else {
-        console.error("Zip export error:", err);
-      }
-    });
-
-    archive.on("error", (err) => {
-      console.error("Archive error:", err);
-    });
-
-    const passThrough = new PassThrough();
-    archive.pipe(passThrough);
-
-    for (const folder of folders || []) {
+    for (const folder of folders) {
       const folderPath = buildFolderPath(folder.id, folderMap);
       if (folderPath) {
         archive.append("", { name: `${folderPath}/.folder` });
       }
     }
 
-    for (const file of files || []) {
-      const folderPath = buildFolderPath(file.folder_id, folderMap);
-      const fileName = ensureMarkdownExtension(file.name);
-      const fullPath = folderPath ? `${folderPath}/${fileName}` : fileName;
-
-      archive.append(file.content || "# Empty Document\n", {
-        name: fullPath,
-        date: file.updated_at ? new Date(file.updated_at) : new Date(),
-      });
-    }
+    await Promise.all(
+      files.map((file) => {
+        const folderPath = buildFolderPath(file.folderId, folderMap);
+        const fileName = ensureMarkdownExtension(file.name);
+        const fullPath = folderPath ? `${folderPath}/${fileName}` : fileName;
+        return appendFile(file, fullPath);
+      }),
+    );
 
     archive.finalize();
 
     const timestamp = new Date().toISOString().split("T")[0];
-    const downloadName = `inkdown-export-${timestamp}.zip`;
 
     return new Response(passThrough as unknown as ReadableStream, {
       status: 200,
       headers: {
         "Content-Type": "application/zip",
-        "Content-Disposition": `attachment; filename="${downloadName}"`,
+        "Content-Disposition": `attachment; filename="inkdown-export-${timestamp}.zip"`,
         ...getSecurityHeaders(),
       },
     });

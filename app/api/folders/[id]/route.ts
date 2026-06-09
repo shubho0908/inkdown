@@ -1,5 +1,6 @@
-import { requireVerifiedUser } from "@/lib/auth";
+import { requireVerifiedUser } from "@/lib/auth/session";
 import { createAuthErrorResponse } from "@/lib/auth/server";
+import { updateFolder, deleteFolder } from "@/lib/db/folders";
 import { wouldCreateFolderCycle } from "@/lib/folder-tree";
 import {
   collectPublicFolderShareSlugsForFolderDelete,
@@ -8,148 +9,124 @@ import {
   revalidatePublicFolderShares,
 } from "@/lib/public-share-cache";
 import { generateUniqueShareSlug } from "@/lib/share-slug";
-import { createClient } from "@/lib/supabase/server";
+import { slugExists } from "@/lib/db/files";
+import { parseJsonBody } from "@/lib/validation/parse";
+import { updateFolderBodySchema } from "@/lib/validation/requests";
 import { NextResponse } from "next/server";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const supabase = await createClient();
-  const { id } = await params;
-
-  const authState = await requireVerifiedUser(supabase);
+  const authState = await requireVerifiedUser();
   if (authState.kind !== "authenticated") {
     return createAuthErrorResponse(authState);
   }
 
-  const body = await request.json();
-  const { name, parent_id, is_public } = body;
+  const [{ id }, parsed] = await Promise.all([
+    params,
+    parseJsonBody(request, updateFolderBodySchema),
+  ]);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
 
-  const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
-  if (name !== undefined) updateData.name = name;
-  let folderShareState = [] as Awaited<ReturnType<typeof listOwnedFolderShareState>>;
+  const { name, parent_id, is_public } = parsed.data;
 
   try {
-    folderShareState = await listOwnedFolderShareState(supabase, authState.user.id);
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Could not load folders" },
-      { status: 500 },
-    );
-  }
+    const folderShareState = await listOwnedFolderShareState(authState.user.id);
+    const currentFolder = folderShareState.find((folder) => folder.id === id);
 
-  const currentFolder = folderShareState.find((folder) => folder.id === id);
-  if (!currentFolder) {
-    return NextResponse.json({ error: "Folder not found" }, { status: 404 });
-  }
+    if (!currentFolder) {
+      return NextResponse.json({ error: "Folder not found" }, { status: 404 });
+    }
 
-  if (parent_id !== undefined) {
-    if (parent_id !== null) {
+    if (parent_id !== undefined && parent_id !== null) {
       const targetFolder = folderShareState.find((folder) => folder.id === parent_id);
       if (!targetFolder) {
         return NextResponse.json({ error: "Invalid target folder" }, { status: 400 });
       }
     }
 
-    if (wouldCreateFolderCycle(folderShareState, currentFolder.id, parent_id)) {
+    if (
+      parent_id !== undefined &&
+      wouldCreateFolderCycle(folderShareState, currentFolder.id, parent_id)
+    ) {
       return NextResponse.json(
         { error: "A folder cannot be moved into itself or one of its subfolders" },
         { status: 400 },
       );
     }
 
-    updateData.parent_id = parent_id;
-  }
-
-  if (is_public !== undefined) {
-    updateData.is_public = is_public;
-
+    let slug = currentFolder.slug;
     if (is_public && !currentFolder.slug) {
-      updateData.slug = await generateUniqueShareSlug(async (slug) => {
-        const { data, error } = await supabase
-          .from("folders")
-          .select("id")
-          .eq("slug", slug)
-          .maybeSingle();
-
-        if (error) {
-          throw error;
-        }
-
-        return Boolean(data);
-      });
+      slug = await generateUniqueShareSlug(async (candidate) => slugExists("folders", candidate));
     }
+
+    const folder = await updateFolder(authState.user.id, id, {
+      name,
+      parentId: parent_id,
+      isPublic: is_public,
+      slug: is_public !== undefined ? slug : undefined,
+    });
+
+    if (!folder) {
+      return NextResponse.json({ error: "Folder not found" }, { status: 404 });
+    }
+
+    const nextFolderShareState = folderShareState.map((entry) =>
+      entry.id === folder.id
+        ? {
+            ...entry,
+            parent_id: folder.parent_id,
+            slug: folder.slug,
+            is_public: folder.is_public,
+          }
+        : entry,
+    );
+
+    const affectedShareSlugs = collectPublicFolderShareSlugsForFolderUpdate(
+      folderShareState,
+      nextFolderShareState,
+      id,
+    );
+
+    revalidatePublicFolderShares(affectedShareSlugs);
+    return NextResponse.json(folder);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to update folder" },
+      { status: 500 },
+    );
   }
-
-  const { data: folder, error } = await supabase
-    .from("folders")
-    .update(updateData)
-    .eq("id", id)
-    .eq("user_id", authState.user.id)
-    .select()
-    .single();
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  const nextFolderShareState = folderShareState.map((entry) =>
-    entry.id === folder.id
-      ? {
-          ...entry,
-          parent_id: folder.parent_id,
-          slug: folder.slug,
-          is_public: folder.is_public,
-        }
-      : entry,
-  );
-  const affectedShareSlugs = collectPublicFolderShareSlugsForFolderUpdate(
-    folderShareState,
-    nextFolderShareState,
-    id,
-  );
-
-  revalidatePublicFolderShares(affectedShareSlugs);
-
-  return NextResponse.json(folder);
 }
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const supabase = await createClient();
-  const { id } = await params;
-
-  const authState = await requireVerifiedUser(supabase);
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const authState = await requireVerifiedUser();
   if (authState.kind !== "authenticated") {
     return createAuthErrorResponse(authState);
   }
 
-  let folderShareState = [] as Awaited<ReturnType<typeof listOwnedFolderShareState>>;
+  const { id } = await params;
 
   try {
-    folderShareState = await listOwnedFolderShareState(supabase, authState.user.id);
+    const folderShareState = await listOwnedFolderShareState(authState.user.id);
+    const currentFolder = folderShareState.find((folder) => folder.id === id);
+
+    if (!currentFolder) {
+      return NextResponse.json({ error: "Folder not found" }, { status: 404 });
+    }
+
+    const affectedShareSlugs = collectPublicFolderShareSlugsForFolderDelete(folderShareState, id);
+
+    const deleted = await deleteFolder(authState.user.id, id);
+    if (!deleted) {
+      return NextResponse.json({ error: "Folder not found" }, { status: 404 });
+    }
+
+    revalidatePublicFolderShares(affectedShareSlugs);
+    return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Could not load folders" },
+      { error: error instanceof Error ? error.message : "Failed to delete folder" },
       { status: 500 },
     );
   }
-
-  const currentFolder = folderShareState.find((folder) => folder.id === id);
-  if (!currentFolder) {
-    return NextResponse.json({ error: "Folder not found" }, { status: 404 });
-  }
-
-  const affectedShareSlugs = collectPublicFolderShareSlugsForFolderDelete(folderShareState, id);
-
-  const { error } = await supabase
-    .from("folders")
-    .delete()
-    .eq("id", id)
-    .eq("user_id", authState.user.id);
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  revalidatePublicFolderShares(affectedShareSlugs);
-
-  return NextResponse.json({ success: true });
 }

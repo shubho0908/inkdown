@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,25 +21,23 @@ interface RenameDialogProps {
   onRename: (newName: string) => void;
 }
 
-export function RenameDialog({
-  open,
-  onOpenChange,
-  currentName,
-  type,
-  onRename,
-}: RenameDialogProps) {
-  const [localName, setLocalName] = useState(currentName);
+interface RenameDialogFormProps {
+  currentName: string;
+  type: "file" | "folder";
+  onRename: (newName: string) => void;
+  onOpenChange: (open: boolean) => void;
+}
+
+function RenameDialogForm({ currentName, type, onRename, onOpenChange }: RenameDialogFormProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (open) {
-      inputRef.current?.focus();
-    }
-  }, [open]);
+    inputRef.current?.focus();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = localName.trim();
+    const trimmed = (inputRef.current?.value ?? "").trim();
     if (trimmed && trimmed !== currentName) {
       onRename(trimmed);
     }
@@ -47,38 +45,57 @@ export function RenameDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent key={currentName} className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Rename {type}</DialogTitle>
-          <DialogDescription>Enter a new name for this {type}.</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                ref={inputRef}
-                value={localName}
-                onChange={(e) => setLocalName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleSubmit(e);
-                  }
-                }}
-              />
-            </div>
+    <>
+      <DialogHeader>
+        <DialogTitle>Rename {type}</DialogTitle>
+        <DialogDescription>Enter a new name for this {type}.</DialogDescription>
+      </DialogHeader>
+      <form onSubmit={handleSubmit}>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              ref={inputRef}
+              defaultValue={currentName}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSubmit(e);
+                }
+              }}
+            />
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={!localName.trim() || localName.trim() === currentName}>
-              Rename
-            </Button>
-          </DialogFooter>
-        </form>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button type="submit">Rename</Button>
+        </DialogFooter>
+      </form>
+    </>
+  );
+}
+
+export function RenameDialog({
+  open,
+  onOpenChange,
+  currentName,
+  type,
+  onRename,
+}: RenameDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        {open ? (
+          <RenameDialogForm
+            key={currentName}
+            currentName={currentName}
+            type={type}
+            onRename={onRename}
+            onOpenChange={onOpenChange}
+          />
+        ) : null}
       </DialogContent>
     </Dialog>
   );

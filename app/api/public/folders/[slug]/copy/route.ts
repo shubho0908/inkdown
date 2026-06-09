@@ -1,115 +1,64 @@
-import { requireVerifiedUser } from "@/lib/auth";
+import { requireVerifiedUser } from "@/lib/auth/session";
 import { createAuthErrorResponse } from "@/lib/auth/server";
+import { createFile } from "@/lib/db/files";
+import { insertFolder } from "@/lib/db/folders";
+import { getPublicFolderSnapshot } from "@/lib/db/public-snapshot";
 import {
   collectPublicFolderShareSlugsForFolderCreate,
   listOwnedFolderShareState,
   revalidatePublicFolderShares,
 } from "@/lib/public-share-cache";
-import { createClient } from "@/lib/supabase/server";
+import { parseJsonBody } from "@/lib/validation/parse";
+import { copySharedItemBodySchema } from "@/lib/validation/requests";
+import type { Folder } from "@/lib/validation/models";
 import { NextResponse } from "next/server";
 
-interface CopyFolderRequest {
-  destination_parent_id: string | null;
-}
+function groupFoldersByDepthFromRoot(foldersToGroup: Folder[], rootFolderId: string): Folder[][] {
+  const folderById = new Map(foldersToGroup.map((folder) => [folder.id, folder]));
+  const depthById = new Map<string, number>();
 
-interface SharedFolderRow {
-  id: string;
-  user_id: string;
-  name: string;
-  parent_id: string | null;
-  slug: string | null;
-  is_public: boolean;
-  created_at: string;
-  updated_at: string;
-}
+  const getDepth = (folderId: string): number => {
+    const cached = depthById.get(folderId);
+    if (cached !== undefined) return cached;
 
-interface SharedFileRow {
-  id: string;
-  user_id: string;
-  folder_id: string;
-  name: string;
-  content: string;
-  slug: string | null;
-  is_public: boolean;
-  created_at: string;
-  updated_at: string;
-}
+    const folder = folderById.get(folderId);
+    if (!folder || folder.id === rootFolderId) {
+      depthById.set(folderId, 0);
+      return 0;
+    }
 
-async function fetchSharedFolderSnapshot(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  slug: string,
-) {
-  const { data: folders, error: foldersError } = await supabase.rpc(
-    "get_public_folder_subtree_folders",
-    { folder_slug: slug },
-  );
-
-  if (foldersError) {
-    throw new Error(`Failed to fetch shared folders: ${foldersError.message}`);
-  }
-
-  const sharedFolders = (folders ?? []) as SharedFolderRow[];
-  const rootFolder = sharedFolders.find((folder) => folder.slug === slug);
-
-  if (!rootFolder) {
-    throw new Error("Shared folder not found");
-  }
-
-  const { data: fileRows, error: filesError } = await supabase.rpc(
-    "get_public_folder_subtree_files",
-    { folder_slug: slug },
-  );
-
-  if (filesError) {
-    throw new Error(`Failed to fetch shared files: ${filesError.message}`);
-  }
-
-  const sharedFileRows = (fileRows ?? []) as Array<Omit<SharedFileRow, "content">>;
-  const files = await Promise.all(
-    sharedFileRows.map(async (file) => {
-      const { data: fileContentRows, error: fileContentError } = await supabase.rpc(
-        "get_public_folder_file",
-        {
-          folder_slug: slug,
-          target_file_id: file.id,
-        },
-      );
-
-      if (fileContentError) {
-        throw new Error(`Failed to fetch file content: ${fileContentError.message}`);
-      }
-
-      const [fileWithContent] = (fileContentRows ?? []) as SharedFileRow[];
-      if (!fileWithContent) {
-        throw new Error(`Failed to fetch file content for "${file.name}"`);
-      }
-
-      return fileWithContent;
-    }),
-  );
-
-  return {
-    rootFolder,
-    folders: sharedFolders,
-    files,
+    const depth = getDepth(folder.parent_id ?? "") + 1;
+    depthById.set(folderId, depth);
+    return depth;
   };
+
+  for (const folder of foldersToGroup) {
+    getDepth(folder.id);
+  }
+
+  const maxDepth = Math.max(...depthById.values());
+  const batches: Folder[][] = [];
+
+  for (let depth = 0; depth <= maxDepth; depth += 1) {
+    batches.push(foldersToGroup.filter((folder) => depthById.get(folder.id) === depth));
+  }
+
+  return batches;
 }
 
-function sortFoldersForCopy(folders: SharedFolderRow[], rootFolderId: string) {
-  const foldersByParentId = new Map<string | null, SharedFolderRow[]>();
+function sortFoldersForCopy(foldersToSort: Folder[], rootFolderId: string) {
+  const foldersByParentId = new Map<string | null, Folder[]>();
 
-  for (const folder of folders) {
+  for (const folder of foldersToSort) {
     const siblings = foldersByParentId.get(folder.parent_id) ?? [];
     siblings.push(folder);
     foldersByParentId.set(folder.parent_id, siblings);
   }
 
-  const rootFolder = folders.find((folder) => folder.id === rootFolderId);
-  if (!rootFolder) {
-    return [];
-  }
+  const rootFolder = foldersToSort.find((folder) => folder.id === rootFolderId);
+  if (!rootFolder) return [];
 
-  const sortedFolders: SharedFolderRow[] = [];
+  const sortedFolders: Folder[] = [];
   const queue = [rootFolder];
 
   while (queue.length > 0) {
@@ -121,137 +70,118 @@ function sortFoldersForCopy(folders: SharedFolderRow[], rootFolderId: string) {
   return sortedFolders;
 }
 
-async function copyFolderSnapshot(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
-  snapshot: Awaited<ReturnType<typeof fetchSharedFolderSnapshot>>,
-  destinationParentId: string | null,
-) {
-  const folderMap = new Map<string, string>();
-  const fileMap = new Map<string, string>();
-  const foldersToCopy = sortFoldersForCopy(snapshot.folders, snapshot.rootFolder.id);
-
-  if (foldersToCopy.length !== snapshot.folders.length) {
-    throw new Error("Shared folder tree is incomplete");
-  }
-
-  for (const folder of foldersToCopy) {
-    const parentId =
-      folder.id === snapshot.rootFolder.id
-        ? destinationParentId
-        : folderMap.get(folder.parent_id ?? "");
-
-    if (folder.id !== snapshot.rootFolder.id && !parentId) {
-      throw new Error(`Missing copied parent for folder "${folder.name}"`);
-    }
-
-    const { data: newFolder, error: createError } = await supabase
-      .from("folders")
-      .insert({
-        name: folder.name,
-        parent_id: parentId,
-        user_id: userId,
-        is_public: false,
-        slug: null,
-      })
-      .select()
-      .single();
-
-    if (createError || !newFolder) {
-      throw new Error(`Failed to create folder: ${createError?.message}`);
-    }
-
-    folderMap.set(folder.id, newFolder.id);
-  }
-
-  for (const file of snapshot.files) {
-    const newFolderId = folderMap.get(file.folder_id);
-
-    if (!newFolderId) {
-      throw new Error(`Missing copied folder for file "${file.name}"`);
-    }
-
-    const { data: newFile, error: fileError } = await supabase
-      .from("files")
-      .insert({
-        name: file.name,
-        folder_id: newFolderId,
-        content: file.content,
-        user_id: userId,
-        is_public: false,
-        slug: null,
-      })
-      .select()
-      .single();
-
-    if (fileError || !newFile) {
-      throw new Error(`Failed to create file: ${fileError?.message}`);
-    }
-
-    fileMap.set(file.id, newFile.id);
-  }
-
-  return { folderMap, fileMap };
-}
-
 export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const supabase = await createClient();
-  const { slug } = await params;
-
-  const authState = await requireVerifiedUser(supabase);
+  const authState = await requireVerifiedUser();
   if (authState.kind !== "authenticated") {
     return createAuthErrorResponse(authState);
   }
 
-  const body: CopyFolderRequest = await request.json();
-  const { destination_parent_id } = body;
-
-  // Validate destination folder
-  let folderShareState = [] as Awaited<ReturnType<typeof listOwnedFolderShareState>>;
-  try {
-    folderShareState = await listOwnedFolderShareState(supabase, authState.user.id);
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Could not load folders" },
-      { status: 500 },
-    );
+  const [{ slug }, parsed] = await Promise.all([
+    params,
+    parseJsonBody(request, copySharedItemBodySchema),
+  ]);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
-  if (destination_parent_id) {
-    const parentFolder = folderShareState.find((folder) => folder.id === destination_parent_id);
-    if (!parentFolder) {
-      return NextResponse.json({ error: "Invalid destination folder" }, { status: 400 });
+  const { destination_parent_id } = parsed.data;
+
+  try {
+    const folderShareState = await listOwnedFolderShareState(authState.user.id);
+
+    if (destination_parent_id) {
+      const parentFolder = folderShareState.find((folder) => folder.id === destination_parent_id);
+      if (!parentFolder) {
+        return NextResponse.json({ error: "Invalid destination folder" }, { status: 400 });
+      }
     }
-  }
 
-  // Calculate affected share slugs for revalidation
-  const affectedShareSlugs = collectPublicFolderShareSlugsForFolderCreate(
-    folderShareState,
-    destination_parent_id || null,
-  );
-
-  try {
-    const snapshot = await fetchSharedFolderSnapshot(supabase, slug);
-    const { folderMap, fileMap } = await copyFolderSnapshot(
-      supabase,
-      authState.user.id,
-      snapshot,
+    const affectedShareSlugs = collectPublicFolderShareSlugsForFolderCreate(
+      folderShareState,
       destination_parent_id || null,
     );
 
-    // Revalidate public folder shares
+    const snapshot = await getPublicFolderSnapshot(slug);
+    if (!snapshot) {
+      return NextResponse.json({ error: "Shared folder not found" }, { status: 404 });
+    }
+
+    const foldersToCopy = sortFoldersForCopy(snapshot.folders, snapshot.rootFolder.id);
+
+    if (foldersToCopy.length !== snapshot.folders.length) {
+      throw new Error("Shared folder tree is incomplete");
+    }
+
+    const userId = authState.user.id;
+    const rootFolderId = snapshot.rootFolder.id;
+    const folderMap = new Map<string, string>();
+    const folderBatches = groupFoldersByDepthFromRoot(foldersToCopy, rootFolderId);
+
+    async function copyFolderBatch(batchIndex: number): Promise<void> {
+      if (batchIndex >= folderBatches.length) return;
+
+      const batch = folderBatches[batchIndex];
+      const inserted = await Promise.all(
+        batch.map(async (folder) => {
+          const parentId =
+            folder.id === rootFolderId
+              ? destination_parent_id
+              : folderMap.get(folder.parent_id ?? "");
+
+          if (folder.id !== rootFolderId && !parentId) {
+            throw new Error(`Missing copied parent for folder "${folder.name}"`);
+          }
+
+          const newFolder = await insertFolder({
+            userId,
+            name: folder.name,
+            parentId: parentId || null,
+          });
+
+          return { sourceId: folder.id, newId: newFolder.id };
+        }),
+      );
+
+      for (const { sourceId, newId } of inserted) {
+        folderMap.set(sourceId, newId);
+      }
+
+      await copyFolderBatch(batchIndex + 1);
+    }
+
+    await copyFolderBatch(0);
+
+    await Promise.all(
+      snapshot.files.map(async (file) => {
+        if (!file.folder_id) {
+          throw new Error(`Shared file "${file.name}" is missing a folder reference`);
+        }
+
+        const newFolderId = folderMap.get(file.folder_id);
+        if (!newFolderId) {
+          throw new Error(`Missing copied folder for file "${file.name}"`);
+        }
+
+        await createFile({
+          userId: authState.user.id,
+          name: file.name,
+          folderId: newFolderId,
+          content: file.content ?? "",
+        });
+      }),
+    );
+
     revalidatePublicFolderShares(affectedShareSlugs);
 
     return NextResponse.json({
       success: true,
       folderId: folderMap.get(snapshot.rootFolder.id),
       folderCount: folderMap.size,
-      fileCount: fileMap.size,
+      fileCount: snapshot.files.length,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to copy folder";
     const status = message === "Shared folder not found" ? 404 : 500;
-
     return NextResponse.json({ error: message }, { status });
   }
 }

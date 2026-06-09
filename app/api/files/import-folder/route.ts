@@ -1,210 +1,128 @@
-import { requireVerifiedUser } from "@/lib/auth";
+import { requireVerifiedUser } from "@/lib/auth/session";
 import { createAuthErrorResponse } from "@/lib/auth/server";
 import { formatFolderName } from "@/lib/folder-utils";
-import {
-  normalizeMarkdownImportFileName,
-  validateMarkdownImportPayload,
-} from "@/lib/markdown-import";
+import { normalizeMarkdownImportFileName } from "@/lib/markdown-import-constants";
 import {
   collectPublicFolderShareSlugsForFileChange,
   listOwnedFolderShareState,
   revalidatePublicFolderShares,
 } from "@/lib/public-share-cache";
-import { createClient } from "@/lib/supabase/server";
+import { insertFolder } from "@/lib/db/folders";
+import { bulkInsertFiles } from "@/lib/db/files";
+import { parseJsonBody } from "@/lib/validation/parse";
+import { importFolderBodySchema } from "@/lib/validation/requests";
 import { NextResponse } from "next/server";
 
-interface FolderImportFolder {
-  name: string;
-  relativePath: string;
-}
-
-interface FolderImportFile {
-  name: string;
-  content: string;
-  relativePath: string;
-}
-
-interface ImportFolderRequestBody {
-  folder_id?: string | null;
-  folders?: FolderImportFolder[];
-  files?: FolderImportFile[];
-}
-
-// Performance and safety limits
-const MAX_FOLDERS = 500;
-const MAX_FILES = 1000;
-const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB
+const BATCH_SIZE = 150;
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-
-  const authState = await requireVerifiedUser(supabase);
+  const authState = await requireVerifiedUser();
   if (authState.kind !== "authenticated") {
     return createAuthErrorResponse(authState);
   }
 
-  let body: ImportFolderRequestBody;
+  const parsed = await parseJsonBody(request, importFolderBodySchema);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
+
+  const { folder_id: folderId, folders, files } = parsed.data;
 
   try {
-    body = (await request.json()) as ImportFolderRequestBody;
-  } catch {
-    return NextResponse.json({ error: "Invalid import payload" }, { status: 400 });
-  }
-
-  const folderId = body.folder_id ?? null;
-  const folders = Array.isArray(body.folders) ? body.folders : [];
-  const files = Array.isArray(body.files) ? body.files : [];
-
-  // Validate limits
-  if (folders.length > MAX_FOLDERS) {
-    return NextResponse.json(
-      { error: `Too many folders. Maximum ${MAX_FOLDERS} folders allowed.` },
-      { status: 400 },
-    );
-  }
-
-  if (files.length > MAX_FILES) {
-    return NextResponse.json(
-      { error: `Too many files. Maximum ${MAX_FILES} files allowed.` },
-      { status: 400 },
-    );
-  }
-
-  // Calculate total size
-  const totalSize = files.reduce((sum, file) => sum + file.content.length, 0);
-  if (totalSize > MAX_TOTAL_SIZE) {
-    return NextResponse.json(
-      { error: `Total content size too large. Maximum ${MAX_TOTAL_SIZE / 1024 / 1024}MB allowed.` },
-      { status: 400 },
-    );
-  }
-
-  // Validate files
-  const validationError = validateMarkdownImportPayload(files);
-  if (validationError) {
-    return NextResponse.json({ error: validationError }, { status: 400 });
-  }
-
-  let folderShareState = [] as Awaited<ReturnType<typeof listOwnedFolderShareState>>;
-
-  try {
-    folderShareState = await listOwnedFolderShareState(supabase, authState.user.id);
+    const folderShareState = await listOwnedFolderShareState(authState.user.id);
 
     if (folderId && !folderShareState.find((folder) => folder.id === folderId)) {
       return NextResponse.json({ error: "Invalid target folder" }, { status: 400 });
     }
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Could not validate target folder" },
-      { status: 500 },
+
+    const affectedShareSlugs = collectPublicFolderShareSlugsForFileChange(
+      folderShareState,
+      folderId ?? null,
+      folderId ?? null,
     );
-  }
 
-  // Collect affected share slugs
-  const affectedShareSlugs = collectPublicFolderShareSlugsForFileChange(
-    folderShareState,
-    folderId,
-    folderId,
-  );
-
-  try {
-    // Create folders first (in topological order - parents before children)
-    // Sort folders by depth to ensure parents are created before children
-    // Pre-calculate depths to avoid repeated string splitting
     const foldersWithDepth = folders.map((folder) => ({
       ...folder,
       depth: folder.relativePath.split("/").length,
     }));
 
     const sortedFolders = foldersWithDepth.sort((a, b) => a.depth - b.depth);
+    const foldersByDepth = new Map<number, typeof sortedFolders>();
+    for (const folder of sortedFolders) {
+      const siblings = foldersByDepth.get(folder.depth) ?? [];
+      siblings.push(folder);
+      foldersByDepth.set(folder.depth, siblings);
+    }
 
+    const userId = authState.user.id;
     const folderPathToId = new Map<string, string>();
     const createdFolders: Array<{ id: string; name: string; parent_id: string | null }> = [];
+    const depths = [...foldersByDepth.keys()].toSorted((a, b) => a - b);
 
-    // Insert folders one at a time to maintain parent-child relationships
-    for (const folder of sortedFolders) {
-      // Determine parent folder dynamically (parent must already exist due to sorting)
-      const pathParts = folder.relativePath.split("/");
-      const folderName = pathParts.pop()!;
-      const parentPath = pathParts.join("/");
+    async function createFoldersAtDepth(depthIndex: number): Promise<void> {
+      if (depthIndex >= depths.length) return;
 
-      let parentId = folderId;
-      if (parentPath && folderPathToId.has(parentPath)) {
-        parentId = folderPathToId.get(parentPath)!;
+      const depth = depths[depthIndex];
+      const batch = foldersByDepth.get(depth) ?? [];
+      const inserted = await Promise.all(
+        batch.map(async (folder) => {
+          const pathParts = folder.relativePath.split("/");
+          const folderName = pathParts.pop()!;
+          const parentPath = pathParts.join("/");
+
+          let parentId = folderId ?? null;
+          if (parentPath && folderPathToId.has(parentPath)) {
+            parentId = folderPathToId.get(parentPath)!;
+          }
+
+          const createdFolder = await insertFolder({
+            userId,
+            name: formatFolderName(folderName),
+            parentId,
+          });
+
+          return { relativePath: folder.relativePath, createdFolder };
+        }),
+      );
+
+      for (const { relativePath, createdFolder } of inserted) {
+        folderPathToId.set(relativePath, createdFolder.id);
+        createdFolders.push(createdFolder);
       }
 
-      const { data: createdFolder, error: folderError } = await supabase
-        .from("folders")
-        .insert({
-          name: formatFolderName(folderName),
-          parent_id: parentId,
-          user_id: authState.user.id,
-        })
-        .select()
-        .single();
-
-      if (folderError) {
-        console.error(`Failed to create folder ${folder.relativePath}:`, folderError);
-        throw new Error(`Failed to create folder ${folder.relativePath}: ${folderError.message}`);
-      }
-
-      folderPathToId.set(folder.relativePath, createdFolder.id);
-      createdFolders.push(createdFolder);
+      await createFoldersAtDepth(depthIndex + 1);
     }
 
-    // Create files in batches for better performance
-    const BATCH_SIZE = 150;
-    const allCreatedFiles: Array<{
-      id: string;
-      name: string;
-      content: string;
-      folder_id: string | null;
-    }> = [];
+    await createFoldersAtDepth(0);
 
-    // Process files in batches without creating intermediate arrays
-    for (let i = 0; i < files.length; i += BATCH_SIZE) {
-      const batchEnd = Math.min(i + BATCH_SIZE, files.length);
-      const filesToInsert = [];
+    const fileBatches = Array.from({ length: Math.ceil(files.length / BATCH_SIZE) }, (_, index) =>
+      files.slice(index * BATCH_SIZE, (index + 1) * BATCH_SIZE),
+    );
 
-      for (let j = i; j < batchEnd; j++) {
-        const file = files[j];
-        const pathParts = file.relativePath.split("/");
-        pathParts.pop(); // Remove file name
-        const folderPath = pathParts.join("/");
+    const batchResults = await Promise.all(
+      fileBatches.map((batch) => {
+        const payload = batch.map((file) => {
+          const pathParts = file.relativePath.split("/");
+          pathParts.pop();
+          const folderPath = pathParts.join("/");
 
-        let fileFolderId = folderId;
-        if (folderPath && folderPathToId.has(folderPath)) {
-          fileFolderId = folderPathToId.get(folderPath)!;
-        }
+          let fileFolderId = folderId ?? null;
+          if (folderPath && folderPathToId.has(folderPath)) {
+            fileFolderId = folderPathToId.get(folderPath)!;
+          }
 
-        filesToInsert.push({
-          name: normalizeMarkdownImportFileName(file.name),
-          content: file.content,
-          folder_id: fileFolderId,
-          user_id: authState.user.id,
+          return {
+            name: normalizeMarkdownImportFileName(file.name),
+            content: file.content,
+            folderId: fileFolderId,
+          };
         });
-      }
 
-      const { data: batchFiles, error: filesError } = await supabase
-        .from("files")
-        .insert(filesToInsert)
-        .select();
+        return bulkInsertFiles(authState.user.id, payload);
+      }),
+    );
 
-      if (filesError) {
-        console.error("Failed to create files:", filesError);
-        // Attempt to clean up created folders on failure
-        await supabase
-          .from("folders")
-          .delete()
-          .in(
-            "id",
-            createdFolders.map((f) => f.id),
-          );
-        throw new Error(`Failed to create files: ${filesError.message}`);
-      }
-
-      allCreatedFiles.push(...batchFiles);
-    }
+    const allCreatedFiles = batchResults.flat();
 
     revalidatePublicFolderShares(affectedShareSlugs);
 

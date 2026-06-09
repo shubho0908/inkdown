@@ -1,3 +1,4 @@
+import { HighlightedHtml } from "@/components/highlighted-html";
 import hljs from "highlight.js/lib/common";
 import { escapeHtml, formatLanguageLabel, resolveLanguage } from "@/lib/code-block";
 
@@ -28,9 +29,10 @@ export function StaticCodeBlock({ code, language }: StaticCodeBlockProps) {
         </span>
       </div>
       <pre className="overflow-x-auto p-4 text-xs leading-5 sm:text-sm sm:leading-6">
-        <code
+        <HighlightedHtml
+          as="code"
+          html={highlightedCode}
           className="hljs block min-w-full bg-transparent p-0 font-mono"
-          dangerouslySetInnerHTML={{ __html: highlightedCode }}
         />
       </pre>
     </div>

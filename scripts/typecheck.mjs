@@ -2,10 +2,13 @@ import { existsSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 
-const devTypesPath = join(process.cwd(), '.next', 'dev', 'types')
-
-if (existsSync(devTypesPath)) {
-  rmSync(devTypesPath, { recursive: true, force: true })
+for (const typesPath of [
+  join(process.cwd(), '.next', 'dev', 'types'),
+  join(process.cwd(), '.next', 'types'),
+]) {
+  if (existsSync(typesPath)) {
+    rmSync(typesPath, { recursive: true, force: true })
+  }
 }
 
 const result = spawnSync('bun', ['x', 'tsc', '--noEmit'], {

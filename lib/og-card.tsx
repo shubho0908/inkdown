@@ -3,6 +3,43 @@ import { DocumentContent } from "@/lib/og-document-content";
 import { MarketingContent } from "@/lib/og-marketing-content";
 import { clampText, getHostLabel, getOgBaseUrl } from "@/lib/og-shared";
 
+const CARD_ROOT_STYLE = {
+  height: "100%",
+  width: "100%",
+  display: "flex",
+  position: "relative" as const,
+  overflow: "hidden",
+  background: "#18181b",
+  color: "#f8fafc",
+  fontFamily: "Geist",
+};
+
+const MAIN_CONTENT_STYLE = {
+  display: "flex",
+  flex: 1,
+  minHeight: 0,
+  overflow: "hidden",
+  alignItems: "flex-start",
+  justifyContent: "flex-start",
+  width: "100%",
+  padding: "0 8px",
+};
+
+const CTA_BUTTON_STYLE = {
+  display: "flex",
+  alignItems: "center",
+  flexShrink: 0,
+  borderRadius: "999px",
+  border: "1px solid rgba(255,255,255,0.10)",
+  padding: "11px 24px",
+  background: "rgba(255,255,255,0.05)",
+  fontSize: "26px",
+  fontWeight: 500,
+  color: "rgba(241,245,249,0.7)",
+  letterSpacing: "0.01em",
+  whiteSpace: "nowrap" as const,
+};
+
 interface OgCardProps {
   title: string;
   preview?: string;
@@ -27,18 +64,7 @@ export function OgCard({
   const ctaText = isDoc ? `Open on ${hostLabel}` : `Get started on ${hostLabel}`;
 
   return (
-    <div
-      style={{
-        height: "100%",
-        width: "100%",
-        display: "flex",
-        position: "relative",
-        overflow: "hidden",
-        background: "#18181b",
-        color: "#f8fafc",
-        fontFamily: "Geist",
-      }}
-    >
+    <div style={CARD_ROOT_STYLE}>
       <div
         style={{
           position: "absolute",
@@ -72,18 +98,7 @@ export function OgCard({
           padding: "52px 60px 36px",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            flex: 1,
-            minHeight: 0,
-            overflow: "hidden",
-            alignItems: "flex-start",
-            justifyContent: "flex-start",
-            width: "100%",
-            padding: "0 8px",
-          }}
-        >
+        <div style={MAIN_CONTENT_STYLE}>
           {isDoc ? (
             <DocumentContent
               title={displayTitle}
@@ -108,6 +123,7 @@ export function OgCard({
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "18px" }}>
+            {/* react-doctor-disable-next-line react-doctor/nextjs-no-img-element */}
             <img
               src={logoUrl}
               width={48}
@@ -142,24 +158,7 @@ export function OgCard({
             </div>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              flexShrink: 0,
-              borderRadius: "999px",
-              border: "1px solid rgba(255,255,255,0.10)",
-              padding: "11px 24px",
-              background: "rgba(255,255,255,0.05)",
-              fontSize: "26px",
-              fontWeight: 500,
-              color: "rgba(241,245,249,0.7)",
-              letterSpacing: "0.01em",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {ctaText}
-          </div>
+          <div style={CTA_BUTTON_STYLE}>{ctaText}</div>
         </div>
       </div>
     </div>

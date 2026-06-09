@@ -29,7 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 import { canMoveTreeItem } from "@/lib/folder-tree";
 import { isExternalFileDragEvent, type FolderRef } from "@/lib/drag-utils";
-import type { TreeItem } from "@/lib/types";
+import type { TreeItem } from "@/lib/validation/models";
 
 const AUTO_EXPAND_DELAY = 500;
 
@@ -69,6 +69,7 @@ interface TreeNodeProps {
   onTogglePublic?: (item: TreeItem) => void;
   onDownloadFile?: (item: TreeItem) => void;
   onExportFolder?: (folderId: string, folderName: string) => void;
+  onPrefetchFile?: (fileId: string) => void;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -103,6 +104,7 @@ export const TreeNode = memo(function TreeNode({
   onTogglePublic,
   onDownloadFile,
   onExportFolder,
+  onPrefetchFile,
 }: TreeNodeProps) {
   const isFolder = item.type === "folder";
   const isSelected = selectedId === item.id;
@@ -152,6 +154,16 @@ export const TreeNode = memo(function TreeNode({
             "border-primary/60 bg-primary/10 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]",
         )}
         style={{ paddingLeft: `${level * 12 + 8}px` }}
+        onMouseEnter={() => {
+          if (!isFolder) {
+            onPrefetchFile?.(item.id);
+          }
+        }}
+        onFocus={() => {
+          if (!isFolder) {
+            onPrefetchFile?.(item.id);
+          }
+        }}
         onDragOver={(event) => {
           if (isFolder && isExternalFileDragEvent(event)) {
             event.stopPropagation();
@@ -219,6 +231,7 @@ export const TreeNode = memo(function TreeNode({
         }}
       >
         <button
+          type="button"
           draggable
           onDragStart={(event) => {
             event.dataTransfer.effectAllowed = "move";
@@ -237,6 +250,7 @@ export const TreeNode = memo(function TreeNode({
 
         {isFolder ? (
           <button
+            type="button"
             onClick={() => onToggleExpanded(item.id)}
             className="flex size-4 shrink-0 items-center justify-center"
             aria-label={`${isExpanded ? "Collapse" : "Expand"} ${item.name}`}
@@ -253,6 +267,7 @@ export const TreeNode = memo(function TreeNode({
         )}
 
         <button
+          type="button"
           onClick={() => {
             if (isFolder) {
               onToggleExpanded(item.id);
@@ -382,6 +397,7 @@ export const TreeNode = memo(function TreeNode({
               onTogglePublic={onTogglePublic}
               onDownloadFile={onDownloadFile}
               onExportFolder={onExportFolder}
+              onPrefetchFile={onPrefetchFile}
             />
           ))}
         </div>

@@ -1,81 +1,117 @@
 "use client";
 
-import { type DragEvent, useCallback, useDeferredValue, useEffect, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useReducer, useRef } from "react";
 import { ShareDialog } from "@/components/share-dialog";
 import { MarkdownEditorHeader, type ViewMode } from "@/components/markdown-editor-header";
 import { MarkdownEditorLoading } from "@/components/markdown-editor-loading";
 import { MarkdownEditorToolbar } from "@/components/markdown-editor-toolbar";
-import { MarkdownPreview } from "@/components/markdown-preview";
+import { MarkdownEditorWorkspace } from "@/components/markdown-editor-workspace";
 import { useIsMobile } from "@/hooks/use-mobile";
-import {
-  useToggleFilePublicMutation,
-  useUpdateFileMutation,
-} from "@/hooks/workspace/use-file-mutations";
+import { useMarkdownEditorFileDrop } from "@/hooks/use-markdown-editor-file-drop";
+import { useUpdateFileMutation } from "@/hooks/workspace/use-file-mutations";
+import { useShareVisibilityActions } from "@/hooks/workspace/use-share-visibility-actions";
 import { useFileQuery } from "@/hooks/workspace/use-workspace-queries";
 import { downloadMarkdownFile } from "@/lib/file-export";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface MarkdownEditorProps {
   fileId: string;
 }
 
-const hasDraggedFiles = (dataTransfer: DataTransfer) =>
-  Array.from(dataTransfer.items).some((item) => item.kind === "file");
-
-const getDroppedMarkdownFile = (files: FileList) => {
-  if (files.length !== 1) {
-    return { error: "Drop a single .md file into the editor." } as const;
-  }
-
-  const [file] = Array.from(files);
-  if (!file.name.toLowerCase().endsWith(".md")) {
-    return { error: "Only .md files can be dropped into the editor." } as const;
-  }
-
-  return { file } as const;
+type EditorState = {
+  content: string;
+  isSaving: boolean;
+  hasChanges: boolean;
+  viewMode: ViewMode;
+  shareOpen: boolean;
 };
+
+type EditorAction =
+  | { type: "file_loaded"; content: string }
+  | { type: "content_changed"; content: string }
+  | { type: "saving_started" }
+  | { type: "save_succeeded" }
+  | { type: "save_failed" }
+  | { type: "set_view_mode"; viewMode: ViewMode }
+  | { type: "set_share_open"; shareOpen: boolean };
+
+function editorReducer(state: EditorState, action: EditorAction): EditorState {
+  switch (action.type) {
+    case "file_loaded":
+      return {
+        ...state,
+        content: action.content,
+        hasChanges: false,
+        isSaving: false,
+      };
+    case "content_changed":
+      return {
+        ...state,
+        content: action.content,
+        hasChanges: true,
+      };
+    case "saving_started":
+      return { ...state, isSaving: true };
+    case "save_succeeded":
+      return { ...state, isSaving: false, hasChanges: false };
+    case "save_failed":
+      return { ...state, isSaving: false };
+    case "set_view_mode":
+      return { ...state, viewMode: action.viewMode };
+    case "set_share_open":
+      return { ...state, shareOpen: action.shareOpen };
+    default:
+      return state;
+  }
+}
 
 export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
   const isMobile = useIsMobile();
-  const { data: file, isLoading } = useFileQuery(fileId);
+  const { data: file } = useFileQuery(fileId);
 
-  const [content, setContent] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
-  const [isFileDropActive, setIsFileDropActive] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("split");
-  const [shareOpen, setShareOpen] = useState(false);
-  const prevFileIdRef = useRef<string | undefined>(undefined);
+  const [{ content, isSaving, hasChanges, viewMode, shareOpen }, dispatch] = useReducer(
+    editorReducer,
+    {
+      content: "",
+      isSaving: false,
+      hasChanges: false,
+      viewMode: "split",
+      shareOpen: false,
+    },
+  );
+  const loadedFileIdRef = useRef<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const fileDragDepthRef = useRef(0);
   const deferredPreviewContent = useDeferredValue(content);
   const updateFileMutation = useUpdateFileMutation({
     onSuccess: () => {
-      setHasChanges(false);
-      setIsSaving(false);
+      dispatch({ type: "save_succeeded" });
     },
   });
-  const toggleFilePublicMutation = useToggleFilePublicMutation();
+  const { toggle: toggleShareVisibility, isPendingFor: isShareTogglePendingFor } =
+    useShareVisibilityActions();
 
-  // Sync editor content when the loaded file changes.
-  // Using React's "storing information from previous renders" pattern instead of
-  // useEffect so that state is updated in the same render pass rather than
-  // causing a cascading second render via an effect.
-  // See: https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
-  if (file?.id !== prevFileIdRef.current) {
-    prevFileIdRef.current = file?.id;
-    if (file) {
-      setContent(file.content);
-      setHasChanges(false);
+  useEffect(() => {
+    loadedFileIdRef.current = null;
+  }, [fileId]);
+
+  useEffect(() => {
+    if (!file || file.content === undefined) {
+      return;
     }
-  }
+
+    if (loadedFileIdRef.current === file.id) {
+      return;
+    }
+
+    loadedFileIdRef.current = file.id;
+    dispatch({ type: "file_loaded", content: file.content });
+  }, [file]);
 
   const saveContent = useCallback(
     async (newContent: string) => {
       if (!fileId) return;
-      setIsSaving(true);
+      dispatch({ type: "saving_started" });
 
       try {
         await updateFileMutation.mutateAsync({
@@ -83,7 +119,7 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
           data: { content: newContent },
         });
       } catch {
-        setIsSaving(false);
+        dispatch({ type: "save_failed" });
       }
     },
     [fileId, updateFileMutation],
@@ -98,8 +134,7 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
 
   const handleContentChange = useCallback(
     (newContent: string) => {
-      setContent(newContent);
-      setHasChanges(true);
+      dispatch({ type: "content_changed", content: newContent });
 
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
@@ -112,77 +147,16 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
     [saveContent],
   );
 
-  const resetFileDropState = useCallback(() => {
-    fileDragDepthRef.current = 0;
-    setIsFileDropActive(false);
-  }, []);
-
-  const handleFileDragEnter = useCallback((event: DragEvent<HTMLDivElement>) => {
-    if (!hasDraggedFiles(event.dataTransfer)) {
-      return;
-    }
-
-    event.preventDefault();
-    fileDragDepthRef.current += 1;
-    setIsFileDropActive(true);
-  }, []);
-
-  const handleFileDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
-    if (!hasDraggedFiles(event.dataTransfer)) {
-      return;
-    }
-
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "copy";
-    setIsFileDropActive(true);
-  }, []);
-
-  const handleFileDragLeave = useCallback((event: DragEvent<HTMLDivElement>) => {
-    if (!hasDraggedFiles(event.dataTransfer)) {
-      return;
-    }
-
-    event.preventDefault();
-    fileDragDepthRef.current = Math.max(fileDragDepthRef.current - 1, 0);
-    if (fileDragDepthRef.current === 0) {
-      setIsFileDropActive(false);
-    }
-  }, []);
-
-  const handleFileDrop = useCallback(
-    async (event: DragEvent<HTMLDivElement>) => {
-      if (!hasDraggedFiles(event.dataTransfer)) {
-        return;
-      }
-
-      event.preventDefault();
-      resetFileDropState();
-
-      const result = getDroppedMarkdownFile(event.dataTransfer.files);
-      if ("error" in result) {
-        toast.error(result.error);
-        return;
-      }
-
-      try {
-        const droppedContent = await result.file.text();
-        handleContentChange(droppedContent);
-        toast.success(`Loaded "${result.file.name}" into the editor`);
-
-        requestAnimationFrame(() => {
-          const textarea = textareaRef.current;
-          if (!textarea) return;
-
-          textarea.focus();
-          const cursorPosition = droppedContent.length;
-          textarea.setSelectionRange(cursorPosition, cursorPosition);
-        });
-      } catch {
-        toast.error("Could not read the dropped markdown file");
-      }
-    },
-    [handleContentChange, resetFileDropState],
-  );
+  const {
+    isFileDropActive,
+    handleFileDragEnter,
+    handleFileDragOver,
+    handleFileDragLeave,
+    handleFileDrop,
+  } = useMarkdownEditorFileDrop({
+    textareaRef,
+    onContentChange: handleContentChange,
+  });
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -197,9 +171,11 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
   }, [handleSave]);
 
   useEffect(() => {
+    const timeoutRef = saveTimeoutRef;
     return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
+      const timeoutId = timeoutRef.current;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
       }
     };
   }, []);
@@ -239,9 +215,12 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
     }, 0);
   };
 
-  const handleShareToggle = async (isPublic: boolean) => {
-    if (!file) return;
-    await toggleFilePublicMutation.mutateAsync({ file, isPublic });
+  const handleShareToggle = (isPublic: boolean) => {
+    if (!file) {
+      return;
+    }
+
+    toggleShareVisibility({ type: "file", file, isPublic });
   };
 
   const handleDownloadMarkdown = useCallback(() => {
@@ -258,16 +237,16 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
     }
   }, [content, file]);
 
-  if (isLoading) {
-    return <MarkdownEditorLoading />;
-  }
-
   if (!file) {
     return (
       <div className="flex h-full items-center justify-center text-muted-foreground">
         File not found
       </div>
     );
+  }
+
+  if (file.content === undefined) {
+    return <MarkdownEditorLoading />;
   }
 
   return (
@@ -277,8 +256,10 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
         isSaving={isSaving}
         hasChanges={hasChanges}
         viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        onShare={() => setShareOpen(true)}
+        onViewModeChange={(nextViewMode) =>
+          dispatch({ type: "set_view_mode", viewMode: nextViewMode })
+        }
+        onShare={() => dispatch({ type: "set_share_open", shareOpen: true })}
         onDownload={handleDownloadMarkdown}
         onSave={handleSave}
       />
@@ -287,64 +268,30 @@ export function MarkdownEditor({ fileId }: MarkdownEditorProps) {
         <MarkdownEditorToolbar onWrap={insertMarkdown} onLinePrefix={insertAtLineStart} />
       )}
 
-      <div
-        className={cn(
-          "relative flex min-h-0 min-w-0 flex-1 overflow-hidden",
-          viewMode === "split" && isMobile ? "flex-col" : "flex-row",
-        )}
+      <MarkdownEditorWorkspace
+        viewMode={viewMode}
+        isMobile={isMobile}
+        isFileDropActive={isFileDropActive}
+        content={content}
+        previewContent={deferredPreviewContent}
+        textareaRef={textareaRef}
+        onContentChange={handleContentChange}
         onDragEnter={handleFileDragEnter}
         onDragOver={handleFileDragOver}
         onDragLeave={handleFileDragLeave}
         onDrop={handleFileDrop}
-      >
-        {isFileDropActive && (
-          <div className="pointer-events-none absolute inset-4 z-10 flex items-center justify-center rounded-xl border border-dashed border-primary/40 bg-background/95 px-6 text-center text-sm font-medium text-foreground shadow-sm">
-            Drop a single .md file to replace the current editor content
-          </div>
-        )}
-
-        {(viewMode === "edit" || viewMode === "split") && (
-          <div
-            className={cn(
-              "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background",
-              viewMode === "split"
-                ? cn("flex-1 basis-1/2", isMobile ? "border-b" : "border-r")
-                : "w-full",
-            )}
-          >
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={(event) => handleContentChange(event.target.value)}
-              className="min-h-0 w-full flex-1 resize-none overflow-x-hidden bg-background p-4 font-mono text-sm leading-6 whitespace-pre-wrap [overflow-wrap:anywhere] focus:outline-none sm:p-6"
-              placeholder="Start writing markdown..."
-              spellCheck={false}
-              wrap="soft"
-            />
-          </div>
-        )}
-
-        {(viewMode === "preview" || viewMode === "split") && (
-          <div
-            className={cn(
-              "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
-              viewMode === "split" ? "flex-1 basis-1/2" : "w-full",
-            )}
-          >
-            <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6">
-              <MarkdownPreview content={deferredPreviewContent} />
-            </div>
-          </div>
-        )}
-      </div>
+      />
 
       <ShareDialog
         open={shareOpen}
-        onOpenChange={setShareOpen}
+        onOpenChange={(nextShareOpen) =>
+          dispatch({ type: "set_share_open", shareOpen: nextShareOpen })
+        }
         itemName={file.name}
         itemType="file"
         isPublic={file.is_public}
         slug={file.slug}
+        isPending={isShareTogglePendingFor(file.id)}
         onTogglePublic={handleShareToggle}
       />
     </div>

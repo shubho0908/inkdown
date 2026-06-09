@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Folder, FolderOpen, ChevronDown, ChevronRight, Move, Navigation } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { collectDescendantFolderIds } from "@/lib/folder-tree";
-import type { Folder as FolderType, TreeItem } from "@/lib/types";
+import type { Folder as FolderType, TreeItem } from "@/lib/validation/models";
 
 interface MoveItemDialogProps {
   open: boolean;
@@ -124,23 +124,8 @@ function FolderTreeItem({
           "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
           isSelected && !node.isDisabled && "bg-accent text-accent-foreground",
           node.isDisabled && "opacity-50",
-          !node.isDisabled &&
-            "cursor-pointer hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none",
         )}
         style={{ paddingLeft: `${node.level * 16 + 8}px` }}
-        onClick={() => {
-          if (!node.isDisabled) {
-            onSelectFolder(node.folder.id);
-          }
-        }}
-        onKeyDown={(e) => {
-          if (!node.isDisabled && (e.key === "Enter" || e.key === " ")) {
-            e.preventDefault();
-            onSelectFolder(node.folder.id);
-          }
-        }}
-        tabIndex={node.isDisabled ? -1 : 0}
-        role="button"
       >
         {hasChildren ? (
           <button
@@ -150,6 +135,7 @@ function FolderTreeItem({
               e.stopPropagation();
               onToggleFolder(node.folder.id);
             }}
+            disabled={node.isDisabled}
             tabIndex={-1}
           >
             {isExpanded ? (
@@ -161,20 +147,35 @@ function FolderTreeItem({
         ) : (
           <span className="size-5 shrink-0" />
         )}
-        {isExpanded ? (
-          <FolderOpen className="size-4 shrink-0 text-muted-foreground" />
-        ) : (
-          <Folder className="size-4 shrink-0 text-muted-foreground" />
-        )}
-        <span className="min-w-0 flex-1 truncate">{node.folder.name}</span>
-        {node.isCurrentLocation && (
-          <span className="shrink-0 rounded-full border bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
-            Current
-          </span>
-        )}
+        <button
+          type="button"
+          className={cn(
+            "flex min-w-0 flex-1 items-center gap-2 text-left focus-visible:outline-none",
+            !node.isDisabled &&
+              "hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring/60",
+          )}
+          onClick={() => {
+            if (!node.isDisabled) {
+              onSelectFolder(node.folder.id);
+            }
+          }}
+          disabled={node.isDisabled}
+        >
+          {isExpanded ? (
+            <FolderOpen className="size-4 shrink-0 text-muted-foreground" />
+          ) : (
+            <Folder className="size-4 shrink-0 text-muted-foreground" />
+          )}
+          <span className="min-w-0 flex-1 truncate">{node.folder.name}</span>
+          {node.isCurrentLocation && (
+            <span className="shrink-0 rounded-full border bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
+              Current
+            </span>
+          )}
+        </button>
       </div>
       {isExpanded && hasChildren && (
-        <div role="group">
+        <div>
           {node.children.map((child) => (
             <FolderTreeItem
               key={child.folder.id}

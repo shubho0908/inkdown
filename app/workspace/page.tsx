@@ -1,7 +1,12 @@
 import { Metadata } from "next";
-import { getEmailVerificationRedirectPath, requireVerifiedUser } from "@/lib/auth";
+import {
+  getEmailVerificationRedirectPath,
+  VERIFICATION_RESEND_SOURCE,
+} from "@/lib/auth/email-verification-flow";
+import { requireVerifiedUser } from "@/lib/auth/session";
 import { DashboardWorkspace } from "@/components/dashboard-workspace";
-import { createClient } from "@/lib/supabase/server";
+import { WorkspaceHydrationBoundary } from "@/components/workspace-hydration-boundary";
+import { getWorkspaceBootstrapData } from "@/lib/workspace/server-bootstrap";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
@@ -14,16 +19,25 @@ export const metadata: Metadata = {
 };
 
 export default async function WorkspacePage() {
-  const supabase = await createClient();
-  const authState = await requireVerifiedUser(supabase);
+  const authState = await requireVerifiedUser();
 
   if (authState.kind === "unverified") {
-    redirect(getEmailVerificationRedirectPath(authState.user.email));
+    redirect(
+      getEmailVerificationRedirectPath(authState.user.email, {
+        resend: VERIFICATION_RESEND_SOURCE.GATE,
+      }),
+    );
   }
 
   if (authState.kind === "unauthenticated") {
     redirect("/auth/login");
   }
 
-  return <DashboardWorkspace />;
+  const { files, folders } = await getWorkspaceBootstrapData(authState.user.id);
+
+  return (
+    <WorkspaceHydrationBoundary files={files} folders={folders}>
+      <DashboardWorkspace />
+    </WorkspaceHydrationBoundary>
+  );
 }
