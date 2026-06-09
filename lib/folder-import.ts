@@ -1,8 +1,15 @@
 import { getDataTransferEntry } from "@/lib/data-transfer-entry";
 
+export interface DroppedImportSelection {
+  files: Array<{ file: File; relativePath: string }>;
+  folderPaths: string[];
+}
+
 export interface FileSystemEntryWithFile extends FileSystemEntry {
   file?: (callback: (file: File) => void, errorCallback?: (error: Error) => void) => void;
 }
+
+type FileWithRelativePath = File & { webkitRelativePath?: string };
 
 // Safety limits to prevent stack overflow and memory issues
 const MAX_DEPTH = 100;
@@ -190,4 +197,121 @@ export async function parseDroppedItems(
   }
 
   return { files: allFiles, folderPaths: allFolderPaths };
+}
+
+export function collectFolderPathsFromRelativePath(relativePath: string): string[] {
+  const slashIndex = relativePath.lastIndexOf("/");
+  if (slashIndex === -1) return [];
+
+  const folderPathSet = new Set<string>();
+  addFolderPathSegments(folderPathSet, relativePath.slice(0, slashIndex));
+  return [...folderPathSet].toSorted((a, b) => a.split("/").length - b.split("/").length);
+}
+
+function addFolderPathSegments(folderPathSet: Set<string>, directoryPath: string) {
+  const parts = directoryPath.split("/").filter(Boolean);
+  let current = "";
+
+  for (const part of parts) {
+    current = current ? `${current}/${part}` : part;
+    folderPathSet.add(current);
+  }
+}
+
+export function hasStructuredImport(selection: DroppedImportSelection): boolean {
+  if (selection.folderPaths.length > 0) return true;
+  return selection.files.some(({ relativePath }) => relativePath.includes("/"));
+}
+
+/**
+ * Enforces the invariant that every nested file path has matching folder paths.
+ */
+export function normalizeDroppedImportSelection(
+  selection: DroppedImportSelection,
+): DroppedImportSelection {
+  const folderPathSet = new Set(selection.folderPaths);
+
+  for (const { relativePath } of selection.files) {
+    for (const folderPath of collectFolderPathsFromRelativePath(relativePath)) {
+      folderPathSet.add(folderPath);
+    }
+  }
+
+  return {
+    files: selection.files,
+    folderPaths: [...folderPathSet].toSorted((a, b) => a.split("/").length - b.split("/").length),
+  };
+}
+
+/**
+ * Fallback when webkitGetAsEntry is unavailable or already invalidated.
+ * Folder drops from Chromium still populate File.webkitRelativePath.
+ */
+export function parseFilesFromWebkitRelativePaths(files: File[]): DroppedImportSelection {
+  const parsedFiles: DroppedImportSelection["files"] = [];
+  const folderPathSet = new Set<string>();
+
+  for (const file of files) {
+    const relativePath = file.webkitRelativePath?.trim() || file.name;
+    parsedFiles.push({ file, relativePath });
+
+    const slashIndex = relativePath.lastIndexOf("/");
+    if (slashIndex === -1) continue;
+
+    addFolderPathSegments(folderPathSet, relativePath.slice(0, slashIndex));
+  }
+
+  const folderPaths = [...folderPathSet].toSorted(
+    (a, b) => a.split("/").length - b.split("/").length,
+  );
+
+  return { files: parsedFiles, folderPaths };
+}
+
+async function captureFromDataTransferEntries(
+  items: DataTransferItem[],
+): Promise<DroppedImportSelection | null> {
+  if (!supportsWebkitGetAsEntry()) return null;
+
+  try {
+    const parsed = await parseDroppedItems(items);
+    return parsed.files.length > 0 ? normalizeDroppedImportSelection(parsed) : null;
+  } catch (error) {
+    console.error("Error parsing dropped entries:", error);
+    return null;
+  }
+}
+
+function captureFromDataTransferFiles(dataTransfer: DataTransfer): DroppedImportSelection | null {
+  const files = Array.from(dataTransfer.files ?? []);
+  if (files.length === 0) return null;
+
+  const hasRelativePaths = files.some((file) =>
+    Boolean((file as FileWithRelativePath).webkitRelativePath),
+  );
+
+  const selection = hasRelativePaths
+    ? parseFilesFromWebkitRelativePaths(files)
+    : {
+        files: files.map((file) => ({ file, relativePath: file.name })),
+        folderPaths: [],
+      };
+
+  return normalizeDroppedImportSelection(selection);
+}
+
+/**
+ * Capture dropped files while the DataTransfer is still valid.
+ * Must be awaited inside the drop handler before it returns.
+ */
+export async function captureDroppedImportSelection(
+  dataTransfer: DataTransfer,
+): Promise<DroppedImportSelection | null> {
+  const items = Array.from(dataTransfer.items ?? []).filter((item) => item.kind === "file");
+  if (items.length === 0) return null;
+
+  const fromEntries = await captureFromDataTransferEntries(items);
+  if (fromEntries) return fromEntries;
+
+  return captureFromDataTransferFiles(dataTransfer);
 }

@@ -11,6 +11,7 @@ import {
   useCreateFileMutation,
   useImportMarkdownFilesMutation,
 } from "@/hooks/workspace/use-file-mutations";
+import type { DroppedImportSelection } from "@/lib/folder-import";
 import { useCreateFolderMutation } from "@/hooks/workspace/use-folder-mutations";
 import { useShareVisibilityActions } from "@/hooks/workspace/use-share-visibility-actions";
 import {
@@ -23,6 +24,8 @@ import {
   usePrefetchFileContent,
 } from "@/hooks/workspace/prefetch-file-content";
 import { useFilesQuery, useFoldersQuery } from "@/hooks/workspace/use-workspace-queries";
+import { workspaceKeys } from "@/lib/query-keys";
+import type { File } from "@/lib/validation/models";
 import { downloadMarkdownFile } from "@/lib/file-export";
 import { useZipExport } from "@/hooks/use-zip-export";
 import { authClient } from "@/lib/auth/client";
@@ -118,6 +121,14 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
     onSuccess: ({ item }) => {
       if (item.type === "file" && selectedFileId === item.id) {
         onFileSelect(null);
+        return;
+      }
+
+      if (selectedFileId) {
+        const currentFiles = queryClient.getQueryData<File[]>(workspaceKeys.files()) ?? [];
+        if (!currentFiles.some((file) => file.id === selectedFileId)) {
+          onFileSelect(null);
+        }
       }
     },
   });
@@ -151,16 +162,15 @@ export function DashboardSidebar({ selectedFileId, onFileSelect }: DashboardSide
   };
 
   const handleImportMarkdownFiles = (
-    importedFiles: globalThis.File[],
+    selection: DroppedImportSelection,
     folderId: string | null,
-    items?: DataTransferItemList,
   ) => {
     if (importMarkdownFilesMutation.isPending) {
       toast.error("Markdown import already in progress");
       return;
     }
 
-    importMarkdownFilesMutation.mutate({ files: importedFiles, folderId, items });
+    importMarkdownFilesMutation.mutate({ selection, folderId });
   };
 
   const handleRename = (newName: string) => {

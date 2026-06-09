@@ -1,6 +1,4 @@
 "use client";
-
-import Link from "next/link";
 import { FilePlus, FolderPlus, LogOut, X } from "lucide-react";
 import { ZipExportButton } from "@/components/zip-export-button";
 import { FileTree } from "@/components/file-tree";
@@ -8,6 +6,7 @@ import { InkdownLogo } from "@/components/inkdown-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { DroppedImportSelection } from "@/lib/folder-import";
 import type { TreeItem } from "@/lib/validation/models";
 
 interface DashboardSidebarContentProps {
@@ -19,11 +18,7 @@ interface DashboardSidebarContentProps {
   onClose?: () => void;
   onCreateFile: (folderId: string | null) => void;
   onCreateFolder: (parentId: string | null) => void;
-  onImportFiles: (
-    files: globalThis.File[],
-    folderId: string | null,
-    items?: DataTransferItemList,
-  ) => void;
+  onImportFiles: (selection: DroppedImportSelection, folderId: string | null) => void;
   isImportingFiles?: boolean;
   onSelect: (item: TreeItem) => void;
   onMove: (item: TreeItem, targetFolderId: string | null) => void;
@@ -62,9 +57,7 @@ export function DashboardSidebarContent({
   return (
     <div className="flex h-full min-h-0 w-full flex-col bg-sidebar">
       <div className="flex h-16 items-center justify-between border-b px-4">
-        <Link href="/workspace">
-          <InkdownLogo size="md" />
-        </Link>
+        <InkdownLogo size="md" />
         <div className="flex items-center gap-1">
           {showCloseAction && (
             <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close workspace">

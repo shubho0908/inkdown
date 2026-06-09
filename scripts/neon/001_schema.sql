@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS folders (
 CREATE TABLE IF NOT EXISTS files (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
-  folder_id UUID REFERENCES folders(id) ON DELETE SET NULL,
+  folder_id UUID REFERENCES folders(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   content_key TEXT NOT NULL,
   content_size INTEGER NOT NULL DEFAULT 0,

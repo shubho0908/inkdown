@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { canMoveTreeItem, collectDescendantFolderIds } from "@/lib/folder-tree";
+import { canMoveTreeItem } from "@/lib/folder-tree";
 import { fetchJson } from "@/lib/api";
 import { workspaceKeys } from "@/lib/query-keys";
 import { isFile } from "@/lib/type-guards";
@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import {
   cancelWorkspaceQueries,
   getWorkspaceSnapshot,
+  removeFileFromCache,
+  removeWorkspaceSubtreeFromCache,
   replaceFile,
   replaceFolder,
   restoreWorkspaceSnapshot,
@@ -190,22 +192,9 @@ export function useDeleteTreeItemMutation(options?: MutationCallbacks<{ item: Tr
       const snapshot = getWorkspaceSnapshot(queryClient);
 
       if (item.type === "file") {
-        queryClient.setQueryData<File[]>(
-          workspaceKeys.files(),
-          snapshot.files.filter((file) => file.id !== item.id),
-        );
-        queryClient.removeQueries({ queryKey: workspaceKeys.file(item.id) });
+        removeFileFromCache(queryClient, item.id);
       } else {
-        const removedFolderIds = collectDescendantFolderIds(snapshot.folders, item.id);
-
-        queryClient.setQueryData<Folder[]>(
-          workspaceKeys.folders(),
-          snapshot.folders.filter((folder) => !removedFolderIds.has(folder.id)),
-        );
-        queryClient.setQueryData<File[]>(
-          workspaceKeys.files(),
-          snapshot.files.filter((file) => !file.folder_id || !removedFolderIds.has(file.folder_id)),
-        );
+        removeWorkspaceSubtreeFromCache(queryClient, item.id);
       }
 
       return snapshot;
@@ -223,6 +212,8 @@ export function useDeleteTreeItemMutation(options?: MutationCallbacks<{ item: Tr
       toast.error(error.message || `Could not delete ${getItemLabel(variables.item)}`);
     },
     onSuccess: (_result, variables) => {
+      void queryClient.invalidateQueries({ queryKey: workspaceKeys.folders() });
+      void queryClient.invalidateQueries({ queryKey: workspaceKeys.files() });
       toast.success(`Deleted "${variables.item.name}"`);
       options?.onSuccess?.({ item: variables.item });
     },

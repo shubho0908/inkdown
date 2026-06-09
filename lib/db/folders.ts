@@ -1,9 +1,10 @@
 import "server-only";
 
-import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm";
 
 import { db } from "@/lib/db/client";
-import { folders } from "@/lib/db/schema";
+import { files, folders } from "@/lib/db/schema";
+import { collectSubtreeFolderIds } from "@/lib/folder-subtree";
 import { toFolder } from "@/lib/db/rows";
 import type { Folder } from "@/lib/validation/models";
 
@@ -83,12 +84,34 @@ export async function updateFolder(
 }
 
 export async function deleteFolder(userId: string, folderId: string) {
-  const rows = await db
-    .delete(folders)
-    .where(and(eq(folders.id, folderId), eq(folders.userId, userId)))
-    .returning({ id: folders.id });
+  const folderRows = await db
+    .select({ id: folders.id, parentId: folders.parentId })
+    .from(folders)
+    .where(eq(folders.userId, userId));
 
-  return rows.length > 0;
+  if (!folderRows.some((folder) => folder.id === folderId)) {
+    return false;
+  }
+
+  const subtreeIds = collectSubtreeFolderIds(
+    folderRows.map((folder) => ({ id: folder.id, parentId: folder.parentId })),
+    folderId,
+  );
+
+  const subtreeIdList = [...subtreeIds];
+
+  return db.transaction(async (tx) => {
+    await tx
+      .delete(files)
+      .where(and(eq(files.userId, userId), inArray(files.folderId, subtreeIdList)));
+
+    const deleted = await tx
+      .delete(folders)
+      .where(and(eq(folders.id, folderId), eq(folders.userId, userId)))
+      .returning({ id: folders.id });
+
+    return deleted.length > 0;
+  });
 }
 
 export async function listPublicFolderRowsForSitemap() {

@@ -1,14 +1,10 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ApiError, fetchJson } from "@/lib/api";
+import { fetchJson } from "@/lib/api";
 import { workspaceKeys } from "@/lib/query-keys";
 import type { File } from "@/lib/validation/models";
-import {
-  fileSchema,
-  fileWithContentListSchema,
-  importFolderResponseSchema,
-} from "@/lib/validation/responses";
+import { fileSchema } from "@/lib/validation/responses";
 import { toast } from "sonner";
 import {
   cancelWorkspaceQueries,
@@ -19,17 +15,10 @@ import {
 } from "@/hooks/workspace/workspace-cache";
 import {
   MARKDOWN_IMPORT_MAX_FILE_BYTES,
-  MARKDOWN_IMPORT_READ_CONCURRENCY,
   isMarkdownFileName,
-  normalizeMarkdownImportFileName,
 } from "@/lib/markdown-import-constants";
-import {
-  formatMarkdownImportSkipMessage,
-  splitMarkdownImportSelection,
-  validateMarkdownImportSelection,
-} from "@/lib/markdown-import";
-import { parseDroppedItems, supportsWebkitGetAsEntry } from "@/lib/folder-import";
-import { FileReadQueue } from "@/lib/upload-queue";
+import type { DroppedImportSelection } from "@/lib/folder-import";
+import { importDroppedMarkdownSelection } from "@/lib/markdown-import-pipeline";
 
 interface CreateFileInput {
   folderId: string | null;
@@ -46,24 +35,22 @@ interface UpdateFileInput {
 }
 
 interface ImportMarkdownFilesInput {
-  files: globalThis.File[];
+  selection: DroppedImportSelection;
   folderId: string | null;
-  items?: DataTransferItemList;
-}
-
-interface ImportMarkdownFilesResult {
-  files: File[];
-  skippedMessage: string | null;
 }
 
 interface ImportMarkdownFilesCallbacks {
   onSuccess?: (files: File[]) => void;
 }
 
-function getMarkdownImportLoadingMessage(files: globalThis.File[]) {
-  const acceptedFiles = files.filter(
-    (file) => isMarkdownFileName(file.name) && file.size <= MARKDOWN_IMPORT_MAX_FILE_BYTES,
-  );
+function getMarkdownImportLoadingMessage(selection: DroppedImportSelection) {
+  const acceptedFiles: globalThis.File[] = [];
+
+  for (const { file } of selection.files) {
+    if (isMarkdownFileName(file.name) && file.size <= MARKDOWN_IMPORT_MAX_FILE_BYTES) {
+      acceptedFiles.push(file);
+    }
+  }
 
   if (acceptedFiles.length === 1) {
     return `"${acceptedFiles[0].name}" is being uploaded`;
@@ -73,32 +60,13 @@ function getMarkdownImportLoadingMessage(files: globalThis.File[]) {
     return `${acceptedFiles.length} files are being uploaded`;
   }
 
+  const files = selection.files.map(({ file }) => file);
+
   if (files.length === 1) {
     return `"${files[0].name}" is being uploaded`;
   }
 
   return `${files.length} files are being uploaded`;
-}
-
-async function mapWithConcurrency<TInput, TResult>(
-  items: TInput[],
-  concurrency: number,
-  worker: (item: TInput) => Promise<TResult>,
-): Promise<TResult[]> {
-  const limit = Math.max(1, Math.min(concurrency, items.length));
-  const chunkStarts = Array.from(
-    { length: Math.ceil(items.length / limit) },
-    (_, index) => index * limit,
-  );
-
-  const chunkResults = await Promise.all(
-    chunkStarts.map((start) => {
-      const chunk = items.slice(start, start + limit);
-      return Promise.all(chunk.map(worker));
-    }),
-  );
-
-  return chunkResults.flat();
 }
 
 export function useCreateFileMutation(options?: MutationCallbacks<File>) {
@@ -143,131 +111,10 @@ export function useImportMarkdownFilesMutation(options?: ImportMarkdownFilesCall
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      files,
-      folderId,
-      items,
-    }: ImportMarkdownFilesInput): Promise<ImportMarkdownFilesResult> => {
-      let filesToImport = files;
-      let parsedDroppedItems: Awaited<ReturnType<typeof parseDroppedItems>> | null = null;
-
-      if (items && supportsWebkitGetAsEntry()) {
-        parsedDroppedItems = await parseDroppedItems(Array.from(items));
-        if (parsedDroppedItems.files.length > 0) {
-          filesToImport = parsedDroppedItems.files.map(({ file }) => file);
-        }
-      }
-
-      // Preserve folder structure only when the drop actually contains folders.
-      if (parsedDroppedItems && parsedDroppedItems.folderPaths.length > 0) {
-        const { files: allFiles, folderPaths } = parsedDroppedItems;
-
-        // Filter markdown files
-        const markdownFiles = allFiles.filter(
-          ({ file }) =>
-            isMarkdownFileName(file.name) && file.size <= MARKDOWN_IMPORT_MAX_FILE_BYTES,
-        );
-
-        if (markdownFiles.length === 0) {
-          throw new ApiError("No markdown files found in the dropped items", 400);
-        }
-
-        // Read file contents using queue with progress tracking
-        const fileReadQueue = new FileReadQueue({
-          concurrency: MARKDOWN_IMPORT_READ_CONCURRENCY,
-          maxQueueSize: 500, // Limit queue size to prevent memory issues
-          onProgress: (_completed, _total) => {
-            // Progress tracking for future UI integration
-            // Currently logs for debugging
-          },
-        });
-
-        // Add all files to queue (queue manages concurrency internally)
-        const fileReadResults = await Promise.all(
-          markdownFiles.map(({ file }) => fileReadQueue.add({ file })),
-        );
-
-        // Clean up queue to prevent memory leaks
-        fileReadQueue.reset();
-
-        // Create a Map for O(1) file lookup instead of O(n*m) find
-        const fileContentMap = new Map<globalThis.File, string>();
-        for (const result of fileReadResults) {
-          fileContentMap.set(result.file, result.content);
-        }
-
-        // Prepare folder structure
-        const folders = folderPaths.map((path) => {
-          const parts = path.split("/");
-          return {
-            name: parts[parts.length - 1],
-            relativePath: path,
-          };
-        });
-
-        // Prepare files with relative paths from the parsed structure
-        const payloadFiles = markdownFiles.map(({ file, relativePath }) => ({
-          name: normalizeMarkdownImportFileName(file.name),
-          content: fileContentMap.get(file) || "",
-          relativePath,
-        }));
-
-        // Import with folder structure
-        const response = await fetchJson("/api/files/import-folder", importFolderResponseSchema, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            folder_id: folderId,
-            folders,
-            files: payloadFiles,
-          }),
-        });
-
-        return {
-          files: response.files,
-          skippedMessage: null,
-        };
-      }
-
-      // Fallback to original file-only import
-      const selection = splitMarkdownImportSelection(
-        filesToImport.map((file) => ({ name: file.name, size: file.size })),
-      );
-      const validationError = validateMarkdownImportSelection(selection);
-
-      if (validationError) {
-        throw new ApiError(validationError, 400);
-      }
-
-      const acceptedFiles = filesToImport.filter(
-        (file) => isMarkdownFileName(file.name) && file.size <= MARKDOWN_IMPORT_MAX_FILE_BYTES,
-      );
-
-      const payloadFiles = await mapWithConcurrency(
-        acceptedFiles,
-        MARKDOWN_IMPORT_READ_CONCURRENCY,
-        async (file) => ({
-          name: normalizeMarkdownImportFileName(file.name),
-          content: await file.text(),
-        }),
-      );
-
-      const createdFiles = await fetchJson("/api/files/import", fileWithContentListSchema, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          folder_id: folderId,
-          files: payloadFiles,
-        }),
-      });
-
-      return {
-        files: createdFiles,
-        skippedMessage: formatMarkdownImportSkipMessage(selection.rejected),
-      };
-    },
-    onMutate: ({ files }) => {
-      const uploadToastId = toast.loading(getMarkdownImportLoadingMessage(files));
+    mutationFn: ({ selection, folderId }: ImportMarkdownFilesInput) =>
+      importDroppedMarkdownSelection(selection, folderId),
+    onMutate: ({ selection }) => {
+      const uploadToastId = toast.loading(getMarkdownImportLoadingMessage(selection));
       return { uploadToastId };
     },
     onSuccess: ({ files, skippedMessage }, _variables, context) => {

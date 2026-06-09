@@ -28,7 +28,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { canMoveTreeItem } from "@/lib/folder-tree";
-import { isExternalFileDragEvent, type FolderRef } from "@/lib/drag-utils";
+import { handleExternalFileDrop, isExternalFileDragEvent, type FolderRef } from "@/lib/drag-utils";
+import type { DroppedImportSelection } from "@/lib/folder-import";
 import type { TreeItem } from "@/lib/validation/models";
 
 const AUTO_EXPAND_DELAY = 500;
@@ -52,11 +53,7 @@ interface TreeNodeProps {
   onDropTargetChange: (targetId: string | "root" | null) => void;
   onExternalDropTargetChange: (targetId: string | "root" | null) => void;
   onExternalDragActiveChange: (active: boolean) => void;
-  onImportFiles: (
-    files: globalThis.File[],
-    folderId: string | null,
-    items?: DataTransferItemList,
-  ) => void;
+  onImportFiles: (selection: DroppedImportSelection, folderId: string | null) => void;
   onToggleExpanded: (itemId: string) => void;
   onExpand: (itemId: string) => void;
   onSelect: (item: TreeItem) => void;
@@ -199,17 +196,17 @@ export const TreeNode = memo(function TreeNode({
           if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
           if (dropTargetId === item.id) onDropTargetChange(null);
         }}
-        onDrop={(event) => {
+        onDrop={async (event) => {
           cancelExpand();
 
           if (isFolder && isExternalFileDragEvent(event)) {
-            event.stopPropagation();
-            event.preventDefault();
             onExternalDragActiveChange(false);
             onExternalDropTargetChange(null);
-            const files = Array.from(event.dataTransfer.files);
-            const transferItems = event.dataTransfer.items;
-            if (files.length > 0) onImportFiles(files, item.id, transferItems);
+            await handleExternalFileDrop({
+              event,
+              folderId: item.id,
+              onImport: onImportFiles,
+            });
             return;
           }
 

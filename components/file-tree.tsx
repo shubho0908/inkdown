@@ -5,17 +5,14 @@ import { FileUp, Move } from "lucide-react";
 import { TreeNode } from "@/components/file-tree-node";
 import { useFileTree } from "@/hooks/use-file-tree";
 import { cn } from "@/lib/utils";
+import type { DroppedImportSelection } from "@/lib/folder-import";
 import type { TreeItem } from "@/lib/validation/models";
 
 export interface FileTreeProps {
   items: TreeItem[];
   selectedId: string | null;
   emptyState?: ReactNode;
-  onImportFiles: (
-    files: globalThis.File[],
-    folderId: string | null,
-    items?: DataTransferItemList,
-  ) => void;
+  onImportFiles: (selection: DroppedImportSelection, folderId: string | null) => void;
   onSelect: (item: TreeItem) => void;
   onMove: (item: TreeItem, targetFolderId: string | null) => void;
   onCreateFile: (folderId: string | null) => void;

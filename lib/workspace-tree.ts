@@ -23,8 +23,11 @@ export function buildTree(folders: Folder[], files: File[]): TreeItem[] {
       return;
     }
 
-    if (folder.parent_id && folderMap.has(folder.parent_id)) {
-      folderMap.get(folder.parent_id)?.children?.push(item);
+    if (folder.parent_id) {
+      if (folderMap.has(folder.parent_id)) {
+        folderMap.get(folder.parent_id)?.children?.push(item);
+      }
+
       return;
     }
 
@@ -41,8 +44,11 @@ export function buildTree(folders: Folder[], files: File[]): TreeItem[] {
       slug: file.slug,
     };
 
-    if (file.folder_id && folderMap.has(file.folder_id)) {
-      folderMap.get(file.folder_id)?.children?.push(fileItem);
+    if (file.folder_id) {
+      if (folderMap.has(file.folder_id)) {
+        folderMap.get(file.folder_id)?.children?.push(fileItem);
+      }
+
       return;
     }
 

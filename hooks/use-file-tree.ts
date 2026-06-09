@@ -10,7 +10,8 @@ import {
   type SetStateAction,
 } from "react";
 import { canMoveTreeItem } from "@/lib/folder-tree";
-import { isExternalFileDragEvent, getDroppedFiles, type FolderRef } from "@/lib/drag-utils";
+import { handleExternalFileDrop, isExternalFileDragEvent, type FolderRef } from "@/lib/drag-utils";
+import type { DroppedImportSelection } from "@/lib/folder-import";
 import type { TreeItem } from "@/lib/validation/models";
 import {
   fileTreeReducer,
@@ -20,11 +21,7 @@ import {
 } from "@/components/file-tree-state";
 interface UseFileTreeParams {
   items: TreeItem[];
-  onImportFiles: (
-    files: globalThis.File[],
-    folderId: string | null,
-    items?: DataTransferItemList,
-  ) => void;
+  onImportFiles: (selection: DroppedImportSelection, folderId: string | null) => void;
   onMove: (item: TreeItem, targetFolderId: string | null) => void;
 }
 
@@ -157,15 +154,16 @@ export function useFileTree({ items, onImportFiles, onMove }: UseFileTreeParams)
   );
 
   const handleRootZoneDrop = useCallback(
-    (event: DragEvent<HTMLDivElement>) => {
-      if (isExternalFileDragEvent(event)) {
-        event.stopPropagation();
-        event.preventDefault();
-        const files = getDroppedFiles(event);
-        const transferItems = event.dataTransfer.items;
+    async (event: DragEvent<HTMLDivElement>) => {
+      if (
+        await handleExternalFileDrop({
+          event,
+          folderId: null,
+          onImport: onImportFiles,
+        })
+      ) {
         setExternalDropTargetId(null);
         setIsExternalDragging(false);
-        if (files.length > 0) onImportFiles(files, null, transferItems);
         return;
       }
       event.stopPropagation();
@@ -216,15 +214,20 @@ export function useFileTree({ items, onImportFiles, onMove }: UseFileTreeParams)
   );
 
   const handleContainerDrop = useCallback(
-    (event: DragEvent<HTMLDivElement>) => {
+    async (event: DragEvent<HTMLDivElement>) => {
       if (isExternalFileDragEvent(event)) {
         if (!isTreeBackgroundDragEvent(event)) return;
-        event.preventDefault();
-        const files = getDroppedFiles(event);
-        const transferItems = event.dataTransfer.items;
-        setExternalDropTargetId(null);
-        setIsExternalDragging(false);
-        if (files.length > 0) onImportFiles(files, null, transferItems);
+        if (
+          await handleExternalFileDrop({
+            event,
+            folderId: null,
+            onImport: onImportFiles,
+            stopPropagation: false,
+          })
+        ) {
+          setExternalDropTargetId(null);
+          setIsExternalDragging(false);
+        }
         return;
       }
       event.preventDefault();

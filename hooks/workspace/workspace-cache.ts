@@ -2,6 +2,10 @@
 
 import type { QueryClient } from "@tanstack/react-query";
 import { workspaceKeys } from "@/lib/query-keys";
+import {
+  filterFilesExcludingSubtree,
+  filterFoldersExcludingSubtree,
+} from "@/lib/workspace-subtree-cache";
 import type { File, Folder } from "@/lib/validation/models";
 
 export interface MutationCallbacks<TData> {
@@ -129,4 +133,34 @@ export function syncFolder(queryClient: QueryClient, folder: Folder, optimisticI
     workspaceKeys.folders(),
     replaceFolder(currentFolders, folder, optimisticId),
   );
+}
+
+export function removeFileFromCache(queryClient: QueryClient, fileId: string) {
+  queryClient.setQueryData<File[]>(workspaceKeys.files(), (current = []) =>
+    current.filter((file) => file.id !== fileId),
+  );
+  queryClient.removeQueries({ queryKey: workspaceKeys.file(fileId) });
+}
+
+export function removeWorkspaceSubtreeFromCache(queryClient: QueryClient, folderId: string) {
+  let foldersBeforeDelete: Folder[] = [];
+
+  queryClient.setQueryData<Folder[]>(workspaceKeys.folders(), (current = []) => {
+    foldersBeforeDelete = current;
+    return filterFoldersExcludingSubtree(current, folderId);
+  });
+
+  const removedFileIds: string[] = [];
+
+  queryClient.setQueryData<File[]>(workspaceKeys.files(), (current = []) => {
+    const result = filterFilesExcludingSubtree(current, foldersBeforeDelete, folderId);
+    removedFileIds.push(...result.removedFileIds);
+    return result.files;
+  });
+
+  for (const fileId of removedFileIds) {
+    queryClient.removeQueries({ queryKey: workspaceKeys.file(fileId) });
+  }
+
+  return { removedFileIds };
 }
