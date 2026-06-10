@@ -12,7 +12,7 @@ import {
 } from "@/lib/db/subtree";
 import { getPublicFolderRootBySlug } from "@/lib/db/public-snapshot";
 import { toFileMetadata, toFolder } from "@/lib/db/rows";
-import { buildTree } from "@/lib/workspace-tree";
+import { buildPublicFolderTree } from "@/lib/workspace-tree";
 import type { FileMetadata, Folder, TreeItem } from "@/lib/validation/models";
 import { getProfileUsername } from "@/lib/db/profiles";
 import { readFileContent } from "@/lib/storage/content";
@@ -60,19 +60,6 @@ async function fetchPublicFolderSubtreeFiles(slug: string) {
   return filterFilesInSubtree(fileRows, subtreeIds).map(toFileMetadata);
 }
 
-function normalizeTreeItemsToSharedRoot(items: TreeItem[], rootFolderId: string) {
-  const rootFolder = items.find(
-    (item): item is TreeItem & { type: "folder" } =>
-      item.type === "folder" && item.id === rootFolderId,
-  );
-
-  if (!rootFolder) {
-    return [];
-  }
-
-  return [rootFolder];
-}
-
 export const getPublicFolderBySlug = cache(
   async (slug: string): Promise<PublicFolderRecord | null> => {
     const folder = await getPublicFolderRootBySlug(slug);
@@ -94,12 +81,10 @@ export const getPublicFolderTreeBySlug = cache(async (slug: string) => {
     fetchPublicFolderSubtreeFiles(slug),
   ]);
 
-  const treeItems = normalizeTreeItemsToSharedRoot(
-    buildTree(
-      foldersInSubtree,
-      filesInSubtree.map((file) => ({ ...file, content: "" })),
-    ),
+  const treeItems = buildPublicFolderTree(
     folder.id,
+    foldersInSubtree,
+    filesInSubtree.map((file) => ({ ...file, content: "" })),
   );
 
   return { folder, folders: foldersInSubtree, files: filesInSubtree, treeItems };

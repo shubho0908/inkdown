@@ -5,7 +5,7 @@ import { formatRateLimitMessage } from "@/lib/rate-limit/messages";
 import { AUTH_EMAIL_RECIPIENT } from "@/lib/rate-limit/policies";
 import { peekRateLimit } from "@/lib/rate-limit/peek";
 
-export const AUTH_EMAIL_RATE_LIMIT_CODE = "RATE_LIMITED" as const;
+const AUTH_EMAIL_RATE_LIMIT_CODE = "RATE_LIMITED" as const;
 
 export function normalizeAuthEmailRecipient(email: string) {
   return email.toLowerCase().trim();

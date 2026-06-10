@@ -51,11 +51,7 @@ export function readResolvedTheme(): ResolvedTheme {
   return readStoredTheme();
 }
 
-export function resolveTheme(theme: Theme): ResolvedTheme {
-  return theme;
-}
-
-export function applyThemeToDocument(theme: Theme): void {
+function applyThemeToDocument(theme: Theme): void {
   assertBrowser("applyThemeToDocument");
 
   document.documentElement.classList.toggle("dark", theme === "dark");

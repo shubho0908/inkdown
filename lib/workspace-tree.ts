@@ -1,5 +1,43 @@
 import type { File, Folder, TreeItem } from "@/lib/validation/models";
 
+export function findFirstFileInTree(items: TreeItem[]): string | null {
+  for (const item of items) {
+    if (item.type === "file") {
+      return item.id;
+    }
+
+    const nestedFileId = item.children ? findFirstFileInTree(item.children) : null;
+    if (nestedFileId) {
+      return nestedFileId;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Build a navigable tree for a shared folder subtree. Shared folders are often nested
+ * inside the owner's workspace, so ancestor folders are intentionally excluded from
+ * `folders`. Promote the shared root to the virtual tree root before building.
+ */
+export function buildPublicFolderTree(
+  sharedRootFolderId: string,
+  folders: Folder[],
+  files: File[],
+): TreeItem[] {
+  const foldersForTree = folders.map((folder) =>
+    folder.id === sharedRootFolderId ? { ...folder, parent_id: null } : folder,
+  );
+
+  const tree = buildTree(foldersForTree, files);
+  const sharedRoot = tree.find(
+    (item): item is TreeItem & { type: "folder" } =>
+      item.type === "folder" && item.id === sharedRootFolderId,
+  );
+
+  return sharedRoot ? [sharedRoot] : [];
+}
+
 export function buildTree(folders: Folder[], files: File[]): TreeItem[] {
   const folderMap = new Map<string, TreeItem>();
   const rootItems: TreeItem[] = [];

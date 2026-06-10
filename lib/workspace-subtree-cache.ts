@@ -7,7 +7,7 @@ function toFolderNodes(folders: FolderParentRef[]) {
   return folders.map((folder) => ({ id: folder.id, parentId: folder.parent_id }));
 }
 
-export function getSubtreeFolderIdSet(folders: FolderParentRef[], rootFolderId: string) {
+function getSubtreeFolderIdSet(folders: FolderParentRef[], rootFolderId: string) {
   return collectSubtreeFolderIds(toFolderNodes(folders), rootFolderId);
 }
 

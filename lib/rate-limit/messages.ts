@@ -21,7 +21,7 @@ export function formatRateLimitMessage(retryAfterSec: number) {
   return `You've requested too many emails. Please wait about ${minutes} minutes before trying again.`;
 }
 
-export function getAuthRateLimitMessage(action: AuthRateLimitAction) {
+function getAuthRateLimitMessage(action: AuthRateLimitAction) {
   switch (action) {
     case "password-reset":
       return "Too many password reset requests. Please wait about an hour before requesting another link.";

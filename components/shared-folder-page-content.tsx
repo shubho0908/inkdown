@@ -7,27 +7,12 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { getPublicFolderFileById, getPublicFolderTreeBySlug } from "@/lib/db/public-folders";
 import { getServerSession } from "@/lib/auth/session";
 import { createSiteUrl, getSiteUrl } from "@/lib/site-url";
-import type { TreeItem } from "@/lib/validation/models";
+import { findFirstFileInTree } from "@/lib/workspace-tree";
 import { notFound } from "next/navigation";
 
 interface SharedFolderPageContentProps {
   slug: string;
   requestedFileId?: string;
-}
-
-function findFirstFileId(items: TreeItem[]): string | null {
-  for (const item of items) {
-    if (item.type === "file") {
-      return item.id;
-    }
-
-    const nestedFileId = item.children ? findFirstFileId(item.children) : null;
-    if (nestedFileId) {
-      return nestedFileId;
-    }
-  }
-
-  return null;
 }
 
 export async function SharedFolderPageContent({
@@ -46,7 +31,7 @@ export async function SharedFolderPageContent({
   const user = session?.user;
   const isOwner = Boolean(user && user.id === sharedFolder.folder.user_id);
 
-  const fallbackFileId = findFirstFileId(sharedFolder.treeItems);
+  const fallbackFileId = findFirstFileInTree(sharedFolder.treeItems);
   const selectedFileId = requestedFileId || fallbackFileId;
   let selectedFile = selectedFileId ? await getPublicFolderFileById(slug, selectedFileId) : null;
 

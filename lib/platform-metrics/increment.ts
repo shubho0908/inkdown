@@ -18,10 +18,6 @@ function scheduleMetricDeltas(deltas: PlatformMetricDeltas) {
   });
 }
 
-export function recordPlatformMetricDeltas(deltas: PlatformMetricDeltas) {
-  scheduleMetricDeltas(deltas);
-}
-
 export function recordUserCreated() {
   scheduleMetricDeltas({ total_users: 1 });
 }

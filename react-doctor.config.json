@@ -1,6 +1,7 @@
 {
   "diff": false,
   "failOn": "warning",
+  "exclude": [".next/**"],
   "ignore": {
     "overrides": [
       {
@@ -14,7 +15,11 @@
       },
       {
         "files": ["lib/email/auth-email-template.tsx"],
-        "rules": ["react-doctor/nextjs-no-img-element"]
+        "rules": ["react-doctor/nextjs-no-img-element", "react-doctor/control-has-associated-label"]
+      },
+      {
+        "files": [".next/**"],
+        "rules": ["deslop/unused-file"]
       }
     ]
   }

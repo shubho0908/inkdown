@@ -14,6 +14,7 @@
     "guard:react-doctor": "bun scripts/check-react-doctor-score.mjs",
     "test:folder-import": "bun scripts/test-folder-import.mjs",
     "test:folder-subtree": "bun scripts/test-folder-subtree.mjs",
+    "test:public-folder-tree": "bun scripts/test-public-folder-tree.mjs",
     "test:workspace-subtree-cache": "bun scripts/test-workspace-subtree-cache.mjs",
     "db:setup": "bun scripts/db-setup.mjs",
     "backup:supabase": "bun scripts/backup-supabase.mjs",

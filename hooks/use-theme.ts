@@ -13,7 +13,7 @@ import {
 } from "@/lib/theme-client";
 import type { ResolvedTheme, Theme } from "@/lib/theme";
 
-export function useTheme(): Theme {
+function useTheme(): Theme {
   return useSyncExternalStore(subscribeToThemeStore, readStoredTheme, getServerThemeSnapshot);
 }
 
