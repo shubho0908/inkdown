@@ -5,6 +5,7 @@ import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { files, folders } from "@/lib/db/schema";
 import { collectSubtreeFolderIds } from "@/lib/folder-subtree";
+import { recordFolderCreated, recordFolderDeleted } from "@/lib/platform-metrics/increment";
 import { toFolder } from "@/lib/db/rows";
 import type { Folder } from "@/lib/validation/models";
 
@@ -55,6 +56,8 @@ export async function insertFolder(input: {
     })
     .returning();
 
+  recordFolderCreated(1);
+
   return toFolder(rows[0]);
 }
 
@@ -100,18 +103,38 @@ export async function deleteFolder(userId: string, folderId: string) {
 
   const subtreeIdList = [...subtreeIds];
 
-  return db.transaction(async (tx) => {
-    await tx
-      .delete(files)
-      .where(and(eq(files.userId, userId), inArray(files.folderId, subtreeIdList)));
+  const filesInSubtree = await db
+    .select({
+      isPublic: files.isPublic,
+      slug: files.slug,
+    })
+    .from(files)
+    .where(and(eq(files.userId, userId), inArray(files.folderId, subtreeIdList)));
 
-    const deleted = await tx
-      .delete(folders)
-      .where(and(eq(folders.id, folderId), eq(folders.userId, userId)))
-      .returning({ id: folders.id });
+  // Metrics require a pre-delete snapshot; folder delete must follow the read.
+  // react-doctor-disable-next-line react-doctor/server-sequential-independent-await
+  const deletedFolders = await db
+    .delete(folders)
+    .where(and(eq(folders.id, folderId), eq(folders.userId, userId)))
+    .returning({ id: folders.id });
 
-    return deleted.length > 0;
-  });
+  const deleteResult = {
+    deleted: deletedFolders.length > 0,
+    filesInSubtree,
+  };
+
+  if (deleteResult.deleted) {
+    const publicDocumentCount = deleteResult.filesInSubtree.filter(
+      (file) => file.isPublic && file.slug,
+    ).length;
+    recordFolderDeleted(
+      deleteResult.filesInSubtree.length,
+      subtreeIdList.length,
+      publicDocumentCount,
+    );
+  }
+
+  return deleteResult.deleted;
 }
 
 export async function listPublicFolderRowsForSitemap() {

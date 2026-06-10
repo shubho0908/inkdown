@@ -13,6 +13,9 @@ next.user-config.*
 # Database backups (contain user data — never commit)
 backups/
 
+# React Doctor agent cache (fetched playbook + scan output — not source of truth)
+.react-doctor/
+
 # Common ignores
 node_modules
 .next/

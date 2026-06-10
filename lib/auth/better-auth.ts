@@ -9,6 +9,7 @@ import { deliverAuthEmail } from "@/lib/auth/deliver-auth-email";
 import { betterAuthDrizzleSchema } from "@/lib/db/better-auth-schema";
 import { db } from "@/lib/db/client";
 import { syncProfileForAuthUser } from "@/lib/auth/profile-sync";
+import { recordUserCreated } from "@/lib/platform-metrics/increment";
 import { getSiteUrl } from "@/lib/site-url";
 
 export const auth = betterAuth({
@@ -85,6 +86,7 @@ export const auth = betterAuth({
       create: {
         after: async (user) => {
           await syncProfileForAuthUser(user);
+          recordUserCreated();
         },
       },
       update: {

@@ -4,7 +4,7 @@ const THRESHOLD = 100
 
 const result = spawnSync(
   'bunx',
-  ['react-doctor', '--json', '-y', '--fail-on', 'warning'],
+  ['react-doctor', '.', '--json', '-y', '--fail-on', 'warning'],
   {
     encoding: 'utf8',
     shell: process.platform === 'win32',

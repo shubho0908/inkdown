@@ -24,6 +24,15 @@ export const copySharedItemResponseSchema = z.object({
   fileCount: z.number().int().nonnegative().optional(),
 });
 
+export const platformMetricsResponseSchema = z.object({
+  total_users: z.number().int().nonnegative(),
+  total_documents: z.number().int().nonnegative(),
+  total_folders: z.number().int().nonnegative(),
+  public_documents: z.number().int().nonnegative(),
+  is_ready: z.boolean(),
+  computed_at: z.string().datetime(),
+});
+
 export const importFolderResponseSchema = z.object({
   folders: z.array(
     folderSchema.pick({

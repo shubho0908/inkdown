@@ -5,6 +5,11 @@ import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { files, folders } from "@/lib/db/schema";
 import { toFileFromContentRow, toFileMetadata } from "@/lib/db/rows";
+import {
+  recordDocumentCreated,
+  recordDocumentDeleted,
+  recordPublicDocumentVisibilityChanged,
+} from "@/lib/platform-metrics/increment";
 import { DEFAULT_FILE_CONTENT, readFileContent, writeFileContent } from "@/lib/storage/content";
 import type { File, FileMetadata } from "@/lib/validation/models";
 
@@ -98,13 +103,18 @@ export async function slugExists(table: "files" | "folders", slug: string) {
   return rows.length > 0;
 }
 
-export async function createFile(input: {
-  userId: string;
-  name: string;
-  folderId: string | null;
-  content?: string;
-  fileId?: string;
-}) {
+export async function createFile(
+  input: {
+    userId: string;
+    name: string;
+    folderId: string | null;
+    content?: string;
+    fileId?: string;
+  },
+  options?: {
+    recordMetrics?: boolean;
+  },
+) {
   const fileId = input.fileId ?? crypto.randomUUID();
   const content = input.content ?? DEFAULT_FILE_CONTENT;
   const { key, size } = await writeFileContent(input.userId, fileId, content);
@@ -120,6 +130,10 @@ export async function createFile(input: {
       contentSize: size,
     })
     .returning();
+
+  if (options?.recordMetrics !== false) {
+    recordDocumentCreated(1);
+  }
 
   return toFileFromContentRow(rows[0], content);
 }
@@ -138,6 +152,7 @@ export async function updateFile(
   const existing = await getFileRowByIdForUser(userId, fileId);
   if (!existing) return null;
 
+  const wasPubliclyPublished = Boolean(existing.isPublic && existing.slug);
   let contentSize = existing.contentSize;
   if (update.content !== undefined) {
     const result = await writeFileContent(userId, fileId, update.content, existing.contentKey);
@@ -160,6 +175,11 @@ export async function updateFile(
   const row = rows[0];
   if (!row) return null;
 
+  const isPubliclyPublished = Boolean(row.isPublic && row.slug);
+  if (isPubliclyPublished !== wasPubliclyPublished) {
+    recordPublicDocumentVisibilityChanged(isPubliclyPublished);
+  }
+
   const content = update.content ?? (await readFileContent(userId, fileId, row.contentKey));
   return toFileFromContentRow(row, content);
 }
@@ -170,6 +190,8 @@ export async function deleteFile(userId: string, fileId: string) {
 
   await db.delete(files).where(and(eq(files.id, fileId), eq(files.userId, userId)));
 
+  recordDocumentDeleted(1, existing.isPublic && existing.slug != null ? 1 : 0);
+
   return true;
 }
 
@@ -177,17 +199,26 @@ export async function bulkInsertFiles(
   userId: string,
   items: Array<{ name: string; folderId: string | null; content: string; fileId?: string }>,
 ) {
-  return Promise.all(
+  const createdFiles = await Promise.all(
     items.map((item) =>
-      createFile({
-        userId,
-        name: item.name,
-        folderId: item.folderId,
-        content: item.content,
-        fileId: item.fileId,
-      }),
+      createFile(
+        {
+          userId,
+          name: item.name,
+          folderId: item.folderId,
+          content: item.content,
+          fileId: item.fileId,
+        },
+        { recordMetrics: false },
+      ),
     ),
   );
+
+  if (items.length > 0) {
+    recordDocumentCreated(items.length);
+  }
+
+  return createdFiles;
 }
 
 export async function listFileExportRowsByUserId(userId: string) {

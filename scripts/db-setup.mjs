@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
+import { spawnSync } from 'node:child_process'
 import pg from 'pg'
 
 import { verifyUserIdSchema } from './lib/verify-user-id-schema.mjs'
@@ -68,7 +69,32 @@ for (const migrationFile of migrationFiles) {
 
 await verifyUserIdSchema(client)
 
-const tables = await client.query(
+await client.end()
+
+const seedResult = spawnSync('bun', ['scripts/seed-platform-metrics.mjs'], {
+  encoding: 'utf8',
+  stdio: 'pipe',
+})
+
+if (seedResult.stdout) {
+  process.stdout.write(seedResult.stdout)
+}
+
+if (seedResult.status !== 0) {
+  if (seedResult.stderr) {
+    process.stderr.write(seedResult.stderr)
+  }
+  process.exit(seedResult.status ?? 1)
+}
+
+const verifyClient = new pg.Client({
+  connectionString: databaseUrl,
+  ssl: databaseUrl.includes('localhost') ? false : { rejectUnauthorized: false },
+})
+
+await verifyClient.connect()
+
+const tables = await verifyClient.query(
   "SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename",
 )
 
@@ -77,4 +103,4 @@ process.stdout.write(
 )
 process.stdout.write('User ID schema invariant verified (TEXT + FK -> "user".id)\n')
 
-await client.end()
+await verifyClient.end()

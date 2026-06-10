@@ -149,6 +149,17 @@ export const files = pgTable(
   ],
 );
 
+/** Single-row snapshot for landing-page metrics — never aggregate at read time. */
+export const platformMetrics = pgTable("platform_metrics", {
+  id: text("id").primaryKey().default("global"),
+  totalUsers: bigint("total_users", { mode: "number" }).notNull().default(0),
+  totalDocuments: bigint("total_documents", { mode: "number" }).notNull().default(0),
+  totalFolders: bigint("total_folders", { mode: "number" }).notNull().default(0),
+  publicDocuments: bigint("public_documents", { mode: "number" }).notNull().default(0),
+  isReady: boolean("is_ready").notNull().default(false),
+  computedAt: timestamp("computed_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 /**
  * Better Auth user primary key. App tables reference this as TEXT, never UUID.
  * @see scripts/neon/001_schema.sql

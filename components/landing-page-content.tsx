@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { LandingPageMetrics } from "@/components/landing-page-metrics";
 import { LandingPageShowcase } from "@/components/landing-page-showcase";
 
 export function LandingPageContent() {
@@ -40,6 +41,8 @@ export function LandingPageContent() {
           <LandingPageShowcase />
         </div>
       </section>
+
+      <LandingPageMetrics />
 
       <section className="relative overflow-hidden border-t border-border bg-muted/10 py-20 sm:py-32">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">

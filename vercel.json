@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/recompute-platform-metrics",
+      "schedule": "0 0 */3 * *"
+    }
+  ]
+}
