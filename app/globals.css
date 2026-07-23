@@ -319,13 +319,20 @@
   }
 }
 
-.animate-split-stream-source {
-  animation: split-stream-source 9s steps(24, end) var(--stream-delay, 0ms) infinite both;
+.animate-split-stream-source,
+.animate-split-stream-preview {
+  animation: none;
 }
 
-.animate-split-stream-preview {
-  animation: split-stream-preview 9s cubic-bezier(0.22, 1, 0.36, 1) var(--stream-delay, 0ms)
-    infinite both;
+@media (min-width: 640px) {
+  .animate-split-stream-source {
+    animation: split-stream-source 9s steps(24, end) var(--stream-delay, 0ms) infinite both;
+  }
+
+  .animate-split-stream-preview {
+    animation: split-stream-preview 9s cubic-bezier(0.22, 1, 0.36, 1) var(--stream-delay, 0ms)
+      infinite both;
+  }
 }
 
 .landing-organize-scene {
