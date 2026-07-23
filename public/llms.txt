@@ -1,6 +1,6 @@
 # Inkdown
 
-Inkdown is a self-hosted markdown workspace: write in a calm editor, organize documents into folders, and publish them with a public link.
+Inkdown is a markdown workspace: write in a calm editor, organize documents into folders, and publish them with a public link.
 
 ## Public pages
 

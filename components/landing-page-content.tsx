@@ -16,8 +16,8 @@ export function LandingPageContent() {
                 A markdown editor built for clear, focused writing.
               </h1>
               <p className="mt-5 max-w-lg text-balance text-base leading-relaxed text-muted-foreground sm:mt-6 sm:text-lg">
-                Inkdown is a self-hosted markdown workspace. Write with live preview, organize
-                documents in folders, and share them with a public link. No clutter, no friction.
+                Inkdown is a markdown workspace. Write with live preview, organize documents in
+                folders, and share them with a public link. No clutter, no friction.
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row">
                 <Button asChild size="lg">
