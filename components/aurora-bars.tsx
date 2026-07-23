@@ -1,15 +1,14 @@
 "use client";
 
-import * as React from "react";
-import { domAnimation, LazyMotion, useAnimationFrame } from "motion/react";
-import * as m from "motion/react-m";
+import { useRef } from "react";
+import { useAnimationFrame } from "motion/react";
 
 import { cn } from "@/lib/utils";
 
 export interface AuroraBarsProps {
   /** @default 24 */
   barCount?: number;
-  /** gradient color stops, bottom to top — @default ["#ff2d78", "#c04aff", "#4a6fff", "#0a1aff", "#00000000"] */
+  /** gradient color stops, bottom to top — @default ["#ffd6eb", "#ff9acb", "#ff5aa6", "#ff2d78", "#00000000"] */
   colors?: string[];
   /** max bar height as fraction of container height — @default 0.92 */
   maxHeightRatio?: number;
@@ -53,66 +52,57 @@ export function AuroraBars({
   background = "#000000",
   className,
 }: AuroraBarsProps) {
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const [heights, setHeights] = React.useState<number[]>(() =>
-    Array.from({ length: barCount }, (_, i) =>
-      barHeight(i, barCount, 0, minHeightRatio, maxHeightRatio),
-    ),
-  );
-
-  const timeRef = React.useRef(0);
-
-  useAnimationFrame((_, delta) => {
-    timeRef.current += (delta / 1000) * speed;
-    const t = timeRef.current;
-    setHeights(
-      Array.from({ length: barCount }, (_, i) =>
-        barHeight(i, barCount, t, minHeightRatio, maxHeightRatio),
-      ),
-    );
-  });
+  const timeRef = useRef(0);
+  const barRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const gradientStop = colors
     .map((c, i) => `${c} ${Math.round((i / (colors.length - 1)) * 100)}%`)
     .join(", ");
   const gradient = `linear-gradient(to top, ${gradientStop})`;
 
+  useAnimationFrame((_, delta) => {
+    timeRef.current += (delta / 1000) * speed;
+    const t = timeRef.current;
+
+    for (let i = 0; i < barCount; i += 1) {
+      const bar = barRefs.current[i];
+      if (!bar) continue;
+
+      const height = barHeight(i, barCount, t, minHeightRatio, maxHeightRatio);
+      bar.style.height = `${height * 100}%`;
+    }
+  });
+
   return (
-    <div
-      ref={containerRef}
-      className={cn("relative h-full w-full overflow-hidden", className)}
-      style={{ background }}
-    >
-      <LazyMotion features={domAnimation}>
-        <div className="absolute inset-0 flex items-end">
-          {Array.from({ length: barCount }).map((_, i) => {
-            const heightFraction = heights[i] ?? maxHeightRatio;
-            return (
-              <div
-                key={i}
-                className="flex-1"
-                style={{
-                  height: "100%",
-                  display: "flex",
-                  alignItems: "flex-end",
-                  padding: `0 ${gap / 2}px`,
-                }}
-              >
-                <m.div
-                  style={{
-                    width: "100%",
-                    height: `${heightFraction * 100}%`,
-                    background: gradient,
-                    borderRadius: "9999px 9999px 0 0",
-                    filter: `blur(${blur}px)`,
-                    opacity: 0.85,
-                  }}
-                />
-              </div>
-            );
-          })}
-        </div>
-      </LazyMotion>
+    <div className={cn("relative h-full w-full overflow-hidden", className)} style={{ background }}>
+      <div className="absolute inset-0 flex items-end">
+        {Array.from({ length: barCount }).map((_, i) => (
+          <div
+            key={i}
+            className="flex-1"
+            style={{
+              height: "100%",
+              display: "flex",
+              alignItems: "flex-end",
+              padding: `0 ${gap / 2}px`,
+            }}
+          >
+            <div
+              ref={(el) => {
+                barRefs.current[i] = el;
+              }}
+              style={{
+                width: "100%",
+                height: `${barHeight(i, barCount, 0, minHeightRatio, maxHeightRatio) * 100}%`,
+                background: gradient,
+                borderRadius: "9999px 9999px 0 0",
+                filter: `blur(${blur}px)`,
+                opacity: 0.85,
+              }}
+            />
+          </div>
+        ))}
+      </div>
 
       <div
         className="pointer-events-none absolute inset-0"
