@@ -22,12 +22,11 @@ export async function LandingPageMetrics() {
         </h2>
         <dl className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-3">
           {items.map(({ key, label, value }) => (
-            <div key={key} className="text-center">
-              <dt className="sr-only">{label}</dt>
+            <div key={key} className="flex flex-col-reverse text-center">
+              <dt className="mt-2 text-sm font-medium text-muted-foreground">{label}</dt>
               <dd className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
                 <AnimatedNumber value={value} />
               </dd>
-              <p className="mt-2 text-sm font-medium text-muted-foreground">{label}</p>
             </div>
           ))}
         </dl>
