@@ -13,15 +13,15 @@ const rootSocialImages = createSocialImageSet(
 
 export const metadata: Metadata = {
   title: {
-    default: "Inkdown - Self-Hosted Markdown Editor & Workspace",
+    default: "Inkdown - Markdown Editor & Workspace",
     template: "%s | Inkdown",
   },
   applicationName: "Inkdown",
   description:
-    "Inkdown is a self-hosted markdown workspace for writing, organizing, and sharing documents. Write with live preview, manage folders, and publish public links from one focused editor.",
+    "Inkdown is a markdown workspace for writing, organizing, and sharing documents. Write with live preview, manage folders, and publish public links from one focused editor.",
   keywords: [
     "markdown editor",
-    "self-hosted markdown workspace",
+    "markdown workspace",
     "markdown notes",
     "document sharing",
     "live preview editor",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "/",
-    title: "Inkdown - Self-Hosted Markdown Editor & Workspace",
+    title: "Inkdown - Markdown Editor & Workspace",
     description:
       "Write, organize, and share markdown documents with live preview, folder management, and instant public publishing.",
     siteName: "Inkdown",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Inkdown - Self-Hosted Markdown Editor & Workspace",
+    title: "Inkdown - Markdown Editor & Workspace",
     description:
       "Write, organize, and share markdown documents with live preview and public publishing.",
     images: rootSocialImages.twitter,

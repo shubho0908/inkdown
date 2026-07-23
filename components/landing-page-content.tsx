@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { LandingPageHeroMockup } from "@/components/landing-page-hero-mockup";
+import { LazyHeroMockup } from "@/components/lazy-hero-mockup";
 import { AnimatedSection } from "@/components/animated-section";
 import { LandingPageMetrics } from "@/components/landing-page-metrics";
 import { LandingPageShowcase } from "@/components/landing-page-showcase";
@@ -16,15 +16,11 @@ export function LandingPageContent() {
                 A markdown editor built for clear, focused writing.
               </h1>
               <p className="mt-5 max-w-lg text-balance text-base leading-relaxed text-muted-foreground sm:mt-6 sm:text-lg">
-                Inkdown is a self-hosted markdown workspace. Write with live preview, organize
-                documents in folders, and share them with a public link. No clutter, no friction.
+                Inkdown is a markdown workspace. Write with live preview, organize documents in
+                folders, and share them with a public link. No clutter, no friction.
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row">
-                <Button
-                  asChild
-                  size="lg"
-                  className="bg-indigo-600 text-white hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-                >
+                <Button asChild size="lg">
                   <Link href="/auth/sign-up">Start writing</Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
@@ -33,7 +29,7 @@ export function LandingPageContent() {
               </div>
             </div>
             <div className="order-2 hidden min-w-0 lg:block">
-              <LandingPageHeroMockup />
+              <LazyHeroMockup />
             </div>
           </div>
         </div>
@@ -54,11 +50,7 @@ export function LandingPageContent() {
             Join a focused workspace built for markdown. Start writing for free in seconds.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:mt-10 sm:flex-row">
-            <Button
-              asChild
-              size="lg"
-              className="bg-indigo-600 text-white hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-            >
+            <Button asChild size="lg">
               <Link href="/auth/sign-up">Create your free account</Link>
             </Button>
             <Button asChild variant="outline" size="lg">

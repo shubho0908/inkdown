@@ -30,7 +30,7 @@ export default async function HomePage() {
         name: "Inkdown",
         url: siteUrl,
         description:
-          "A self-hosted markdown editor and workspace for writing, organizing, and sharing documents with live preview.",
+          "A markdown editor and workspace for writing, organizing, and sharing documents with live preview.",
       },
       {
         "@type": "SoftwareApplication",
@@ -44,7 +44,7 @@ export default async function HomePage() {
         },
         url: siteUrl,
         description:
-          "A self-hosted markdown workspace with live preview, folder organization, and public publishing.",
+          "A markdown workspace with live preview, folder organization, and public publishing.",
       },
     ],
   };
@@ -64,11 +64,7 @@ export default async function HomePage() {
             <Button asChild variant="ghost" size="sm">
               <Link href="/auth/login">Sign in</Link>
             </Button>
-            <Button
-              asChild
-              size="sm"
-              className="hidden bg-indigo-600 text-white hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400 sm:inline-flex"
-            >
+            <Button asChild size="sm" className="hidden sm:inline-flex">
               <Link href="/auth/sign-up">Get started</Link>
             </Button>
             <ThemeToggle />
@@ -85,7 +81,7 @@ export default async function HomePage() {
           <div className="flex flex-col items-center justify-between gap-4 text-center md:flex-row md:text-left">
             <InkdownLogo size="sm" />
             <p className="text-sm text-muted-foreground">
-              Inkdown - the self-hosted markdown workspace for focused writing.
+              Inkdown - a markdown workspace for focused writing.
             </p>
             <nav
               aria-label="Legal"

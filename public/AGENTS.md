@@ -1,6 +1,6 @@
 # Inkdown
 
-Inkdown is a self-hosted markdown workspace built with Next.js 16, React 19, TypeScript, Tailwind CSS 4, Bun, Better Auth, Neon Postgres, and Cloudflare R2.
+Inkdown is a markdown workspace built with Next.js 16, React 19, TypeScript, Tailwind CSS 4, Bun, Better Auth, Neon Postgres, and Cloudflare R2.
 
 ## Installation
 

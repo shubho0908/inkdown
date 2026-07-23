@@ -3,6 +3,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@layer base {
+  button,
+  a,
+  [role="button"] {
+    cursor: pointer;
+  }
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -312,11 +320,12 @@
 }
 
 .animate-split-stream-source {
-  animation: split-stream-source 9s steps(24, end) var(--stream-delay, 0ms) 1 both;
+  animation: split-stream-source 9s steps(24, end) var(--stream-delay, 0ms) infinite both;
 }
 
 .animate-split-stream-preview {
-  animation: split-stream-preview 9s cubic-bezier(0.22, 1, 0.36, 1) var(--stream-delay, 0ms) 1 both;
+  animation: split-stream-preview 9s cubic-bezier(0.22, 1, 0.36, 1) var(--stream-delay, 0ms)
+    infinite both;
 }
 
 .landing-organize-scene {
@@ -416,7 +425,7 @@
   }
   14%,
   19% {
-    background-color: color-mix(in oklch, var(--color-indigo-600, #4f46e5) 12%, transparent);
+    background-color: color-mix(in oklch, var(--color-primary, oklch(0.205 0 0)) 12%, transparent);
   }
 }
 
@@ -429,7 +438,7 @@
   }
   39%,
   44% {
-    background-color: color-mix(in oklch, var(--color-indigo-600, #4f46e5) 12%, transparent);
+    background-color: color-mix(in oklch, var(--color-primary, oklch(0.205 0 0)) 12%, transparent);
   }
 }
 
@@ -442,7 +451,7 @@
   }
   64%,
   69% {
-    background-color: color-mix(in oklch, var(--color-indigo-600, #4f46e5) 12%, transparent);
+    background-color: color-mix(in oklch, var(--color-primary, oklch(0.205 0 0)) 12%, transparent);
   }
 }
 

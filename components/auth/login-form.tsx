@@ -80,7 +80,7 @@ export function LoginForm() {
               onChange={(e) => setEmail(e.target.value)}
               disabled={isPending}
               autoComplete="email"
-              className="focus-visible:ring-indigo-500/50"
+              className="focus-visible:ring-primary/50"
             />
           </div>
           <div className="grid gap-2">
@@ -93,22 +93,18 @@ export function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               disabled={isPending}
               autoComplete="current-password"
-              className="focus-visible:ring-indigo-500/50"
+              className="focus-visible:ring-primary/50"
             />
           </div>
           {error ? <AuthErrorAlert message={error} /> : null}
-          <Button
-            type="submit"
-            className="w-full bg-indigo-600 text-white hover:bg-indigo-500 disabled:bg-indigo-600/50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-            disabled={isPending}
-          >
+          <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? "Signing in…" : "Sign in"}
           </Button>
         </div>
         <div className="mt-4 text-center text-sm text-muted-foreground">
           <Link
             href="/auth/forgot-password"
-            className="text-indigo-600 underline underline-offset-4 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+            className="text-primary underline underline-offset-4 hover:text-primary/80"
           >
             Forgot password?
           </Link>
@@ -117,7 +113,7 @@ export function LoginForm() {
           Don&apos;t have an account?{" "}
           <Link
             href="/auth/sign-up"
-            className="text-indigo-600 underline underline-offset-4 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+            className="text-primary underline underline-offset-4 hover:text-primary/80"
           >
             Sign up
           </Link>

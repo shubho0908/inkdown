@@ -7,7 +7,7 @@ export function LandingPageShareDemo() {
       className="relative h-52 overflow-hidden rounded-xl border bg-background p-3 sm:h-56 sm:p-4 lg:h-44 lg:p-3"
     >
       <div className="flex items-center gap-2.5">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-indigo-600/10 text-indigo-600 dark:text-indigo-400">
+        <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <FileText className="size-4" />
         </span>
         <div className="min-w-0">
@@ -18,7 +18,7 @@ export function LandingPageShareDemo() {
             <span className="animate-share-status-private absolute inset-y-0 left-0 whitespace-nowrap">
               Private document
             </span>
-            <span className="animate-share-status-public absolute inset-y-0 left-0 whitespace-nowrap text-indigo-600 dark:text-indigo-400">
+            <span className="animate-share-status-public absolute inset-y-0 left-0 whitespace-nowrap text-primary">
               Public link
             </span>
           </div>
@@ -36,16 +36,16 @@ export function LandingPageShareDemo() {
         </div>
         <span className="relative flex size-8 shrink-0 items-center justify-center rounded-md border bg-background text-foreground shadow-sm">
           <Lock className="animate-share-lock absolute size-3.5" />
-          <LoaderCircle className="animate-share-loader absolute size-3.5 text-indigo-600 dark:text-indigo-400" />
-          <Unlock className="animate-share-unlock absolute size-3.5 text-indigo-600 dark:text-indigo-400" />
-          <span className="animate-share-press absolute -inset-1 rounded-lg border border-indigo-600/70 dark:border-indigo-400/70" />
+          <LoaderCircle className="animate-share-loader absolute size-3.5 text-primary" />
+          <Unlock className="animate-share-unlock absolute size-3.5 text-primary" />
+          <span className="animate-share-press absolute -inset-1 rounded-lg border border-primary/70" />
         </span>
       </div>
 
       <div className="mt-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
         <span className="relative inline-flex size-3 shrink-0">
           <Lock className="animate-share-status-lock absolute inset-0 size-3" />
-          <Check className="animate-share-status-check absolute inset-0 size-3 text-indigo-600 dark:text-indigo-400" />
+          <Check className="animate-share-status-check absolute inset-0 size-3 text-primary" />
         </span>
         <span className="relative h-3.5 flex-1">
           <span className="animate-share-status-private absolute inset-y-0 left-0 whitespace-nowrap">
@@ -72,8 +72,8 @@ export function LandingPageShareDemo() {
         />
       </svg>
 
-      <div className="animate-share-toast pointer-events-none absolute inset-x-3 bottom-3 flex justify-center sm:inset-x-4 sm:bottom-4">
-        <div className="flex items-center gap-1.5 rounded-lg bg-indigo-700 px-3 py-2 text-[10px] font-medium text-white shadow-lg shadow-indigo-950/20">
+      <div className="animate-share-toast pointer-events-none absolute right-3 bottom-3 sm:right-4 sm:bottom-4">
+        <div className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-[10px] font-medium text-primary-foreground shadow-lg shadow-primary/20">
           <Check className="size-3" />
           <span>Share it publically.</span>
         </div>

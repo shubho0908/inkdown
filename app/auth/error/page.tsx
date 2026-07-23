@@ -39,10 +39,7 @@ export default async function AuthErrorPage({
             confirmation route with a token_hash instead of the default PKCE callback URL.
           </p>
         ) : null}
-        <Button
-          asChild
-          className="w-full bg-indigo-600 text-white hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-        >
+        <Button asChild className="w-full">
           <Link href="/auth/login">Try again</Link>
         </Button>
       </div>

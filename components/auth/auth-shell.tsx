@@ -12,8 +12,8 @@ type AuthShellProps = {
 export function AuthShell({ children, description, title }: AuthShellProps) {
   return (
     <main className="relative flex min-h-dvh w-full items-center justify-center overflow-x-hidden bg-background px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-      <div className="pointer-events-none absolute -right-24 -top-24 size-96 rounded-full bg-indigo-600/[0.04] blur-3xl dark:bg-indigo-500/[0.05]" />
-      <div className="pointer-events-none absolute -bottom-32 -left-32 size-80 rounded-full bg-blue-600/[0.03] blur-3xl dark:bg-blue-500/[0.04]" />
+      <div className="pointer-events-none absolute -right-24 -top-24 size-96 rounded-full bg-primary/[0.04] blur-3xl dark:bg-primary/[0.05]" />
+      <div className="pointer-events-none absolute -bottom-32 -left-32 size-80 rounded-full bg-primary/[0.03] blur-3xl dark:bg-primary/[0.04]" />
 
       <div className="absolute right-4 top-4 z-50">
         <ThemeToggle />
