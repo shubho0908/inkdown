@@ -21,7 +21,7 @@ const features = [
 
 export function LandingPageShowcase() {
   return (
-    <AnimatedSection aria-label="Features" className="mt-24 pt-24 pb-24 sm:mt-28 sm:pt-28 sm:pb-28 lg:mt-28 lg:pt-28 lg:pb-28">
+    <AnimatedSection aria-label="Features" className="mt-12 pt-16 pb-24 sm:mt-16 sm:pt-20 sm:pb-28 lg:mt-16 lg:pt-20 lg:pb-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-balance text-4xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-5xl">
