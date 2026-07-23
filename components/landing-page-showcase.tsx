@@ -20,9 +20,9 @@ const features = [
 
 export function LandingPageShowcase() {
   return (
-    <section aria-label="Features" className="pt-0 pb-12 sm:pb-16 lg:pb-16">
+    <section aria-label="Features" className="pt-20 pb-16 sm:pt-24 sm:pb-20 lg:pt-24 lg:pb-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl pt-8 text-center">
+        <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-balance text-4xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-5xl">
             Everything you need to write, organize, and share.
           </h2>
