@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import { domAnimation, LazyMotion, useMotionValue, useSpring, useTransform } from "motion/react";
-import * as m from "motion/react-m";
+import { useEffect, useRef } from "react";
 
 const formatter = new Intl.NumberFormat("en-US", { notation: "compact" });
 
@@ -10,19 +8,46 @@ interface AnimatedNumberProps {
   value: number;
 }
 
+function easeOutQuart(t: number): number {
+  return 1 - (1 - t) ** 4;
+}
+
 export function AnimatedNumber({ value }: AnimatedNumberProps) {
-  const target = useMotionValue(0);
-  const spring = useSpring(target, { stiffness: 50, damping: 20, restDelta: 0.5 });
-  const display = useTransform(spring, (latest) => formatter.format(Math.round(latest)));
+  const ref = useRef<HTMLSpanElement>(null);
+  const finalText = formatter.format(value);
 
   useEffect(() => {
-    target.set(value);
-  }, [target, value]);
+    const el = ref.current;
+    if (!el) return;
+
+    const start = performance.now();
+    const duration = 1500;
+    let raf = 0;
+
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const current = value * easeOutQuart(progress);
+
+      el.textContent = formatter.format(Math.round(current));
+
+      if (progress < 1) {
+        raf = requestAnimationFrame(tick);
+      }
+    };
+
+    el.textContent = formatter.format(0);
+    raf = requestAnimationFrame(tick);
+
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
 
   return (
-    <LazyMotion features={domAnimation}>
-      <m.span aria-hidden="true">{display}</m.span>
-      <span className="sr-only">{formatter.format(value)}</span>
-    </LazyMotion>
+    <>
+      <span ref={ref} aria-hidden="true">
+        {finalText}
+      </span>
+      <span className="sr-only">{finalText}</span>
+    </>
   );
 }
