@@ -73,9 +73,9 @@ export function ShareDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="w-[calc(100%-1rem)] max-w-md p-4 sm:p-6">
-        <DialogHeader>
+        <DialogHeader className="min-w-0">
           <DialogTitle className="pr-8 text-left break-words">
-            Share &quot;{itemName}&quot;
+            Share &quot;<span className="break-all">{itemName}</span>&quot;
           </DialogTitle>
           <DialogDescription className="text-left">
             {itemType === "folder"
@@ -93,7 +93,7 @@ export function ShareDialog({
               <Label htmlFor={isPending ? undefined : "public"} className="text-sm font-medium">
                 Public access
               </Label>
-              <p className="text-sm text-muted-foreground">
+              <p className="break-words text-sm text-muted-foreground">
                 {isPending ? "Updating access…" : accessDescription}
               </p>
             </div>
