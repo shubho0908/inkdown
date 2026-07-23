@@ -16,8 +16,8 @@ export async function LandingPageMetrics() {
   ] as const;
 
   return (
-    <section aria-label="Platform metrics" className="border-y bg-muted/20 py-16 sm:py-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section aria-label="Platform metrics" className="border-y bg-muted/20 pt-0 pb-12 sm:pb-16">
+      <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
         <h2 className="text-center text-sm font-medium uppercase tracking-wider text-muted-foreground">
           Built for writers, developers, and teams
         </h2>
