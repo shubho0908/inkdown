@@ -1,25 +1,6 @@
-import { FileText, Globe, Users } from "lucide-react";
-
 import { getCachedPlatformMetrics } from "@/lib/platform-metrics/cached";
-import { formatMetricValue } from "@/lib/platform-metrics/format";
 
-const metricCards = [
-  {
-    key: "total_users" as const,
-    label: "Total writers",
-    icon: Users,
-  },
-  {
-    key: "total_documents" as const,
-    label: "Documents created",
-    icon: FileText,
-  },
-  {
-    key: "public_documents" as const,
-    label: "Published publicly",
-    icon: Globe,
-  },
-];
+const numberFormat = new Intl.NumberFormat("en-US", { notation: "compact" });
 
 export async function LandingPageMetrics() {
   const metrics = await getCachedPlatformMetrics();
@@ -28,31 +9,26 @@ export async function LandingPageMetrics() {
     return null;
   }
 
+  const items = [
+    { key: "total_users", label: "Writers", value: metrics.total_users },
+    { key: "total_documents", label: "Documents", value: metrics.total_documents },
+    { key: "total_folders", label: "Folders", value: metrics.total_folders },
+  ] as const;
+
   return (
-    <section
-      aria-label="Platform usage"
-      className="relative border-y border-border/60 bg-muted/20 py-14 sm:py-16"
-    >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-
-      <div className="mx-auto max-w-5xl px-4 sm:px-6">
-        <p className="text-center text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-          Trusted by writers everywhere
-        </p>
-
-        <dl className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-          {metricCards.map(({ key, label, icon: Icon }) => (
-            <div
-              key={key}
-              className="rounded-xl border border-border/60 bg-background/70 px-4 py-5 text-center shadow-sm backdrop-blur-sm sm:px-5 sm:py-6"
-            >
-              <dt className="flex items-center justify-center gap-2 text-xs font-medium text-muted-foreground sm:text-sm">
-                <Icon className="size-3.5 shrink-0 opacity-70" aria-hidden />
-                {label}
-              </dt>
-              <dd className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                {formatMetricValue(metrics[key])}
+    <section aria-label="Platform metrics" className="border-y bg-muted/20 py-16 sm:py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 className="text-center text-sm font-medium uppercase tracking-wider text-muted-foreground">
+          Built for writers, developers, and teams
+        </h2>
+        <dl className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-3">
+          {items.map(({ key, label, value }) => (
+            <div key={key} className="text-center">
+              <dt className="sr-only">{label}</dt>
+              <dd className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+                {numberFormat.format(value)}
               </dd>
+              <p className="mt-2 text-sm font-medium text-muted-foreground">{label}</p>
             </div>
           ))}
         </dl>

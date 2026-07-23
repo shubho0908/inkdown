@@ -7,6 +7,7 @@ import {
   PLATFORM_METRICS_REVALIDATE_SECONDS,
 } from "@/lib/platform-metrics/constants";
 import { readPlatformMetricsSnapshot } from "@/lib/platform-metrics/store";
+import { UNINITIALIZED_PLATFORM_METRICS } from "@/lib/platform-metrics/types";
 import type { PlatformMetrics } from "@/lib/platform-metrics/types";
 
 const getCachedSnapshot = unstable_cache(
@@ -23,5 +24,9 @@ const getCachedSnapshot = unstable_cache(
  * Serves from Next.js Data Cache; at most one O(1) snapshot read every 3 days per region.
  */
 export async function getCachedPlatformMetrics(): Promise<PlatformMetrics> {
-  return getCachedSnapshot();
+  try {
+    return await getCachedSnapshot();
+  } catch {
+    return UNINITIALIZED_PLATFORM_METRICS;
+  }
 }

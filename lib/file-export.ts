@@ -30,7 +30,5 @@ export function downloadMarkdownFile(fileName: string, content: string) {
   link.click();
   document.body.removeChild(link);
 
-  window.setTimeout(() => {
-    URL.revokeObjectURL(objectUrl);
-  }, 30_000);
+  URL.revokeObjectURL(objectUrl);
 }

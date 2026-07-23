@@ -231,6 +231,7 @@ function ResetPasswordFormInner() {
               disabled={isPending}
               autoComplete="new-password"
               minLength={12}
+              className="focus-visible:ring-indigo-500/50"
             />
             {password && (
               <div className="space-y-2">
@@ -263,6 +264,7 @@ function ResetPasswordFormInner() {
               }
               disabled={isPending}
               autoComplete="new-password"
+              className="focus-visible:ring-indigo-500/50"
             />
             {repeatPassword && password !== repeatPassword && (
               <p className="text-xs text-destructive">Passwords do not match</p>
@@ -271,7 +273,7 @@ function ResetPasswordFormInner() {
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <Button
             type="submit"
-            className="w-full"
+            className="w-full bg-indigo-600 text-white hover:bg-indigo-500 disabled:bg-indigo-600/50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
             disabled={isPending || !passwordStrength || passwordStrength === "weak"}
           >
             {isPending ? "Updating…" : "Update password"}

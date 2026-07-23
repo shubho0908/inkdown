@@ -1,0 +1,14 @@
+# Inkdown
+
+Inkdown is a self-hosted markdown workspace: write in a calm editor, organize documents into folders, and publish them with a public link.
+
+## Public pages
+
+- [Home](/): product landing page
+- [Privacy](/privacy): privacy policy
+- [Terms](/terms): terms of service
+
+## Agent resources
+
+- [Sitemap](/sitemap.md): human-readable site structure
+- [AGENTS.md](/AGENTS.md): install, configure, and use Inkdown as a coding agent

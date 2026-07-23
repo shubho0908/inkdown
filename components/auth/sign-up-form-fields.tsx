@@ -79,6 +79,7 @@ export function SignUpFormFields({
             onChange={(e) => dispatch({ type: "set_email", email: e.target.value })}
             disabled={isPending}
             autoComplete="email"
+            className="focus-visible:ring-indigo-500/50"
           />
         </div>
         <div className="grid gap-2">
@@ -97,6 +98,7 @@ export function SignUpFormFields({
             disabled={isPending}
             autoComplete="new-password"
             minLength={12}
+            className="focus-visible:ring-indigo-500/50"
           />
           {password && (
             <div className="space-y-2">
@@ -132,6 +134,7 @@ export function SignUpFormFields({
             }
             disabled={isPending}
             autoComplete="new-password"
+            className="focus-visible:ring-indigo-500/50"
           />
         </div>
 
@@ -141,7 +144,7 @@ export function SignUpFormFields({
             {error.action === "login" && (
               <Link
                 href="/auth/login"
-                className="mt-2 inline-block text-sm text-primary underline underline-offset-4 hover:text-primary/80"
+                className="mt-2 inline-block text-sm text-indigo-600 underline underline-offset-4 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
               >
                 Sign in here
               </Link>
@@ -151,7 +154,7 @@ export function SignUpFormFields({
 
         <Button
           type="submit"
-          className="w-full"
+          className="w-full bg-indigo-600 text-white hover:bg-indigo-500 disabled:bg-indigo-600/50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
           disabled={isPending || !passwordStrength || passwordStrength === "weak"}
         >
           {isPending ? (emailChecked ? "Creating account…" : "Checking…") : "Sign up"}
@@ -187,7 +190,7 @@ export function SignUpFormFields({
         Already have an account?{" "}
         <Link
           href="/auth/login"
-          className="text-primary underline underline-offset-4 hover:text-primary/80"
+          className="text-indigo-600 underline underline-offset-4 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
         >
           Sign in
         </Link>

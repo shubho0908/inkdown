@@ -1,29 +1,26 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { FileText } from 'lucide-react'
-import { DashboardSidebar } from '@/components/dashboard-sidebar'
-import { MarkdownEditor } from '@/components/markdown-editor'
+import { useEffect, useState } from "react";
+import { FileText } from "lucide-react";
+import { DashboardSidebar } from "@/components/dashboard-sidebar";
+import { MarkdownEditor } from "@/components/markdown-editor";
 
 export function DashboardWorkspace() {
-  const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
+  const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
 
   useEffect(() => {
-    document.documentElement.classList.add('workspace-scroll-locked')
-    document.body.classList.add('workspace-scroll-locked')
+    document.documentElement.classList.add("workspace-scroll-locked");
+    document.body.classList.add("workspace-scroll-locked");
 
     return () => {
-      document.documentElement.classList.remove('workspace-scroll-locked')
-      document.body.classList.remove('workspace-scroll-locked')
-    }
-  }, [])
+      document.documentElement.classList.remove("workspace-scroll-locked");
+      document.body.classList.remove("workspace-scroll-locked");
+    };
+  }, []);
 
   return (
-    <div className="flex h-screen min-h-screen w-full min-w-0 flex-col overflow-hidden supports-[height:100dvh]:h-dvh supports-[height:100dvh]:min-h-dvh md:grid md:grid-cols-[var(--workspace-sidebar-width)_minmax(0,1fr)]">
-      <DashboardSidebar
-        selectedFileId={selectedFileId}
-        onFileSelect={setSelectedFileId}
-      />
+    <div className="flex h-dvh min-h-dvh w-full min-w-0 flex-col overflow-hidden md:grid md:grid-cols-[var(--workspace-sidebar-width)_minmax(0,1fr)]">
+      <DashboardSidebar selectedFileId={selectedFileId} onFileSelect={setSelectedFileId} />
       <main className="flex h-full min-h-0 min-w-0 w-full flex-1 overflow-hidden bg-background">
         {selectedFileId ? (
           <MarkdownEditor fileId={selectedFileId} />
@@ -42,5 +39,5 @@ export function DashboardWorkspace() {
         )}
       </main>
     </div>
-  )
+  );
 }

@@ -34,7 +34,8 @@ export async function handleAuthenticatedRedirect(
     );
   }
 
-  return NextResponse.redirect(new URL(next, requestUrl.origin));
+  const safeNext = getSafeNextPath(next);
+  return NextResponse.redirect(new URL(safeNext, requestUrl.origin));
 }
 
 export function createErrorRedirect(requestUrl: URL, errorMessage: string): NextResponse {

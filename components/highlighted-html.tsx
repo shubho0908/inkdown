@@ -1,5 +1,6 @@
 "use client";
 
+import DOMPurify from "dompurify";
 import { useCallback, type ReactElement } from "react";
 
 interface HighlightedHtmlProps {
@@ -16,7 +17,7 @@ export function HighlightedHtml({
   const setHighlightedHtml = useCallback(
     (node: HTMLElement | null) => {
       if (node) {
-        node.innerHTML = html;
+        node.innerHTML = DOMPurify.sanitize(html);
       }
     },
     [html],
