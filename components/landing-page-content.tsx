@@ -9,7 +9,7 @@ export function LandingPageContent() {
     <main id="content">
       <section aria-label="Hero" className="relative overflow-hidden">
         <div className="mx-auto flex max-w-7xl flex-col justify-center px-4 sm:px-6 lg:px-8">
-          <div className="mt-12 grid items-center gap-10 pt-24 pb-24 sm:pt-28 sm:pb-24 lg:grid-cols-2 lg:gap-16 lg:pt-28 lg:pb-24">
+          <div className="mt-8 grid items-center gap-10 pt-20 pb-24 sm:pt-24 sm:pb-24 lg:grid-cols-2 lg:gap-16 lg:pt-24 lg:pb-24">
             <div className="order-1 flex min-w-0 flex-col justify-center">
               <h1 className="text-balance text-4xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-5xl md:text-5xl lg:text-5xl xl:text-6xl">
                 A markdown editor built for clear, focused writing.
