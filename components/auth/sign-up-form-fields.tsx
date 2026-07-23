@@ -79,6 +79,7 @@ export function SignUpFormFields({
             onChange={(e) => dispatch({ type: "set_email", email: e.target.value })}
             disabled={isPending}
             autoComplete="email"
+            className="focus-visible:ring-primary/50"
           />
         </div>
         <div className="grid gap-2">
@@ -97,6 +98,7 @@ export function SignUpFormFields({
             disabled={isPending}
             autoComplete="new-password"
             minLength={12}
+            className="focus-visible:ring-primary/50"
           />
           {password && (
             <div className="space-y-2">
@@ -132,6 +134,7 @@ export function SignUpFormFields({
             }
             disabled={isPending}
             autoComplete="new-password"
+            className="focus-visible:ring-primary/50"
           />
         </div>
 

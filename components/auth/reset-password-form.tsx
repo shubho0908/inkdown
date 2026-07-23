@@ -231,6 +231,7 @@ function ResetPasswordFormInner() {
               disabled={isPending}
               autoComplete="new-password"
               minLength={12}
+              className="focus-visible:ring-primary/50"
             />
             {password && (
               <div className="space-y-2">
@@ -263,6 +264,7 @@ function ResetPasswordFormInner() {
               }
               disabled={isPending}
               autoComplete="new-password"
+              className="focus-visible:ring-primary/50"
             />
             {repeatPassword && password !== repeatPassword && (
               <p className="text-xs text-destructive">Passwords do not match</p>

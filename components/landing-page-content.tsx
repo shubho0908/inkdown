@@ -1,67 +1,64 @@
-import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { LazyHeroMockup } from "@/components/lazy-hero-mockup";
+import { AnimatedSection } from "@/components/animated-section";
 import { LandingPageMetrics } from "@/components/landing-page-metrics";
 import { LandingPageShowcase } from "@/components/landing-page-showcase";
 
 export function LandingPageContent() {
   return (
-    <>
-      <section className="relative overflow-hidden bg-background pt-12 pb-16 sm:pt-24 sm:pb-24 lg:pt-28 lg:pb-28">
-        <div className="inkdown-noise pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.015]" />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[linear-gradient(to_bottom,var(--background),transparent)]" />
-
-        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="mx-auto max-w-[50rem] text-center">
-            <h1 className="text-5xl font-semibold tracking-tight text-foreground sm:text-6xl md:text-7xl lg:text-[5.25rem] lg:leading-[1.05]">
-              Write beautiful markdown, <br className="hidden sm:block" />
-              <span className="text-muted-foreground">share it instantly</span>
-            </h1>
-
-            <div className="mt-6 inline-flex items-center rounded-full border border-border/50 bg-background/70 py-1.5 px-4 text-xs font-medium text-foreground/70 shadow-sm">
-              <span className="mr-2.5 flex size-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
-              Inkdown 1.0 is now live
+    <main id="content">
+      <AnimatedSection aria-label="Hero" className="relative overflow-hidden">
+        <div className="mx-auto flex max-w-7xl flex-col justify-center px-4 sm:px-6 lg:px-8">
+          <div className="mt-8 grid items-center gap-10 pt-20 pb-24 sm:pt-24 sm:pb-24 lg:grid-cols-2 lg:gap-16 lg:pt-24 lg:pb-24">
+            <div className="order-1 flex min-w-0 flex-col justify-center">
+              <h1 className="text-balance text-4xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-5xl md:text-5xl lg:text-5xl xl:text-6xl">
+                A markdown editor built for clear, focused writing.
+              </h1>
+              <p className="mt-5 max-w-lg text-balance text-base leading-relaxed text-muted-foreground sm:mt-6 sm:text-lg">
+                Inkdown is a markdown workspace. Write with live preview, organize documents in
+                folders, and share them with a public link. No clutter, no friction.
+              </p>
+              <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row">
+                <Button asChild size="lg">
+                  <Link href="/auth/sign-up">Start writing</Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link href="/auth/login">Sign in</Link>
+                </Button>
+              </div>
             </div>
-
-            <p className="mx-auto mt-6 max-w-2xl px-2 text-pretty text-base leading-relaxed tracking-wide text-muted-foreground sm:mt-8 sm:px-0 sm:text-lg md:text-xl">
-              The premium, distraction-free environment for thinkers. Organize seamlessly, preview
-              fluidly, and publish with uncompromising elegance.
-            </p>
-
-            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:mt-12 sm:flex-row">
-              <Link
-                href="/auth/sign-up"
-                className="group inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-              >
-                Start drafting
-                <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
-              </Link>
+            <div className="order-2 hidden min-w-0 lg:block">
+              <LazyHeroMockup />
             </div>
           </div>
-
-          <LandingPageShowcase />
         </div>
-      </section>
+      </AnimatedSection>
 
       <LandingPageMetrics />
+      <LandingPageShowcase />
 
-      <section className="relative overflow-hidden border-t border-border bg-muted/10 py-20 sm:py-32">
-        <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
-          <h2 className="text-4xl font-medium tracking-tight text-foreground sm:text-5xl lg:text-5xl">
-            Clarity awaits.
+      <AnimatedSection
+        aria-label="Get started"
+        className="relative mt-24 overflow-hidden border-t bg-muted/30 py-24 sm:py-28 lg:py-28"
+      >
+        <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+          <h2 className="text-balance text-4xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-5xl md:text-6xl">
+            Ready to write more clearly?
           </h2>
-          <p className="mx-auto mt-6 max-w-2xl px-2 text-base leading-relaxed tracking-wide text-muted-foreground sm:px-0 sm:text-lg">
-            Experience a genuinely refined markdown environment. Write, organize, and share with a
-            workspace that profoundly respects your focus.
+          <p className="mx-auto mt-6 max-w-xl text-balance text-lg text-muted-foreground">
+            Join a focused workspace built for markdown. Start writing for free in seconds.
           </p>
-          <Link
-            href="/auth/sign-up"
-            className="group mt-8 inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:mt-10"
-          >
-            Start writing seamlessly
-            <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
-          </Link>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:mt-10 sm:flex-row">
+            <Button asChild size="lg">
+              <Link href="/auth/sign-up">Create your free account</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/auth/login">Sign in</Link>
+            </Button>
+          </div>
         </div>
-      </section>
-    </>
+      </AnimatedSection>
+    </main>
   );
 }

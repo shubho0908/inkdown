@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { InkdownLogo } from "@/components/inkdown-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 type AuthShellProps = {
   children: ReactNode;
@@ -12,37 +11,31 @@ type AuthShellProps = {
 
 export function AuthShell({ children, description, title }: AuthShellProps) {
   return (
-    <div className="relative flex min-h-svh w-full items-center justify-center px-4 py-16 sm:px-6 lg:px-8 bg-background">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden flex items-center justify-center opacity-50 dark:opacity-100">
-        <div className="size-[300px] rounded-full bg-primary/5 blur-[80px]" />
-      </div>
-      <div className="inkdown-noise pointer-events-none absolute inset-0 opacity-[0.02]" />
+    <main className="relative flex min-h-dvh w-full items-center justify-center overflow-x-hidden bg-background px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+      <div className="pointer-events-none absolute -right-24 -top-24 size-96 rounded-full bg-primary/[0.04] blur-3xl dark:bg-primary/[0.05]" />
+      <div className="pointer-events-none absolute -bottom-32 -left-32 size-80 rounded-full bg-primary/[0.03] blur-3xl dark:bg-primary/[0.04]" />
 
       <div className="absolute right-4 top-4 z-50">
         <ThemeToggle />
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center justify-center">
-            <Link href="/">
-              <InkdownLogo size="lg" />
-            </Link>
-          </div>
+        <div className="flex flex-col gap-8">
+          <Link href="/" aria-label="Inkdown home" className="mx-auto shrink-0">
+            <InkdownLogo size="lg" />
+          </Link>
 
-          <Card className="rounded-[20px] border-border/60 bg-background/95 py-6 shadow-sm backdrop-blur-xl sm:py-8">
-            <CardHeader className="space-y-1.5 pb-8">
-              <CardTitle className="font-sans text-2xl font-medium tracking-tight text-center">
+          <article className="rounded-2xl border bg-card/95 p-5 shadow-xl backdrop-blur-xl sm:p-10">
+            <header className="space-y-2 text-center">
+              <h1 className="font-sans text-2xl font-medium tracking-tight text-foreground">
                 {title}
-              </CardTitle>
-              <CardDescription className="text-center text-muted-foreground/80">
-                {description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>{children}</CardContent>
-          </Card>
+              </h1>
+              <p className="text-sm text-muted-foreground">{description}</p>
+            </header>
+            <div className="mt-8">{children}</div>
+          </article>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

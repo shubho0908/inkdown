@@ -131,6 +131,8 @@ function FolderTreeItem({
           <button
             type="button"
             className="flex size-5 shrink-0 items-center justify-center rounded hover:bg-accent"
+            aria-label={`${isExpanded ? "Collapse" : "Expand"} ${node.folder.name}`}
+            aria-expanded={isExpanded}
             onClick={(e) => {
               e.stopPropagation();
               onToggleFolder(node.folder.id);

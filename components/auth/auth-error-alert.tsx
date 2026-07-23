@@ -10,7 +10,13 @@ export function AuthErrorAlert({ title, message }: AuthErrorAlertProps) {
       role="alert"
     >
       {title ? <p className="text-sm font-medium text-destructive">{title}</p> : null}
-      <p className={title ? "mt-1 text-sm text-destructive/90" : "text-sm text-destructive"}>
+      <p
+        className={
+          title
+            ? "mt-1 break-words text-sm text-destructive/90"
+            : "break-words text-sm text-destructive"
+        }
+      >
         {message}
       </p>
     </div>

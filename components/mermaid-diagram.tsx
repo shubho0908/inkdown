@@ -46,19 +46,13 @@ export function MermaidDiagram({ chart, theme }: MermaidDiagramProps) {
   useEffect(() => {
     let isCancelled = false;
 
+    dispatch({ type: "reset" });
+
     async function renderDiagram() {
-      if (isCancelled) {
-        return;
-      }
-
-      dispatch({ type: "reset" });
-
       try {
-        if (isCancelled) {
-          return;
-        }
-
         const mermaid = (await import("mermaid")).default;
+        if (isCancelled) return;
+
         mermaid.initialize({
           startOnLoad: false,
           securityLevel: "strict",
@@ -69,22 +63,16 @@ export function MermaidDiagram({ chart, theme }: MermaidDiagramProps) {
           },
         });
 
-        if (isCancelled) {
-          return;
-        }
-
         const { svg: renderedSvg } = await mermaid.render(`mermaid-${diagramId}`, chart);
-
-        dispatch({ type: "success", svg: renderedSvg });
-      } catch (cause) {
-        if (isCancelled) {
-          return;
+        if (!isCancelled) {
+          dispatch({ type: "success", svg: renderedSvg });
         }
-
-        const message =
-          cause instanceof Error ? cause.message : "Unable to render this Mermaid diagram.";
-
-        dispatch({ type: "error", error: message });
+      } catch (cause) {
+        if (!isCancelled) {
+          const message =
+            cause instanceof Error ? cause.message : "Unable to render this Mermaid diagram.";
+          dispatch({ type: "error", error: message });
+        }
       }
     }
 
@@ -93,7 +81,7 @@ export function MermaidDiagram({ chart, theme }: MermaidDiagramProps) {
     return () => {
       isCancelled = true;
     };
-  }, [chart, diagramId, mermaidTheme, diagramState.renderKey]);
+  }, [chart, diagramId, mermaidTheme]);
 
   const { svg, error } = diagramState;
 

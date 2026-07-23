@@ -95,6 +95,7 @@ export function ForgotPasswordForm() {
               onChange={(e) => setEmail(e.target.value)}
               disabled={isPending}
               autoComplete="email"
+              className="focus-visible:ring-primary/50"
             />
           </div>
           {error ? <AuthErrorAlert message={error} /> : null}

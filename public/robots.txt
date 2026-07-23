@@ -4,7 +4,21 @@ Disallow: /api/
 Disallow: /auth/
 Disallow: /dashboard
 Disallow: /emails
-Content-Signal: ai-train=no, search=yes, ai-input=no
 
-Sitemap: https://inkdown.shubhojeet.com/sitemap.xml
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+Sitemap: https://inkdown.shubhojeet.com/sitemap
 Host: https://inkdown.shubhojeet.com

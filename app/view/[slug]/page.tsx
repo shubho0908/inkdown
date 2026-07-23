@@ -139,7 +139,7 @@ export default async function ViewPage({ params }: ViewPageProps) {
             <Link
               href="/auth/sign-up"
               prefetch={false}
-              className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground outline-none transition-all hover:bg-primary/90 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground outline-none transition-colors hover:bg-primary/90 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
               Start writing
               <ArrowRight aria-hidden="true" className="ml-1.5 size-3.5" />

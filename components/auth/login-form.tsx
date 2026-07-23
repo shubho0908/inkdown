@@ -80,6 +80,7 @@ export function LoginForm() {
               onChange={(e) => setEmail(e.target.value)}
               disabled={isPending}
               autoComplete="email"
+              className="focus-visible:ring-primary/50"
             />
           </div>
           <div className="grid gap-2">
@@ -92,6 +93,7 @@ export function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               disabled={isPending}
               autoComplete="current-password"
+              className="focus-visible:ring-primary/50"
             />
           </div>
           {error ? <AuthErrorAlert message={error} /> : null}

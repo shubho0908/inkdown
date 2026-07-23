@@ -126,7 +126,7 @@ export function getVerificationGateCopy(resend?: string | null): VerificationGat
       description: "Your email is not verified yet",
       body: "Sign-in stays blocked until you confirm your email address. We just sent you a fresh verification link.",
       footer:
-        "A fresh verification link is on the way. Click it to confirm your email — you'll be signed in automatically.",
+        "A fresh verification link is on the way. Click it to confirm your email - you'll be signed in automatically.",
     };
   }
 
