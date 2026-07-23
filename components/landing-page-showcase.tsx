@@ -1,4 +1,4 @@
-import { FileText } from "lucide-react";
+import { FileText, FolderOpen, Link } from "lucide-react";
 import { AnimatedSection } from "@/components/animated-section";
 import { LandingPageOrganizeDemo } from "@/components/landing-page-organize-demo";
 import { LandingPageShareDemo } from "@/components/landing-page-share-demo";
@@ -8,12 +8,14 @@ const features = [
   {
     demo: LandingPageOrganizeDemo,
     title: "Organize your ideas",
+    icon: FolderOpen,
     description:
       "Nest documents in folders so drafts, reference notes, and published pages stay easy to find.",
   },
   {
     demo: LandingPageShareDemo,
     title: "Publish with a link",
+    icon: Link,
     description:
       "Make any document or folder public and share it instantly. No exports, no attachments.",
   },
@@ -52,13 +54,18 @@ export function LandingPageShowcase() {
             </figcaption>
           </figure>
 
-          {features.map(({ demo: Demo, title, description }) => (
+          {features.map(({ demo: Demo, title, description, icon: Icon }) => (
             <div
               key={title}
               className="flex min-w-0 max-w-full flex-col justify-start overflow-hidden rounded-2xl border bg-muted/20 p-4 sm:p-6 lg:col-span-5"
             >
               <Demo />
-              <h3 className="mt-5 text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h3>
+              <h3 className="mt-5 flex items-center gap-2 text-xl font-semibold tracking-tight sm:text-2xl">
+                <span className="inline-flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Icon className="size-4" aria-hidden="true" />
+                </span>
+                {title}
+              </h3>
               <p className="mt-2 leading-relaxed text-muted-foreground">{description}</p>
             </div>
           ))}

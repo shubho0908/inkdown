@@ -72,7 +72,7 @@ export function LandingPageShareDemo() {
         />
       </svg>
 
-      <div className="animate-share-toast pointer-events-none absolute inset-x-3 bottom-3 flex justify-center sm:inset-x-4 sm:bottom-4">
+      <div className="animate-share-toast pointer-events-none absolute right-3 bottom-3 sm:right-4 sm:bottom-4">
         <div className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-[10px] font-medium text-primary-foreground shadow-lg shadow-primary/20">
           <Check className="size-3" />
           <span>Share it publically.</span>
