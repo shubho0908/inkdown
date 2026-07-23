@@ -153,7 +153,7 @@ export default async function ViewPage({ params }: ViewPageProps) {
           <header className="mb-8 border-b pb-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
-                <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+                <h1 className="text-balance text-3xl font-semibold tracking-tight [overflow-wrap:anywhere] sm:text-4xl">
                   {title}
                 </h1>
                 <p className="mt-2 text-sm text-muted-foreground">Last updated on {updatedAt}</p>
