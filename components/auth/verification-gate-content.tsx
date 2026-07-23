@@ -26,7 +26,7 @@ export function VerificationGateContent({
 
         {email ? (
           <p className="text-center text-sm text-muted-foreground">
-            Sent to: <span className="font-medium text-foreground">{email}</span>
+            Sent to: <span className="break-all font-medium text-foreground">{email}</span>
           </p>
         ) : null}
 

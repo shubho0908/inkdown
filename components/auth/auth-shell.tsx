@@ -11,7 +11,7 @@ type AuthShellProps = {
 
 export function AuthShell({ children, description, title }: AuthShellProps) {
   return (
-    <main className="relative flex min-h-dvh w-full items-center justify-center overflow-hidden bg-background px-4 py-12 sm:px-6 lg:px-8">
+    <main className="relative flex min-h-dvh w-full items-center justify-center overflow-x-hidden bg-background px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       <div className="pointer-events-none absolute -right-24 -top-24 size-96 rounded-full bg-indigo-600/[0.04] blur-3xl dark:bg-indigo-500/[0.05]" />
       <div className="pointer-events-none absolute -bottom-32 -left-32 size-80 rounded-full bg-blue-600/[0.03] blur-3xl dark:bg-blue-500/[0.04]" />
 
@@ -25,7 +25,7 @@ export function AuthShell({ children, description, title }: AuthShellProps) {
             <InkdownLogo size="lg" />
           </Link>
 
-          <article className="rounded-2xl border bg-card/95 p-8 shadow-xl backdrop-blur-xl sm:p-10">
+          <article className="rounded-2xl border bg-card/95 p-5 shadow-xl backdrop-blur-xl sm:p-10">
             <header className="space-y-2 text-center">
               <h1 className="font-sans text-2xl font-medium tracking-tight text-foreground">
                 {title}

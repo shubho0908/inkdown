@@ -20,10 +20,10 @@ const features = [
 
 export function LandingPageShowcase() {
   return (
-    <section aria-label="Features" className="py-24 sm:py-32">
+    <section aria-label="Features" className="pt-16 pb-16 sm:pt-20 sm:pb-20 lg:pt-20 lg:pb-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+          <h2 className="text-balance text-4xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-5xl">
             Everything you need to write, organize, and share.
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
@@ -31,11 +31,11 @@ export function LandingPageShowcase() {
           </p>
         </div>
 
-        <div className="mt-16 grid gap-6 lg:grid-cols-2 lg:grid-rows-2">
-          <figure className="flex flex-col gap-6 rounded-2xl border bg-muted/20 p-2 lg:row-span-2">
+        <div className="mt-8 grid min-w-0 grid-cols-1 gap-4 sm:mt-10 sm:gap-6 lg:mt-10 lg:grid-cols-12 lg:auto-rows-[minmax(19rem,auto)]">
+          <figure className="flex min-w-0 max-w-full flex-col gap-4 overflow-hidden rounded-2xl border bg-muted/20 p-2 sm:gap-5 lg:col-span-7 lg:row-span-2">
             <LandingPageSplitViewDemo />
-            <figcaption className="px-4 pb-4">
-              <h3 className="flex items-center gap-2 text-lg font-semibold">
+            <figcaption className="min-w-0 px-3 pb-3 sm:px-4 sm:pb-4">
+              <h3 className="flex items-center gap-2 text-xl font-semibold tracking-tight sm:text-2xl">
                 <span className="inline-flex size-8 items-center justify-center rounded-lg bg-indigo-600/10 text-indigo-600 dark:text-indigo-400">
                   <FileText className="size-4" aria-hidden="true" />
                 </span>
@@ -51,10 +51,10 @@ export function LandingPageShowcase() {
           {features.map(({ demo: Demo, title, description }) => (
             <div
               key={title}
-              className="flex flex-col justify-start rounded-2xl border bg-muted/20 p-6 sm:p-8"
+              className="flex min-w-0 max-w-full flex-col justify-start overflow-hidden rounded-2xl border bg-muted/20 p-4 sm:p-6 lg:col-span-5"
             >
               <Demo />
-              <h3 className="mt-5 text-xl font-semibold tracking-tight">{title}</h3>
+              <h3 className="mt-5 text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h3>
               <p className="mt-2 leading-relaxed text-muted-foreground">{description}</p>
             </div>
           ))}

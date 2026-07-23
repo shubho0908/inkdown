@@ -1,120 +1,273 @@
-import { ChevronRight, FileText, Folder, FolderOpen, Search } from "lucide-react";
+import type { CSSProperties, ReactNode } from "react";
 import { BrowserFrame } from "@/components/landing-page-browser-frame";
 
-const sourceLines = [
-  { num: 1, text: "# Welcome", color: "text-indigo-600 dark:text-indigo-400" },
+type StreamStyle = CSSProperties & {
+  "--stream-delay": string;
+  "--stream-height"?: string;
+};
+
+type SourceLine = {
+  number: number;
+  text: string;
+  tone: string;
+  delay?: string;
+  desktopOnly?: boolean;
+};
+
+type PreviewLine = {
+  delay: string;
+  desktopOnly?: boolean;
+  content: ReactNode;
+};
+
+const sourceLines: readonly SourceLine[] = [
   {
-    num: 2,
-    text: "Inkdown is a **self-hosted markdown workspace**.",
-    color: "text-foreground",
+    number: 1,
+    text: "# The quiet plan",
+    tone: "text-indigo-600 dark:text-indigo-400",
+    delay: "0ms",
   },
-  { num: 3, text: "## Features", color: "text-indigo-600 dark:text-indigo-400" },
-  { num: 4, text: "- Live preview", color: "text-foreground" },
-  { num: 5, text: "- Folder organization", color: "text-foreground" },
-  { num: 6, text: "- Public links", color: "text-foreground" },
-];
+  { number: 2, text: "Write ideas as they arrive.", tone: "text-foreground", delay: "420ms" },
+  { number: 3, text: "", tone: "text-foreground" },
+  {
+    number: 4,
+    text: "> No tab switching.",
+    tone: "text-muted-foreground",
+    delay: "840ms",
+  },
+  {
+    number: 5,
+    text: "## Keep the signal",
+    tone: "text-indigo-600 dark:text-indigo-400",
+    delay: "1260ms",
+  },
+  {
+    number: 6,
+    text: "- Capture the rough idea",
+    tone: "text-foreground",
+    delay: "1680ms",
+  },
+  {
+    number: 7,
+    text: "- Make the structure obvious",
+    tone: "text-foreground",
+    delay: "2100ms",
+    desktopOnly: true,
+  },
+  {
+    number: 8,
+    text: "- Share it when it is ready",
+    tone: "text-foreground",
+    delay: "2520ms",
+    desktopOnly: true,
+  },
+  { number: 9, text: "", tone: "text-foreground", desktopOnly: true },
+  {
+    number: 10,
+    text: "## Notes",
+    tone: "text-indigo-600 dark:text-indigo-400",
+    delay: "2940ms",
+    desktopOnly: true,
+  },
+  { number: 11, text: "", tone: "text-foreground", desktopOnly: true },
+  {
+    number: 12,
+    text: "**Markdown** stays readable.",
+    tone: "text-foreground",
+    delay: "3360ms",
+    desktopOnly: true,
+  },
+  { number: 13, text: "", tone: "text-foreground", desktopOnly: true },
+  {
+    number: 14,
+    text: "- _The preview follows._",
+    tone: "text-foreground",
+    delay: "3780ms",
+    desktopOnly: true,
+  },
+  {
+    number: 15,
+    text: "- [x] Keep the work moving",
+    tone: "text-foreground",
+    delay: "4200ms",
+    desktopOnly: true,
+  },
+  { number: 16, text: "", tone: "text-foreground", desktopOnly: true },
+  {
+    number: 17,
+    text: "> A small plan makes space to think.",
+    tone: "text-muted-foreground",
+    delay: "4620ms",
+    desktopOnly: true,
+  },
+  { number: 18, text: "", tone: "text-foreground", desktopOnly: true },
+] as const;
 
-const listItems = ["Live preview", "Folder organization", "Public links"];
+const previewLines: readonly PreviewLine[] = [
+  {
+    delay: "0ms",
+    content: (
+      <h1 className="text-base font-semibold tracking-tight text-foreground sm:text-xl">
+        The quiet plan
+      </h1>
+    ),
+  },
+  {
+    delay: "420ms",
+    content: <p className="text-muted-foreground">Write ideas as they arrive.</p>,
+  },
+  {
+    delay: "840ms",
+    content: (
+      <blockquote className="border-l-2 border-indigo-600/50 pl-2 text-muted-foreground dark:border-indigo-400/50">
+        No tab switching.
+      </blockquote>
+    ),
+  },
+  {
+    delay: "1260ms",
+    content: <h2 className="font-semibold tracking-tight text-foreground">Keep the signal</h2>,
+  },
+  {
+    delay: "1680ms",
+    content: <PreviewListItem>Capture the rough idea</PreviewListItem>,
+  },
+  {
+    delay: "2100ms",
+    desktopOnly: true,
+    content: <PreviewListItem>Make the structure obvious</PreviewListItem>,
+  },
+  {
+    delay: "2520ms",
+    desktopOnly: true,
+    content: <PreviewListItem>Share it when it is ready</PreviewListItem>,
+  },
+  {
+    delay: "2940ms",
+    desktopOnly: true,
+    content: <h2 className="font-semibold tracking-tight text-foreground">Notes</h2>,
+  },
+  {
+    delay: "3360ms",
+    desktopOnly: true,
+    content: (
+      <p className="text-muted-foreground">
+        <strong className="font-semibold text-foreground">Markdown</strong> stays readable.
+      </p>
+    ),
+  },
+  {
+    delay: "3780ms",
+    desktopOnly: true,
+    content: <PreviewListItem emphasis>The preview follows.</PreviewListItem>,
+  },
+  {
+    delay: "4200ms",
+    desktopOnly: true,
+    content: (
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        <span className="flex size-3 items-center justify-center rounded-sm border border-indigo-600 bg-indigo-600 text-[8px] font-bold text-white dark:border-indigo-400 dark:bg-indigo-400 dark:text-background">
+          ✓
+        </span>
+        Keep the work moving
+      </div>
+    ),
+  },
+  {
+    delay: "4620ms",
+    desktopOnly: true,
+    content: (
+      <blockquote className="border-l-2 border-indigo-600/50 pl-2 italic text-muted-foreground dark:border-indigo-400/50">
+        A small plan makes space to think.
+      </blockquote>
+    ),
+  },
+] as const;
 
-function Sidebar() {
+function streamSourceStyle(delay: string): StreamStyle {
+  return { "--stream-delay": delay };
+}
+
+function streamPreviewStyle(delay: string): StreamStyle {
+  return { "--stream-delay": delay, "--stream-height": "4rem" };
+}
+
+function PreviewListItem({ children, emphasis = false }: { children: string; emphasis?: boolean }) {
   return (
-    <aside className="hidden w-40 flex-col border-r bg-muted/30 p-3 sm:flex">
-      <div className="flex items-center gap-2 pb-3">
-        <div className="flex size-6 items-center justify-center rounded-md bg-indigo-600 text-white">
-          <FileText className="size-3.5" />
-        </div>
-        <span className="text-xs font-semibold">Inkdown</span>
-      </div>
-      <div className="relative">
-        <Search className="absolute left-2 top-1.5 size-3 text-muted-foreground" />
-        <div className="h-6 rounded-md bg-background pl-7 text-xs leading-6 text-muted-foreground">
-          Search notes...
-        </div>
-      </div>
-      <div className="mt-4 space-y-1">
-        <div className="flex items-center gap-2 rounded-md bg-accent px-2 py-1.5">
-          <FileText className="size-3.5 text-muted-foreground" />
-          <span className="truncate text-xs font-medium">welcome.md</span>
-        </div>
-        <div className="flex items-center gap-2 px-2 py-1.5">
-          <FolderOpen className="size-3.5 text-indigo-600 dark:text-indigo-400" />
-          <span className="truncate text-xs">Projects</span>
-        </div>
-        <div className="flex items-center gap-2 pl-6">
-          <FileText className="size-3.5 text-muted-foreground" />
-          <span className="truncate text-xs">roadmap.md</span>
-        </div>
-        <div className="flex items-center gap-2 px-2 py-1.5">
-          <ChevronRight className="size-3.5 text-muted-foreground" />
-          <Folder className="size-3.5 text-muted-foreground" />
-          <span className="truncate text-xs">Archive</span>
-        </div>
-      </div>
-    </aside>
+    <div className="flex items-center gap-1.5 text-muted-foreground">
+      <span className="size-1 shrink-0 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+      {emphasis ? <em className="text-foreground">{children}</em> : children}
+    </div>
   );
 }
 
 export function LandingPageSplitViewDemo() {
   return (
     <BrowserFrame
-      url="inkdown.shubhojeet.com"
-      className="w-full aspect-square min-h-[20rem] sm:min-h-[24rem]"
+      url="inkdown.shubhojeet.com/workspace"
+      className="w-full min-w-0 max-w-full min-h-[22rem] sm:aspect-[8/5] sm:min-h-[21rem] lg:min-h-0 lg:flex-1 lg:aspect-auto"
     >
-      <div className="flex h-full flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="flex min-w-0 flex-1">
-          <div className="flex min-w-0 flex-1 flex-col border-r bg-background">
-            <div className="flex items-center justify-between border-b px-3 py-2">
-              <span className="text-xs font-medium text-muted-foreground">welcome.md</span>
-              <span className="text-[10px] text-muted-foreground">Markdown</span>
-            </div>
-            <div className="flex-1 overflow-auto p-3 sm:p-4">
-              <div className="animate-source-wipe font-mono text-[11px] leading-5 sm:text-xs sm:leading-6">
-                {sourceLines.map(({ num, text, color }) => (
-                  <div key={num} className="grid grid-cols-[1.25rem_1fr]">
-                    <span className="select-none text-right text-muted-foreground">{num}</span>
-                    <span className={`pl-2 ${color}`}>{text}</span>
-                  </div>
-                ))}
-                <div className="grid grid-cols-[1.25rem_1fr]">
-                  <span className="select-none text-right text-muted-foreground">
-                    {sourceLines.length + 1}
+      <div
+        aria-hidden="true"
+        className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden sm:flex-row"
+      >
+        <section className="flex min-w-0 flex-1 flex-col bg-muted/[0.18]">
+          <header className="flex h-10 items-center justify-between border-b px-3 sm:px-4">
+            <span className="text-[11px] font-semibold text-foreground sm:text-xs">Write</span>
+            <span className="hidden font-mono text-[10px] text-muted-foreground sm:inline">
+              quiet-plan.md
+            </span>
+          </header>
+
+          <div className="min-h-0 flex-1 overflow-hidden px-2.5 py-3 font-mono text-[10px] leading-5 sm:px-4 sm:py-4 sm:text-xs sm:leading-6 lg:text-[11px] lg:leading-5">
+            {sourceLines.map(({ number, text, tone, delay, desktopOnly }) => (
+              <div
+                key={number}
+                className={`grid min-w-0 grid-cols-[1.1rem_minmax(0,1fr)] gap-1 sm:grid-cols-[1.35rem_minmax(0,1fr)] sm:gap-2 ${desktopOnly ? "hidden lg:grid" : ""}`}
+              >
+                <span className="select-none text-right text-muted-foreground/70">{number}</span>
+                {text ? (
+                  <span className="min-w-0 overflow-hidden">
+                    <span
+                      className={`animate-split-stream-source block whitespace-nowrap ${tone}`}
+                      style={streamSourceStyle(delay ?? "0ms")}
+                    >
+                      {text}
+                    </span>
                   </span>
-                  <span className="flex items-center gap-1 pl-2">
-                    <span className="inline-block h-4 w-0.5 animate-caret-blink bg-indigo-600 dark:bg-indigo-400" />
-                  </span>
-                </div>
+                ) : (
+                  <span aria-hidden="true">&nbsp;</span>
+                )}
               </div>
-            </div>
+            ))}
           </div>
-          <div className="flex min-w-0 flex-1 flex-col bg-background">
-            <div className="border-b px-3 py-2">
-              <span className="text-xs font-medium text-muted-foreground">Preview</span>
-            </div>
-            <div className="flex-1 overflow-auto p-3 sm:p-4 text-sm leading-relaxed">
-              <div className="animate-preview-wipe">
-                <h1 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
-                  Welcome
-                </h1>
-                <p className="mt-2 text-muted-foreground">
-                  Inkdown is a{" "}
-                  <strong className="text-foreground">self-hosted markdown workspace</strong>.
-                </p>
-                <h2 className="mt-4 text-base font-semibold tracking-tight text-foreground">
-                  Features
-                </h2>
-                <ul className="mt-2 list-disc space-y-1 pl-4 text-muted-foreground">
-                  {listItems.map((item) => (
-                    <li key={item}>
-                      <span className="font-semibold text-foreground">{item}</span>
-                    </li>
-                  ))}
-                </ul>
+        </section>
+
+        <section className="flex min-w-0 flex-1 flex-col border-t bg-background sm:border-l sm:border-t-0">
+          <header className="flex h-10 items-center justify-between border-b px-3 sm:px-4">
+            <span className="text-[11px] font-semibold text-foreground sm:text-xs">View</span>
+            <span className="text-[10px] font-medium text-indigo-600 dark:text-indigo-400">
+              Live
+            </span>
+          </header>
+
+          <div className="min-h-0 flex-1 overflow-hidden p-3 text-[11px] leading-relaxed sm:p-4 sm:text-sm">
+            {previewLines.map(({ delay, desktopOnly, content }) => (
+              <div
+                key={delay}
+                className={`animate-split-stream-preview overflow-hidden ${desktopOnly ? "hidden lg:block" : ""}`}
+                style={streamPreviewStyle(delay)}
+              >
+                <div className="pb-2">{content}</div>
               </div>
-            </div>
+            ))}
           </div>
-        </main>
+        </section>
       </div>
+      <p className="sr-only">
+        A Markdown document is typed line by line in the left editor, and each formatted block is
+        rendered at the same point in the right preview.
+      </p>
     </BrowserFrame>
   );
 }

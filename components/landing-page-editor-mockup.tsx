@@ -1,311 +1,632 @@
-import { ChevronRight, FileText, Folder, FolderOpen, Search } from "lucide-react";
+"use client";
+
+import type { LucideIcon } from "lucide-react";
+import {
+  Bold,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Copy,
+  Eye,
+  FilePlus2,
+  FileText,
+  Folder,
+  FolderOpen,
+  FolderPlus,
+  Heading1,
+  Italic,
+  List,
+  Menu,
+  PencilLine,
+  Share2,
+  X,
+} from "lucide-react";
+import { type ReactNode, useDeferredValue, useReducer, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { BrowserFrame } from "@/components/landing-page-browser-frame";
+import { cn } from "@/lib/utils";
 
-interface SourceLine {
-  num: number;
-  parts: { text: string; color: string }[];
-}
-
-interface Sample {
-  fileName: string;
-  sourceLines: SourceLine[];
-  preview: React.ReactNode;
-}
-
-const samples: Record<"welcome" | "roadmap", Sample> = {
-  welcome: {
-    fileName: "welcome.md",
-    sourceLines: [
-      { num: 1, parts: [{ text: "# Welcome", color: "text-indigo-600 dark:text-indigo-400" }] },
-      { num: 2, parts: [] },
-      {
-        num: 3,
-        parts: [
-          { text: "Inkdown is a ", color: "text-foreground" },
-          { text: "**self-hosted markdown workspace**", color: "text-foreground font-bold" },
-          { text: ".", color: "text-foreground" },
-        ],
-      },
-      { num: 4, parts: [] },
-      {
-        num: 5,
-        parts: [{ text: "## Features", color: "text-indigo-600 dark:text-indigo-400" }],
-      },
-      { num: 6, parts: [] },
-      {
-        num: 7,
-        parts: [
-          { text: "- ", color: "text-foreground" },
-          { text: "Live preview", color: "text-emerald-700 dark:text-emerald-300 font-semibold" },
-        ],
-      },
-      {
-        num: 8,
-        parts: [
-          { text: "- ", color: "text-foreground" },
-          {
-            text: "Folder organization",
-            color: "text-emerald-700 dark:text-emerald-300 font-semibold",
-          },
-        ],
-      },
-      {
-        num: 9,
-        parts: [
-          { text: "- ", color: "text-foreground" },
-          { text: "Public links", color: "text-emerald-700 dark:text-emerald-300 font-semibold" },
-        ],
-      },
-      { num: 10, parts: [] },
-      {
-        num: 11,
-        parts: [
-          { text: "```bash", color: "text-rose-600 dark:text-rose-400" },
-          { text: "npm install inkdown", color: "text-foreground" },
-          { text: "```", color: "text-rose-600 dark:text-rose-400" },
-        ],
-      },
-    ],
-    preview: (
-      <>
-        <h1 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">Welcome</h1>
-        <p className="mt-2 text-muted-foreground">
-          Inkdown is a <strong className="text-foreground">self-hosted markdown workspace</strong>.
-        </p>
-        <h2 className="mt-4 text-base font-semibold tracking-tight text-foreground">Features</h2>
-        <ul className="mt-2 list-disc space-y-1 pl-4 text-muted-foreground">
-          <li>
-            <span className="font-semibold text-foreground">Live preview</span>
-          </li>
-          <li>
-            <span className="font-semibold text-foreground">Folder organization</span>
-          </li>
-          <li>
-            <span className="font-semibold text-foreground">Public links</span>
-          </li>
-        </ul>
-        <div className="mt-4 overflow-hidden rounded-md bg-muted/50 p-2.5 font-mono text-[10px] sm:text-xs">
-          npm install inkdown
-        </div>
-      </>
-    ),
-  },
-  roadmap: {
-    fileName: "roadmap.md",
-    sourceLines: [
-      {
-        num: 1,
-        parts: [{ text: "# Product Roadmap", color: "text-indigo-600 dark:text-indigo-400" }],
-      },
-      { num: 2, parts: [] },
-      {
-        num: 3,
-        parts: [
-          {
-            text: "A self-hosted markdown workspace for writing.",
-            color: "text-foreground",
-          },
-        ],
-      },
-      { num: 4, parts: [] },
-      {
-        num: 5,
-        parts: [{ text: "## Core features", color: "text-indigo-600 dark:text-indigo-400" }],
-      },
-      { num: 6, parts: [] },
-      {
-        num: 7,
-        parts: [
-          { text: "- ", color: "text-foreground" },
-          {
-            text: "Live split preview",
-            color: "text-emerald-700 dark:text-emerald-300 font-semibold",
-          },
-        ],
-      },
-      {
-        num: 8,
-        parts: [
-          { text: "- ", color: "text-foreground" },
-          {
-            text: "Folder organization",
-            color: "text-emerald-700 dark:text-emerald-300 font-semibold",
-          },
-        ],
-      },
-      {
-        num: 9,
-        parts: [
-          { text: "- ", color: "text-foreground" },
-          {
-            text: "One-click public links",
-            color: "text-emerald-700 dark:text-emerald-300 font-semibold",
-          },
-        ],
-      },
-      { num: 10, parts: [] },
-      {
-        num: 11,
-        parts: [
-          { text: "```bash", color: "text-rose-600 dark:text-rose-400" },
-          { text: "bun install && bun run dev", color: "text-foreground" },
-          { text: "```", color: "text-rose-600 dark:text-rose-400" },
-        ],
-      },
-    ],
-    preview: (
-      <>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-          Product Roadmap
-        </h1>
-        <p className="mt-4 text-muted-foreground">
-          A self-hosted markdown workspace for focused writing, organizing, and sharing.
-        </p>
-        <h2 className="mt-6 text-lg font-semibold tracking-tight text-foreground">Core features</h2>
-        <ul className="mt-3 list-disc space-y-2 pl-5 text-muted-foreground">
-          <li>
-            <span className="font-semibold text-foreground">Live split preview</span> keeps source
-            and output side by side.
-          </li>
-          <li>
-            <span className="font-semibold text-foreground">Folder organization</span> scales from
-            notes to wikis.
-          </li>
-          <li>
-            <span className="font-semibold text-foreground">One-click public links</span> share
-            documents instantly.
-          </li>
-        </ul>
-        <div className="mt-6 overflow-hidden rounded-lg bg-muted/50 p-3 font-mono text-[10px] sm:text-xs">
-          bun install && bun run dev
-        </div>
-      </>
-    ),
-  },
+type WorkspaceFile = {
+  id: string;
+  name: string;
+  content: string;
+  folderId: string | null;
 };
 
-function Sidebar({ activeFile }: { activeFile: string }) {
-  const file = (name: string) => (
-    <div
-      className={`flex items-center gap-2 ${activeFile === name ? "rounded-md bg-accent px-2 py-1.5" : "px-2 py-1.5"}`}
-    >
-      <FileText
-        className={`size-3.5 ${activeFile === name ? "text-indigo-600 dark:text-indigo-400" : "text-muted-foreground"}`}
-      />
-      <span className={`truncate text-xs ${activeFile === name ? "font-medium" : ""}`}>{name}</span>
-    </div>
-  );
+type WorkspaceFolder = {
+  id: string;
+  name: string;
+  isOpen: boolean;
+};
 
-  return (
-    <aside className="hidden w-40 flex-col border-r bg-muted/30 p-3 sm:flex">
-      <div className="flex items-center gap-2 pb-3">
-        <div className="flex size-6 items-center justify-center rounded-md bg-indigo-600 text-white">
-          <FileText className="size-3.5" />
-        </div>
-        <span className="text-xs font-semibold">Inkdown</span>
-      </div>
-      <div className="relative">
-        <Search className="absolute left-2 top-1.5 size-3 text-muted-foreground" />
-        <div className="h-6 rounded-md bg-background pl-7 text-xs leading-6 text-muted-foreground">
-          Search notes...
-        </div>
-      </div>
-      <div className="mt-4 space-y-1">
-        {activeFile === "welcome.md" ? (
-          file("welcome.md")
-        ) : (
-          <div className="flex items-center gap-2 px-2 py-1.5">
-            <FileText className="size-3.5 text-muted-foreground" />
-            <span className="truncate text-xs">welcome.md</span>
-          </div>
-        )}
-        <div className="flex items-center gap-2 rounded-md bg-accent px-2 py-1.5">
-          <FolderOpen className="size-3.5 text-indigo-600 dark:text-indigo-400" />
-          <span className="truncate text-xs font-medium">Projects</span>
-        </div>
-        <div className="flex items-center gap-2 pl-6">
-          {activeFile === "roadmap.md" ? (
-            <>
-              <FileText className="size-3.5 text-indigo-600 dark:text-indigo-400" />
-              <span className="truncate text-xs font-medium">roadmap.md</span>
-              <span className="ml-auto size-1.5 rounded-full bg-emerald-600 animate-pulse" />
-            </>
-          ) : (
-            <>
-              <FileText className="size-3.5 text-muted-foreground" />
-              <span className="truncate text-xs">roadmap.md</span>
-            </>
-          )}
-        </div>
-        <div className="flex items-center gap-2 pl-6">
-          <FileText className="size-3.5 text-muted-foreground" />
-          <span className="truncate text-xs">notes.md</span>
-        </div>
-        <div className="flex items-center gap-2 px-2 py-1.5">
-          <ChevronRight className="size-3.5 text-muted-foreground" />
-          <Folder className="size-3.5 text-muted-foreground" />
-          <span className="truncate text-xs">Archive</span>
-        </div>
-      </div>
-    </aside>
-  );
+type WorkspaceState = {
+  activeFileId: string;
+  activeFolderId: string | null;
+  files: WorkspaceFile[];
+  folders: WorkspaceFolder[];
+};
+
+type WorkspaceAction =
+  | { type: "select_file"; fileId: string }
+  | { type: "select_folder"; folderId: string }
+  | { type: "toggle_folder"; folderId: string }
+  | { type: "update_content"; fileId: string; content: string }
+  | { type: "create_file" }
+  | { type: "create_folder" };
+
+const initialWorkspace: WorkspaceState = {
+  activeFileId: "welcome",
+  activeFolderId: null,
+  folders: [
+    { id: "projects", name: "Projects", isOpen: true },
+    { id: "reference", name: "Reference", isOpen: true },
+  ],
+  files: [
+    {
+      id: "welcome",
+      name: "welcome.md",
+      folderId: null,
+      content: `# A calmer place to think
+
+Write the first rough version. **Inkdown keeps the structure clear** while you work.
+
+## A working rhythm
+
+- Capture the thought
+- Shape it with Markdown
+- Share it when it is ready`,
+    },
+    {
+      id: "roadmap",
+      name: "roadmap.md",
+      folderId: "projects",
+      content: `# Product roadmap
+
+## This week
+
+- [x] Live Markdown preview
+- [ ] Folder templates
+- [ ] Publish a project brief`,
+    },
+    {
+      id: "reading-list",
+      name: "reading-list.md",
+      folderId: "reference",
+      content: `# Reading list
+
+> Keep the useful material close to the work.
+
+1. A short essay on clear writing
+2. Research notes for the next project`,
+    },
+  ],
+};
+
+function workspaceReducer(state: WorkspaceState, action: WorkspaceAction): WorkspaceState {
+  switch (action.type) {
+    case "select_file": {
+      const selectedFile = state.files.find((file) => file.id === action.fileId);
+
+      if (!selectedFile) {
+        return state;
+      }
+
+      return {
+        ...state,
+        activeFileId: selectedFile.id,
+        activeFolderId: selectedFile.folderId,
+      };
+    }
+    case "select_folder":
+      return { ...state, activeFolderId: action.folderId };
+    case "toggle_folder":
+      return {
+        ...state,
+        activeFolderId: action.folderId,
+        folders: state.folders.map((folder) =>
+          folder.id === action.folderId ? { ...folder, isOpen: !folder.isOpen } : folder,
+        ),
+      };
+    case "update_content":
+      return {
+        ...state,
+        files: state.files.map((file) =>
+          file.id === action.fileId ? { ...file, content: action.content } : file,
+        ),
+      };
+    case "create_file": {
+      const number = state.files.filter((file) => file.name.startsWith("untitled")).length + 1;
+      const id = `untitled-${number}`;
+      const name = number === 1 ? "untitled.md" : `untitled-${number}.md`;
+
+      return {
+        ...state,
+        activeFileId: id,
+        folders: state.folders.map((folder) =>
+          folder.id === state.activeFolderId ? { ...folder, isOpen: true } : folder,
+        ),
+        files: [
+          ...state.files,
+          {
+            id,
+            name,
+            folderId: state.activeFolderId,
+            content: "# Untitled\n\nStart writing here.",
+          },
+        ],
+      };
+    }
+    case "create_folder": {
+      const number =
+        state.folders.filter((folder) => folder.name.startsWith("New folder")).length + 1;
+      const id = `folder-${number}`;
+      const name = number === 1 ? "New folder" : `New folder ${number}`;
+
+      return {
+        ...state,
+        activeFolderId: id,
+        folders: [...state.folders, { id, name, isOpen: true }],
+      };
+    }
+    default:
+      return state;
+  }
 }
 
+const toolbarActions: Array<{
+  label: string;
+  icon: LucideIcon;
+  type: "wrap" | "line";
+  before: string;
+  after?: string;
+}> = [
+  { label: "Bold", icon: Bold, type: "wrap", before: "**", after: "**" },
+  { label: "Italic", icon: Italic, type: "wrap", before: "_", after: "_" },
+  { label: "Heading", icon: Heading1, type: "line", before: "# " },
+  { label: "List", icon: List, type: "line", before: "- " },
+];
+
 interface EditorMockupProps {
-  sample: "welcome" | "roadmap";
   url?: string;
   className?: string;
 }
 
-export function LandingPageEditorMockup({ sample, url, className }: EditorMockupProps) {
-  const { fileName, sourceLines, preview } = samples[sample];
-  const nextLine = sourceLines.length + 1;
+export function LandingPageEditorMockup({ url, className }: EditorMockupProps) {
+  const [workspace, dispatch] = useReducer(workspaceReducer, initialWorkspace);
+  const [viewMode, setViewMode] = useState<"split" | "write" | "preview">("split");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const activeFile =
+    workspace.files.find((file) => file.id === workspace.activeFileId) ?? workspace.files[0];
+  const previewContent = useDeferredValue(activeFile.content);
+  const sourceLines = activeFile.content.split("\n");
+  const shareUrl = `inkdown.shubhojeet.com/view/${activeFile.name.replace(/\.md$/u, "")}`;
+
+  const focusEditor = () => {
+    window.requestAnimationFrame(() => textareaRef.current?.focus());
+  };
+
+  const handleCreateFile = () => {
+    dispatch({ type: "create_file" });
+    setIsSidebarOpen(false);
+    focusEditor();
+  };
+
+  const applyMarkdown = (action: (typeof toolbarActions)[number]) => {
+    const textarea = textareaRef.current;
+
+    if (!textarea) {
+      return;
+    }
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const content = activeFile.content;
+    let nextContent = content;
+    let cursorPosition = start;
+
+    if (action.type === "line") {
+      const lineStart = content.lastIndexOf("\n", start - 1) + 1;
+      nextContent = `${content.slice(0, lineStart)}${action.before}${content.slice(lineStart)}`;
+      cursorPosition = start + action.before.length;
+    } else {
+      const selectedText = content.slice(start, end);
+      const suffix = action.after ?? "";
+      nextContent = `${content.slice(0, start)}${action.before}${selectedText}${suffix}${content.slice(end)}`;
+      cursorPosition = start + action.before.length + selectedText.length;
+    }
+
+    dispatch({ type: "update_content", fileId: activeFile.id, content: nextContent });
+    window.requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(cursorPosition, cursorPosition);
+    });
+  };
+
+  const copyShareLink = async () => {
+    try {
+      await navigator.clipboard?.writeText(`https://${shareUrl}`);
+    } catch {
+      // The interaction remains useful in browsers that deny clipboard access.
+    }
+
+    setIsCopied(true);
+    window.setTimeout(() => setIsCopied(false), 1400);
+  };
 
   return (
     <BrowserFrame url={url ?? "inkdown.shubhojeet.com"} className={className}>
-      <div className="flex h-full flex-1 overflow-hidden">
-        <Sidebar activeFile={fileName} />
-        <main className="flex min-w-0 flex-1">
-          <div className="flex min-w-0 flex-1 flex-col border-r bg-background">
-            <div className="flex items-center justify-between border-b px-3 py-2">
-              <span className="text-xs font-medium text-muted-foreground">{fileName}</span>
-              <span className="text-[10px] text-muted-foreground">Markdown</span>
+      <div className="relative flex h-full min-h-0 flex-1 overflow-hidden">
+        <WorkspaceSidebar
+          workspace={workspace}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          onCreateFile={handleCreateFile}
+          onCreateFolder={() => dispatch({ type: "create_folder" })}
+          onSelectFile={(fileId) => {
+            dispatch({ type: "select_file", fileId });
+            setIsSidebarOpen(false);
+          }}
+          onSelectFolder={(folderId) => dispatch({ type: "select_folder", folderId })}
+          onToggleFolder={(folderId) => dispatch({ type: "toggle_folder", folderId })}
+        />
+
+        <main className="flex min-w-0 flex-1 flex-col bg-background">
+          <header className="flex min-h-10 items-center gap-1.5 border-b px-2 sm:px-3">
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(true)}
+              className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:hidden"
+              aria-label="Open files"
+            >
+              <Menu className="size-3.5" />
+            </button>
+            <FileText className="hidden size-3.5 text-indigo-600 dark:text-indigo-400 sm:block" />
+            <span className="min-w-0 flex-1 truncate text-[10px] font-medium text-foreground sm:text-xs">
+              {activeFile.name}
+            </span>
+            <div className="flex rounded-md bg-muted/60 p-0.5" aria-label="View mode">
+              <ViewModeButton
+                active={viewMode === "write"}
+                label="Write"
+                onClick={() => setViewMode("write")}
+              >
+                <PencilLine className="size-3" />
+              </ViewModeButton>
+              <ViewModeButton
+                active={viewMode === "split"}
+                label="Split view"
+                onClick={() => setViewMode("split")}
+              >
+                <span className="grid w-3 grid-cols-2 gap-px">
+                  <span className="h-3 rounded-[1px] bg-current" />
+                  <span className="h-3 rounded-[1px] bg-current" />
+                </span>
+              </ViewModeButton>
+              <ViewModeButton
+                active={viewMode === "preview"}
+                label="Preview"
+                onClick={() => setViewMode("preview")}
+              >
+                <Eye className="size-3" />
+              </ViewModeButton>
             </div>
-            <div className="flex-1 overflow-auto p-3 sm:p-4">
-              <div className="font-mono text-[11px] leading-5 sm:text-xs sm:leading-6">
-                {sourceLines.map(({ num, parts }) => (
-                  <div key={num} className="grid grid-cols-[1.25rem_1fr]">
-                    <span className="select-none text-right text-muted-foreground">{num}</span>
-                    <span className="pl-2">
-                      {parts.length === 0 ? (
-                        <span>&nbsp;</span>
-                      ) : (
-                        parts.map((part, i) => (
-                          <span key={i} className={part.color}>
-                            {part.text}
-                          </span>
-                        ))
-                      )}
-                    </span>
-                  </div>
-                ))}
-                <div className="grid grid-cols-[1.25rem_1fr]">
-                  <span className="select-none text-right text-muted-foreground">{nextLine}</span>
-                  <span className="flex items-center gap-1 pl-2">
-                    <span className="inline-block h-4 w-0.5 animate-pulse bg-indigo-600 dark:bg-indigo-400" />
-                  </span>
+            <button
+              type="button"
+              onClick={() => setIsShareOpen((open) => !open)}
+              className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              aria-label="Share file"
+              aria-expanded={isShareOpen}
+            >
+              <Share2 className="size-3.5" />
+            </button>
+          </header>
+
+          <div className={cn("flex min-h-0 flex-1", viewMode === "split" && "max-sm:flex-col")}>
+            <section
+              className={cn(
+                "flex min-w-0 flex-1 flex-col bg-muted/[0.16]",
+                viewMode === "preview" && "hidden",
+              )}
+              aria-label="Markdown editor"
+            >
+              <div className="flex h-8 items-center justify-between border-b px-2 sm:px-3">
+                <span className="text-[9px] font-medium text-muted-foreground sm:text-[10px]">
+                  Write
+                </span>
+                <div className="flex items-center gap-0.5">
+                  {toolbarActions.map((action) => {
+                    const Icon = action.icon;
+
+                    return (
+                      <button
+                        key={action.label}
+                        type="button"
+                        onClick={() => applyMarkdown(action)}
+                        className="inline-flex size-5 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-background hover:text-foreground sm:size-6"
+                        title={action.label}
+                        aria-label={action.label}
+                      >
+                        <Icon className="size-3 sm:size-3.5" />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-            </div>
-          </div>
-          <div className="flex min-w-0 flex-1 flex-col bg-background">
-            <div className="border-b px-3 py-2">
-              <span className="text-xs font-medium text-muted-foreground">Preview</span>
-            </div>
-            <div className="flex-1 overflow-auto p-3 sm:p-4 text-sm leading-relaxed">{preview}</div>
+              <div className="flex min-h-0 flex-1 overflow-hidden py-2 sm:py-3">
+                <ol
+                  aria-hidden="true"
+                  className="w-6 shrink-0 select-none overflow-hidden pr-1 text-right font-mono text-[9px] leading-5 text-muted-foreground/60 sm:w-8 sm:pr-2 sm:text-[10px] sm:leading-6"
+                >
+                  {sourceLines.map((_, index) => (
+                    <li key={index}>{index + 1}</li>
+                  ))}
+                </ol>
+                <textarea
+                  ref={textareaRef}
+                  value={activeFile.content}
+                  onChange={(event) =>
+                    dispatch({
+                      type: "update_content",
+                      fileId: activeFile.id,
+                      content: event.target.value,
+                    })
+                  }
+                  onFocus={() => setViewMode((mode) => (mode === "preview" ? "split" : mode))}
+                  className="min-h-0 min-w-0 flex-1 resize-none overflow-auto bg-transparent pr-2 font-mono text-[9px] leading-5 text-foreground outline-none placeholder:text-muted-foreground sm:pr-3 sm:text-[10px] sm:leading-6"
+                  spellCheck={false}
+                  wrap="off"
+                  aria-label={`Edit ${activeFile.name}`}
+                />
+              </div>
+            </section>
+
+            <section
+              className={cn(
+                "min-w-0 flex-1 border-l bg-background",
+                viewMode === "write" && "hidden",
+                viewMode === "split" && "max-sm:border-l-0 max-sm:border-t",
+              )}
+              aria-label="Live Markdown preview"
+            >
+              <div className="flex h-8 items-center justify-between border-b px-2 sm:px-3">
+                <span className="text-[9px] font-medium text-muted-foreground sm:text-[10px]">
+                  Preview
+                </span>
+                <span className="text-[9px] font-medium text-indigo-600 dark:text-indigo-400 sm:text-[10px]">
+                  Live
+                </span>
+              </div>
+              <div className="h-[calc(100%-2rem)] overflow-auto p-2.5 text-[10px] leading-relaxed text-muted-foreground sm:p-3 sm:text-xs [&_blockquote]:border-l-2 [&_blockquote]:border-indigo-500/40 [&_blockquote]:pl-2 [&_blockquote]:italic [&_h1]:mb-2 [&_h1]:text-base [&_h1]:font-semibold [&_h1]:tracking-tight [&_h1]:text-foreground [&_h2]:mb-1.5 [&_h2]:mt-3 [&_h2]:text-xs [&_h2]:font-semibold [&_h2]:tracking-tight [&_h2]:text-foreground [&_ol]:my-1.5 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-4 [&_p]:mb-2 [&_strong]:font-semibold [&_strong]:text-foreground [&_ul]:my-1.5 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-4 sm:[&_h1]:text-lg sm:[&_h2]:text-sm">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{previewContent}</ReactMarkdown>
+              </div>
+            </section>
           </div>
         </main>
+
+        {isShareOpen ? (
+          <div className="absolute right-2 top-12 z-30 w-52 rounded-lg border bg-popover p-2.5 shadow-xl shadow-black/10 sm:right-3">
+            <div className="mb-1.5 flex items-center justify-between gap-2">
+              <span className="text-[10px] font-semibold text-foreground">Share this file</span>
+              <button
+                type="button"
+                onClick={() => setIsShareOpen(false)}
+                className="inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                aria-label="Close share menu"
+              >
+                <X className="size-3" />
+              </button>
+            </div>
+            <p className="truncate rounded-md bg-muted px-2 py-1.5 font-mono text-[9px] text-muted-foreground">
+              {shareUrl}
+            </p>
+            <button
+              type="button"
+              onClick={copyShareLink}
+              className="mt-2 flex h-7 w-full items-center justify-center gap-1.5 rounded-md bg-indigo-600 px-2 text-[10px] font-medium text-white transition-colors hover:bg-indigo-500"
+            >
+              {isCopied ? <Check className="size-3" /> : <Copy className="size-3" />}
+              {isCopied ? "Copied" : "Copy link"}
+            </button>
+          </div>
+        ) : null}
       </div>
     </BrowserFrame>
+  );
+}
+
+function WorkspaceSidebar({
+  workspace,
+  isOpen,
+  onClose,
+  onCreateFile,
+  onCreateFolder,
+  onSelectFile,
+  onSelectFolder,
+  onToggleFolder,
+}: {
+  workspace: WorkspaceState;
+  isOpen: boolean;
+  onClose: () => void;
+  onCreateFile: () => void;
+  onCreateFolder: () => void;
+  onSelectFile: (fileId: string) => void;
+  onSelectFolder: (folderId: string) => void;
+  onToggleFolder: (folderId: string) => void;
+}) {
+  const rootFiles = workspace.files.filter((file) => file.folderId === null);
+
+  return (
+    <aside
+      className={cn(
+        "absolute inset-y-0 left-0 z-20 flex w-44 -translate-x-full flex-col border-r bg-background/95 p-2.5 shadow-xl shadow-black/10 backdrop-blur transition-transform duration-200 ease-out sm:static sm:w-40 sm:translate-x-0 sm:bg-muted/30 sm:shadow-none sm:backdrop-blur-none",
+        isOpen && "translate-x-0",
+      )}
+    >
+      <div className="flex items-center justify-between gap-2 border-b pb-2 sm:border-none sm:pb-2.5">
+        <div className="flex items-center gap-1.5">
+          <span className="flex size-5 items-center justify-center rounded bg-indigo-600 text-white">
+            <FileText className="size-3" />
+          </span>
+          <span className="text-[10px] font-semibold text-foreground sm:text-xs">Inkdown</span>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground sm:hidden"
+          aria-label="Close files"
+        >
+          <X className="size-3.5" />
+        </button>
+      </div>
+
+      <div className="mt-2 flex gap-1">
+        <button
+          type="button"
+          onClick={onCreateFile}
+          className="inline-flex h-6 flex-1 items-center justify-center gap-1 rounded bg-indigo-600 px-1.5 text-[9px] font-medium text-white transition-colors hover:bg-indigo-500 sm:text-[10px]"
+        >
+          <FilePlus2 className="size-3" />
+          File
+        </button>
+        <button
+          type="button"
+          onClick={onCreateFolder}
+          className="inline-flex size-6 shrink-0 items-center justify-center rounded border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          aria-label="Create folder"
+          title="Create folder"
+        >
+          <FolderPlus className="size-3.5" />
+        </button>
+      </div>
+
+      <nav aria-label="Workspace files" className="mt-3 min-h-0 flex-1 space-y-0.5 overflow-auto">
+        {rootFiles.map((file) => (
+          <FileRow
+            key={file.id}
+            file={file}
+            isActive={workspace.activeFileId === file.id}
+            onClick={() => onSelectFile(file.id)}
+          />
+        ))}
+        {workspace.folders.map((folder) => {
+          const folderFiles = workspace.files.filter((file) => file.folderId === folder.id);
+          const isSelected = workspace.activeFolderId === folder.id;
+
+          return (
+            <div key={folder.id} className="pt-1">
+              <div className="flex min-w-0 items-center">
+                <button
+                  type="button"
+                  onClick={() => onToggleFolder(folder.id)}
+                  className={cn(
+                    "inline-flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                    isSelected && "text-indigo-600 dark:text-indigo-400",
+                  )}
+                  aria-label={`${folder.isOpen ? "Collapse" : "Expand"} ${folder.name}`}
+                >
+                  {folder.isOpen ? (
+                    <ChevronDown className="size-3" />
+                  ) : (
+                    <ChevronRight className="size-3" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSelectFolder(folder.id)}
+                  className={cn(
+                    "flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-1.5 py-1 text-left text-[10px] transition-colors hover:bg-muted sm:text-xs",
+                    isSelected && "bg-accent font-medium text-foreground",
+                  )}
+                >
+                  {folder.isOpen ? (
+                    <FolderOpen className="size-3.5 shrink-0 text-indigo-600 dark:text-indigo-400" />
+                  ) : (
+                    <Folder className="size-3.5 shrink-0 text-muted-foreground" />
+                  )}
+                  <span className="truncate">{folder.name}</span>
+                </button>
+              </div>
+              {folder.isOpen ? (
+                <div className="ml-5 border-l border-border/80 pl-1.5">
+                  {folderFiles.map((file) => (
+                    <FileRow
+                      key={file.id}
+                      file={file}
+                      isActive={workspace.activeFileId === file.id}
+                      onClick={() => onSelectFile(file.id)}
+                      nested
+                    />
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </nav>
+    </aside>
+  );
+}
+
+function FileRow({
+  file,
+  isActive,
+  nested = false,
+  onClick,
+}: {
+  file: WorkspaceFile;
+  isActive: boolean;
+  nested?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex w-full min-w-0 items-center gap-1.5 rounded-md px-1.5 py-1 text-left text-[10px] transition-colors hover:bg-muted sm:text-xs",
+        nested && "px-1",
+        isActive && "bg-accent font-medium text-foreground",
+      )}
+      aria-current={isActive ? "page" : undefined}
+    >
+      <FileText
+        className={cn(
+          "size-3.5 shrink-0 text-muted-foreground",
+          isActive && "text-indigo-600 dark:text-indigo-400",
+        )}
+      />
+      <span className="truncate">{file.name}</span>
+    </button>
+  );
+}
+
+function ViewModeButton({
+  active,
+  label,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground sm:size-5",
+        active && "bg-background text-foreground shadow-sm",
+      )}
+      aria-label={label}
+      title={label}
+    >
+      {children}
+    </button>
   );
 }
