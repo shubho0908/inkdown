@@ -1,6 +1,5 @@
 import { getCachedPlatformMetrics } from "@/lib/platform-metrics/cached";
-
-const numberFormat = new Intl.NumberFormat("en-US", { notation: "compact" });
+import { AnimatedNumber } from "@/components/animated-number";
 
 export async function LandingPageMetrics() {
   const metrics = await getCachedPlatformMetrics();
@@ -26,7 +25,7 @@ export async function LandingPageMetrics() {
             <div key={key} className="text-center">
               <dt className="sr-only">{label}</dt>
               <dd className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-                {numberFormat.format(value)}
+                <AnimatedNumber value={value} />
               </dd>
               <p className="mt-2 text-sm font-medium text-muted-foreground">{label}</p>
             </div>

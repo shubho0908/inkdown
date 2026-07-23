@@ -21,9 +21,8 @@ import {
   Share2,
   X,
 } from "lucide-react";
-import { type ReactNode, useDeferredValue, useReducer, useRef, useState } from "react";
+import { type ReactNode, useDeferredValue, useMemo, useReducer, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { BrowserFrame } from "@/components/landing-page-browser-frame";
 import { cn } from "@/lib/utils";
 
@@ -202,6 +201,10 @@ export function LandingPageEditorMockup({ url, className }: EditorMockupProps) {
   const activeFile =
     workspace.files.find((file) => file.id === workspace.activeFileId) ?? workspace.files[0];
   const previewContent = useDeferredValue(activeFile.content);
+  const previewElement = useMemo(
+    () => <ReactMarkdown>{previewContent}</ReactMarkdown>,
+    [previewContent],
+  );
   const sourceLines = activeFile.content.split("\n");
   const shareUrl = `inkdown.shubhojeet.com/view/${activeFile.name.replace(/\.md$/u, "")}`;
 
@@ -288,7 +291,7 @@ export function LandingPageEditorMockup({ url, className }: EditorMockupProps) {
             <span className="min-w-0 flex-1 truncate text-[10px] font-medium text-foreground sm:text-xs">
               {activeFile.name}
             </span>
-            <div className="flex rounded-md bg-muted/60 p-0.5" aria-label="View mode">
+            <div className="flex gap-1 rounded-md bg-muted/60 p-0.5" aria-label="View mode">
               <ViewModeButton
                 active={viewMode === "write"}
                 label="Write"
@@ -346,7 +349,7 @@ export function LandingPageEditorMockup({ url, className }: EditorMockupProps) {
                         key={action.label}
                         type="button"
                         onClick={() => applyMarkdown(action)}
-                        className="inline-flex size-5 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-background hover:text-foreground sm:size-6"
+                        className="inline-flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
                         title={action.label}
                         aria-label={action.label}
                       >
@@ -401,7 +404,7 @@ export function LandingPageEditorMockup({ url, className }: EditorMockupProps) {
                 </span>
               </div>
               <div className="h-[calc(100%-2rem)] overflow-auto p-2.5 text-[10px] leading-relaxed text-muted-foreground sm:p-3 sm:text-xs [&_blockquote]:border-l-2 [&_blockquote]:border-indigo-500/40 [&_blockquote]:pl-2 [&_blockquote]:italic [&_h1]:mb-2 [&_h1]:text-base [&_h1]:font-semibold [&_h1]:tracking-tight [&_h1]:text-foreground [&_h2]:mb-1.5 [&_h2]:mt-3 [&_h2]:text-xs [&_h2]:font-semibold [&_h2]:tracking-tight [&_h2]:text-foreground [&_ol]:my-1.5 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-4 [&_p]:mb-2 [&_strong]:font-semibold [&_strong]:text-foreground [&_ul]:my-1.5 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-4 sm:[&_h1]:text-lg sm:[&_h2]:text-sm">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{previewContent}</ReactMarkdown>
+                {previewElement}
               </div>
             </section>
           </div>
@@ -414,7 +417,7 @@ export function LandingPageEditorMockup({ url, className }: EditorMockupProps) {
               <button
                 type="button"
                 onClick={() => setIsShareOpen(false)}
-                className="inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="inline-flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
                 aria-label="Close share menu"
               >
                 <X className="size-3" />
@@ -523,7 +526,7 @@ function WorkspaceSidebar({
                   type="button"
                   onClick={() => onToggleFolder(folder.id)}
                   className={cn(
-                    "inline-flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                    "inline-flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
                     isSelected && "text-indigo-600 dark:text-indigo-400",
                   )}
                   aria-label={`${folder.isOpen ? "Collapse" : "Expand"} ${folder.name}`}
@@ -587,7 +590,7 @@ function FileRow({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex w-full min-w-0 items-center gap-1.5 rounded-md px-1.5 py-1 text-left text-[10px] transition-colors hover:bg-muted sm:text-xs",
+        "flex min-h-6 w-full min-w-0 items-center gap-1.5 rounded-md px-1.5 py-1 text-left text-[10px] transition-colors hover:bg-muted sm:text-xs",
         nested && "px-1",
         isActive && "bg-accent font-medium text-foreground",
       )}
@@ -620,7 +623,7 @@ function ViewModeButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground sm:size-5",
+        "inline-flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground",
         active && "bg-background text-foreground shadow-sm",
       )}
       aria-label={label}

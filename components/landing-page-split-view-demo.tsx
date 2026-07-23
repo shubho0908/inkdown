@@ -225,7 +225,7 @@ export function LandingPageSplitViewDemo() {
                 key={number}
                 className={`grid min-w-0 grid-cols-[1.1rem_minmax(0,1fr)] gap-1 sm:grid-cols-[1.35rem_minmax(0,1fr)] sm:gap-2 ${desktopOnly ? "hidden lg:grid" : ""}`}
               >
-                <span className="select-none text-right text-muted-foreground/70">{number}</span>
+                <span className="select-none text-right text-muted-foreground">{number}</span>
                 {text ? (
                   <span className="min-w-0 overflow-hidden">
                     <span
