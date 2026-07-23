@@ -95,15 +95,11 @@ export function ForgotPasswordForm() {
               onChange={(e) => setEmail(e.target.value)}
               disabled={isPending}
               autoComplete="email"
-              className="focus-visible:ring-indigo-500/50"
+              className="focus-visible:ring-primary/50"
             />
           </div>
           {error ? <AuthErrorAlert message={error} /> : null}
-          <Button
-            type="submit"
-            className="w-full bg-indigo-600 text-white hover:bg-indigo-500 disabled:bg-indigo-600/50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-            disabled={isPending}
-          >
+          <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? "Sending…" : "Send reset link"}
           </Button>
         </div>
@@ -111,7 +107,7 @@ export function ForgotPasswordForm() {
           Remember your password?{" "}
           <Link
             href="/auth/login"
-            className="text-indigo-600 underline underline-offset-4 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+            className="text-primary underline underline-offset-4 hover:text-primary/80"
           >
             Sign in
           </Link>

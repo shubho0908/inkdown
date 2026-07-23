@@ -24,7 +24,7 @@ const sourceLines: readonly SourceLine[] = [
   {
     number: 1,
     text: "# The quiet plan",
-    tone: "text-indigo-600 dark:text-indigo-400",
+    tone: "text-primary",
     delay: "0ms",
   },
   { number: 2, text: "Write ideas as they arrive.", tone: "text-foreground", delay: "420ms" },
@@ -38,7 +38,7 @@ const sourceLines: readonly SourceLine[] = [
   {
     number: 5,
     text: "## Keep the signal",
-    tone: "text-indigo-600 dark:text-indigo-400",
+    tone: "text-primary",
     delay: "1260ms",
   },
   {
@@ -65,7 +65,7 @@ const sourceLines: readonly SourceLine[] = [
   {
     number: 10,
     text: "## Notes",
-    tone: "text-indigo-600 dark:text-indigo-400",
+    tone: "text-primary",
     delay: "2940ms",
     desktopOnly: true,
   },
@@ -119,7 +119,7 @@ const previewLines: readonly PreviewLine[] = [
   {
     delay: "840ms",
     content: (
-      <blockquote className="border-l-2 border-indigo-600/50 pl-2 text-muted-foreground dark:border-indigo-400/50">
+      <blockquote className="border-l-2 border-primary/50 pl-2 text-muted-foreground dark:border-primary/50">
         No tab switching.
       </blockquote>
     ),
@@ -166,7 +166,7 @@ const previewLines: readonly PreviewLine[] = [
     desktopOnly: true,
     content: (
       <div className="flex items-center gap-1.5 text-muted-foreground">
-        <span className="flex size-3 items-center justify-center rounded-sm border border-indigo-600 bg-indigo-600 text-[8px] font-bold text-white dark:border-indigo-400 dark:bg-indigo-400 dark:text-background">
+        <span className="flex size-3 items-center justify-center rounded-sm border border-primary bg-primary text-[8px] font-bold text-primary-foreground">
           ✓
         </span>
         Keep the work moving
@@ -177,7 +177,7 @@ const previewLines: readonly PreviewLine[] = [
     delay: "4620ms",
     desktopOnly: true,
     content: (
-      <blockquote className="border-l-2 border-indigo-600/50 pl-2 italic text-muted-foreground dark:border-indigo-400/50">
+      <blockquote className="border-l-2 border-primary/50 pl-2 italic text-muted-foreground dark:border-primary/50">
         A small plan makes space to think.
       </blockquote>
     ),
@@ -195,7 +195,7 @@ function streamPreviewStyle(delay: string): StreamStyle {
 function PreviewListItem({ children, emphasis = false }: { children: string; emphasis?: boolean }) {
   return (
     <div className="flex items-center gap-1.5 text-muted-foreground">
-      <span className="size-1 shrink-0 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+      <span className="size-1 shrink-0 rounded-full bg-primary" />
       {emphasis ? <em className="text-foreground">{children}</em> : children}
     </div>
   );
@@ -246,9 +246,7 @@ export function LandingPageSplitViewDemo() {
         <section className="flex min-w-0 flex-1 flex-col border-t bg-background sm:border-l sm:border-t-0">
           <header className="flex h-10 items-center justify-between border-b px-3 sm:px-4">
             <span className="text-[11px] font-semibold text-foreground sm:text-xs">View</span>
-            <span className="text-[10px] font-medium text-indigo-600 dark:text-indigo-400">
-              Live
-            </span>
+            <span className="text-[10px] font-medium text-primary">Live</span>
           </header>
 
           <div className="min-h-0 flex-1 overflow-hidden p-3 text-[11px] leading-relaxed sm:p-4 sm:text-sm">

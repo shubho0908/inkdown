@@ -57,7 +57,7 @@ export function LandingPageOrganizeDemo() {
       <div className="absolute bottom-3 left-[45%] right-3 top-11 min-w-0 sm:bottom-4 sm:right-4">
         <div className="flex h-4 items-center gap-1.5 text-[10px] font-semibold text-foreground sm:text-[11px]">
           <ChevronDown className="size-3 text-muted-foreground" />
-          <FolderOpen className="size-3.5 text-indigo-600 dark:text-indigo-400" />
+          <FolderOpen className="size-3.5 text-primary" />
           <span className="truncate">Workspace</span>
         </div>
         <div className="relative ml-2.5 mt-1.5 h-28 border-l border-border/80 pl-2 sm:ml-3 sm:pl-2.5">
@@ -67,13 +67,13 @@ export function LandingPageOrganizeDemo() {
                 className={`${folderClass} ${folderPosition} absolute left-2 right-0 flex h-4 items-center gap-1.5 rounded-sm text-[10px] text-foreground sm:left-2.5 sm:text-[11px]`}
               >
                 <ChevronDown className="size-3 text-muted-foreground" />
-                <FolderOpen className="size-3.5 text-indigo-600 dark:text-indigo-400" />
+                <FolderOpen className="size-3.5 text-primary" />
                 <span className="truncate">{name}</span>
               </div>
               <div
                 className={`${resultClass} ${filePosition} absolute left-6 right-0 flex h-3 items-center gap-1.5 text-[9px] text-muted-foreground sm:left-7 sm:text-[10px]`}
               >
-                <FileText className="size-3 shrink-0 text-indigo-600 dark:text-indigo-400" />
+                <FileText className="size-3 shrink-0 text-primary" />
                 <span className="truncate">{file}</span>
               </div>
             </div>
@@ -87,7 +87,7 @@ export function LandingPageOrganizeDemo() {
 function FileCard({ name }: { name: string }) {
   return (
     <div className="flex h-6 items-center gap-1.5 rounded-md border bg-background px-1.5 shadow-sm sm:px-2">
-      <FileText className="size-3 shrink-0 text-indigo-600 dark:text-indigo-400" />
+      <FileText className="size-3 shrink-0 text-primary" />
       <span className="truncate text-[9px] font-medium text-foreground sm:text-[10px]">{name}</span>
     </div>
   );

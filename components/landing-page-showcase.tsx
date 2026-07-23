@@ -21,7 +21,10 @@ const features = [
 
 export function LandingPageShowcase() {
   return (
-    <AnimatedSection aria-label="Features" className="mt-12 pt-16 pb-24 sm:mt-16 sm:pt-20 sm:pb-28 lg:mt-16 lg:pt-20 lg:pb-28">
+    <AnimatedSection
+      aria-label="Features"
+      className="mt-12 pt-16 pb-24 sm:mt-16 sm:pt-20 sm:pb-28 lg:mt-16 lg:pt-20 lg:pb-28"
+    >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-balance text-4xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-5xl">
@@ -37,7 +40,7 @@ export function LandingPageShowcase() {
             <LandingPageSplitViewDemo />
             <figcaption className="min-w-0 px-3 pb-3 sm:px-4 sm:pb-4">
               <h3 className="flex items-center gap-2 text-xl font-semibold tracking-tight sm:text-2xl">
-                <span className="inline-flex size-8 items-center justify-center rounded-lg bg-indigo-600/10 text-indigo-600 dark:text-indigo-400">
+                <span className="inline-flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <FileText className="size-4" aria-hidden="true" />
                 </span>
                 Write in split view

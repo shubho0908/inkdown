@@ -64,11 +64,7 @@ export default async function HomePage() {
             <Button asChild variant="ghost" size="sm">
               <Link href="/auth/login">Sign in</Link>
             </Button>
-            <Button
-              asChild
-              size="sm"
-              className="hidden bg-indigo-600 text-white hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400 sm:inline-flex"
-            >
+            <Button asChild size="sm" className="hidden sm:inline-flex">
               <Link href="/auth/sign-up">Get started</Link>
             </Button>
             <ThemeToggle />

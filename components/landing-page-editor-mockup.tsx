@@ -287,7 +287,7 @@ export function LandingPageEditorMockup({ url, className }: EditorMockupProps) {
             >
               <Menu className="size-3.5" />
             </button>
-            <FileText className="hidden size-3.5 text-indigo-600 dark:text-indigo-400 sm:block" />
+            <FileText className="hidden size-3.5 text-primary sm:block" />
             <span className="min-w-0 flex-1 truncate text-[10px] font-medium text-foreground sm:text-xs">
               {activeFile.name}
             </span>
@@ -399,11 +399,9 @@ export function LandingPageEditorMockup({ url, className }: EditorMockupProps) {
                 <span className="text-[9px] font-medium text-muted-foreground sm:text-[10px]">
                   Preview
                 </span>
-                <span className="text-[9px] font-medium text-indigo-600 dark:text-indigo-400 sm:text-[10px]">
-                  Live
-                </span>
+                <span className="text-[9px] font-medium text-primary sm:text-[10px]">Live</span>
               </div>
-              <div className="h-[calc(100%-2rem)] overflow-auto p-2.5 text-[10px] leading-relaxed text-muted-foreground sm:p-3 sm:text-xs [&_blockquote]:border-l-2 [&_blockquote]:border-indigo-500/40 [&_blockquote]:pl-2 [&_blockquote]:italic [&_h1]:mb-2 [&_h1]:text-base [&_h1]:font-semibold [&_h1]:tracking-tight [&_h1]:text-foreground [&_h2]:mb-1.5 [&_h2]:mt-3 [&_h2]:text-xs [&_h2]:font-semibold [&_h2]:tracking-tight [&_h2]:text-foreground [&_ol]:my-1.5 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-4 [&_p]:mb-2 [&_strong]:font-semibold [&_strong]:text-foreground [&_ul]:my-1.5 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-4 sm:[&_h1]:text-lg sm:[&_h2]:text-sm">
+              <div className="h-[calc(100%-2rem)] overflow-auto p-2.5 text-[10px] leading-relaxed text-muted-foreground sm:p-3 sm:text-xs [&_blockquote]:border-l-2 [&_blockquote]:border-primary/40 [&_blockquote]:pl-2 [&_blockquote]:italic [&_h1]:mb-2 [&_h1]:text-base [&_h1]:font-semibold [&_h1]:tracking-tight [&_h1]:text-foreground [&_h2]:mb-1.5 [&_h2]:mt-3 [&_h2]:text-xs [&_h2]:font-semibold [&_h2]:tracking-tight [&_h2]:text-foreground [&_ol]:my-1.5 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-4 [&_p]:mb-2 [&_strong]:font-semibold [&_strong]:text-foreground [&_ul]:my-1.5 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-4 sm:[&_h1]:text-lg sm:[&_h2]:text-sm">
                 {previewElement}
               </div>
             </section>
@@ -429,7 +427,7 @@ export function LandingPageEditorMockup({ url, className }: EditorMockupProps) {
             <button
               type="button"
               onClick={copyShareLink}
-              className="mt-2 flex h-7 w-full items-center justify-center gap-1.5 rounded-md bg-indigo-600 px-2 text-[10px] font-medium text-white transition-colors hover:bg-indigo-500"
+              className="mt-2 flex h-7 w-full items-center justify-center gap-1.5 rounded-md bg-primary px-2 text-[10px] font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               {isCopied ? <Check className="size-3" /> : <Copy className="size-3" />}
               {isCopied ? "Copied" : "Copy link"}
@@ -471,7 +469,7 @@ function WorkspaceSidebar({
     >
       <div className="flex items-center justify-between gap-2 border-b pb-2 sm:border-none sm:pb-2.5">
         <div className="flex items-center gap-1.5">
-          <span className="flex size-5 items-center justify-center rounded bg-indigo-600 text-white">
+          <span className="flex size-5 items-center justify-center rounded bg-primary text-primary-foreground">
             <FileText className="size-3" />
           </span>
           <span className="text-[10px] font-semibold text-foreground sm:text-xs">Inkdown</span>
@@ -490,7 +488,7 @@ function WorkspaceSidebar({
         <button
           type="button"
           onClick={onCreateFile}
-          className="inline-flex h-6 flex-1 items-center justify-center gap-1 rounded bg-indigo-600 px-1.5 text-[9px] font-medium text-white transition-colors hover:bg-indigo-500 sm:text-[10px]"
+          className="inline-flex h-6 flex-1 items-center justify-center gap-1 rounded bg-primary px-1.5 text-[9px] font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:text-[10px]"
         >
           <FilePlus2 className="size-3" />
           File
@@ -527,7 +525,7 @@ function WorkspaceSidebar({
                   onClick={() => onToggleFolder(folder.id)}
                   className={cn(
                     "inline-flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-                    isSelected && "text-indigo-600 dark:text-indigo-400",
+                    isSelected && "text-primary",
                   )}
                   aria-label={`${folder.isOpen ? "Collapse" : "Expand"} ${folder.name}`}
                 >
@@ -546,7 +544,7 @@ function WorkspaceSidebar({
                   )}
                 >
                   {folder.isOpen ? (
-                    <FolderOpen className="size-3.5 shrink-0 text-indigo-600 dark:text-indigo-400" />
+                    <FolderOpen className="size-3.5 shrink-0 text-primary" />
                   ) : (
                     <Folder className="size-3.5 shrink-0 text-muted-foreground" />
                   )}
@@ -597,10 +595,7 @@ function FileRow({
       aria-current={isActive ? "page" : undefined}
     >
       <FileText
-        className={cn(
-          "size-3.5 shrink-0 text-muted-foreground",
-          isActive && "text-indigo-600 dark:text-indigo-400",
-        )}
+        className={cn("size-3.5 shrink-0 text-muted-foreground", isActive && "text-primary")}
       />
       <span className="truncate">{file.name}</span>
     </button>

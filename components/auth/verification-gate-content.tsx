@@ -19,7 +19,7 @@ export function VerificationGateContent({
       <div className="flex flex-col gap-4">
         <div className="rounded-lg border bg-muted/50 p-4">
           <div className="flex items-start gap-3 text-left">
-            <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-indigo-600 dark:text-indigo-400" />
+            <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-primary" />
             <p className="text-sm leading-relaxed text-muted-foreground">{copy.body}</p>
           </div>
         </div>

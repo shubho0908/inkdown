@@ -20,11 +20,7 @@ export function LandingPageContent() {
                 documents in folders, and share them with a public link. No clutter, no friction.
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row">
-                <Button
-                  asChild
-                  size="lg"
-                  className="bg-indigo-700 text-white hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-500"
-                >
+                <Button asChild size="lg">
                   <Link href="/auth/sign-up">Start writing</Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
@@ -54,11 +50,7 @@ export function LandingPageContent() {
             Join a focused workspace built for markdown. Start writing for free in seconds.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:mt-10 sm:flex-row">
-            <Button
-              asChild
-              size="lg"
-              className="bg-indigo-700 text-white hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-500"
-            >
+            <Button asChild size="lg">
               <Link href="/auth/sign-up">Create your free account</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
