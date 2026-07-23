@@ -312,11 +312,12 @@
 }
 
 .animate-split-stream-source {
-  animation: split-stream-source 9s steps(24, end) var(--stream-delay, 0ms) 1 both;
+  animation: split-stream-source 9s steps(24, end) var(--stream-delay, 0ms) infinite both;
 }
 
 .animate-split-stream-preview {
-  animation: split-stream-preview 9s cubic-bezier(0.22, 1, 0.36, 1) var(--stream-delay, 0ms) 1 both;
+  animation: split-stream-preview 9s cubic-bezier(0.22, 1, 0.36, 1) var(--stream-delay, 0ms)
+    infinite both;
 }
 
 .landing-organize-scene {
