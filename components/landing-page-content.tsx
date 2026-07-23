@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { LandingPageHeroMockup } from "@/components/landing-page-hero-mockup";
+import { AnimatedSection } from "@/components/animated-section";
 import { LandingPageMetrics } from "@/components/landing-page-metrics";
 import { LandingPageShowcase } from "@/components/landing-page-showcase";
 
 export function LandingPageContent() {
   return (
     <main id="content">
-      <section aria-label="Hero" className="relative overflow-hidden">
+      <AnimatedSection aria-label="Hero" className="relative overflow-hidden">
         <div className="mx-auto flex max-w-7xl flex-col justify-center px-4 sm:px-6 lg:px-8">
           <div className="mt-8 grid items-center gap-10 pt-20 pb-24 sm:pt-24 sm:pb-24 lg:grid-cols-2 lg:gap-16 lg:pt-24 lg:pb-24">
             <div className="order-1 flex min-w-0 flex-col justify-center">
@@ -36,12 +37,12 @@ export function LandingPageContent() {
             </div>
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
       <LandingPageMetrics />
       <LandingPageShowcase />
 
-      <section
+      <AnimatedSection
         aria-label="Get started"
         className="relative mt-24 overflow-hidden border-t bg-muted/30 py-24 sm:py-28 lg:py-28"
       >
@@ -65,7 +66,7 @@ export function LandingPageContent() {
             </Button>
           </div>
         </div>
-      </section>
+      </AnimatedSection>
     </main>
   );
 }

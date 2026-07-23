@@ -1,4 +1,5 @@
 import { FileText } from "lucide-react";
+import { AnimatedSection } from "@/components/animated-section";
 import { LandingPageOrganizeDemo } from "@/components/landing-page-organize-demo";
 import { LandingPageShareDemo } from "@/components/landing-page-share-demo";
 import { LandingPageSplitViewDemo } from "@/components/landing-page-split-view-demo";
@@ -20,7 +21,7 @@ const features = [
 
 export function LandingPageShowcase() {
   return (
-    <section aria-label="Features" className="pt-24 pb-24 sm:pt-28 sm:pb-28 lg:pt-28 lg:pb-28">
+    <AnimatedSection aria-label="Features" className="pt-24 pb-24 sm:pt-28 sm:pb-28 lg:pt-28 lg:pb-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-balance text-4xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-5xl">
@@ -60,6 +61,6 @@ export function LandingPageShowcase() {
           ))}
         </div>
       </div>
-    </section>
+    </AnimatedSection>
   );
 }
