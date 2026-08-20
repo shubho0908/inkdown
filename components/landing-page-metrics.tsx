@@ -20,11 +20,13 @@ export async function LandingPageMetrics() {
         <h2 className="text-center text-sm font-medium uppercase tracking-wider text-muted-foreground">
           Built for writers, developers, and teams
         </h2>
-        <dl className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-3">
+        <dl className="mt-8 grid grid-cols-3 gap-2 sm:mt-10 sm:gap-8">
           {items.map(({ key, label, value }) => (
             <div key={key} className="flex flex-col-reverse text-center">
-              <dt className="mt-2 text-sm font-medium text-muted-foreground">{label}</dt>
-              <dd className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+              <dt className="mt-2 text-[0.7rem] font-medium text-muted-foreground sm:text-sm">
+                {label}
+              </dt>
+              <dd className="text-2xl font-semibold tabular-nums tracking-tight text-foreground sm:text-4xl lg:text-5xl">
                 <AnimatedNumber value={value} />
               </dd>
             </div>
