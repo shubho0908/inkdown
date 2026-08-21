@@ -30,9 +30,25 @@ function resolveLegacyStoredTheme(storedTheme: string | null): Theme {
   return SERVER_THEME_SNAPSHOT;
 }
 
+function readThemeStorage(): string | null {
+  try {
+    return window.localStorage.getItem(THEME_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeThemeStorage(theme: Theme): void {
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {
+    // Privacy mode / blocked storage must not prevent applying the document theme.
+  }
+}
+
 function persistThemeIfNeeded(previousValue: string | null, theme: Theme): void {
   if (previousValue !== theme) {
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    writeThemeStorage(theme);
   }
 }
 
@@ -41,7 +57,7 @@ export function readStoredTheme(): Theme {
     return SERVER_THEME_SNAPSHOT;
   }
 
-  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+  const storedTheme = readThemeStorage();
   const theme = resolveLegacyStoredTheme(storedTheme);
   persistThemeIfNeeded(storedTheme, theme);
   return theme;
@@ -51,7 +67,7 @@ export function readResolvedTheme(): ResolvedTheme {
   return readStoredTheme();
 }
 
-function applyThemeToDocument(theme: Theme): void {
+export function applyThemeToDocument(theme: Theme): void {
   assertBrowser("applyThemeToDocument");
 
   document.documentElement.classList.toggle("dark", theme === "dark");
@@ -61,7 +77,7 @@ function applyThemeToDocument(theme: Theme): void {
 export function writeStoredTheme(theme: Theme): void {
   assertBrowser("writeStoredTheme");
 
-  window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  writeThemeStorage(theme);
   applyThemeToDocument(theme);
   window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
 }

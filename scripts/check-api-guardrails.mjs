@@ -224,11 +224,17 @@ const THEME_BROWSER_FORBIDDEN_PATTERNS = [
     pattern: /\buseState\b/,
     files: new Set(['components/theme-toggle.tsx']),
   },
+  {
+    label: 'next/script in root layout (App Router beforeInteractive queues theme work after first paint)',
+    pattern: /from\s+['"]next\/script['"]/,
+    files: new Set(['app/layout.tsx']),
+  },
 ]
 
 const THEME_ARCHITECTURE_FILES = {
   themeToggle: 'components/theme-toggle.tsx',
   useThemeHook: 'hooks/use-theme.ts',
+  themeSync: 'components/theme-sync.tsx',
   rootLayout: 'app/layout.tsx',
 }
 
@@ -265,8 +271,33 @@ const THEME_ARCHITECTURE_REQUIRED_PATTERNS = [
   },
   {
     file: THEME_ARCHITECTURE_FILES.rootLayout,
-    label: 'root layout must run theme bootstrap beforeInteractive',
-    pattern: /strategy\s*=\s*['"]beforeInteractive['"]/,
+    label: 'root layout must run theme bootstrap as a native blocking script (next/script beforeInteractive queues after first paint)',
+    pattern: /dangerouslySetInnerHTML=\{\{\s*__html:\s*themeBootstrapScript/,
+  },
+  {
+    file: THEME_ARCHITECTURE_FILES.rootLayout,
+    label: 'root layout must mark the theme bootstrap script blocking=render',
+    pattern: /blocking=['"]render['"]/,
+  },
+  {
+    file: THEME_ARCHITECTURE_FILES.rootLayout,
+    label: 'root layout must include pre-CSS canvas styles for dark-mode first paint',
+    pattern: /themeBootstrapStyle/,
+  },
+  {
+    file: THEME_ARCHITECTURE_FILES.rootLayout,
+    label: 'root layout must re-apply the document theme after hydration via ThemeSync',
+    pattern: /<ThemeSync\s*\/>/,
+  },
+  {
+    file: THEME_ARCHITECTURE_FILES.themeSync,
+    label: 'theme-sync must re-apply theme in useLayoutEffect (before paint)',
+    pattern: /useLayoutEffect/,
+  },
+  {
+    file: THEME_ARCHITECTURE_FILES.themeSync,
+    label: 'theme-sync must apply the stored theme to the document',
+    pattern: /applyThemeToDocument\s*\(\s*readStoredTheme\s*\(\s*\)\s*\)/,
   },
 ]
 

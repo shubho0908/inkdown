@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
+import { ThemeSync } from "@/components/theme-sync";
 import { createSocialImageSet } from "@/lib/social-metadata";
 import { getSiteUrlObject } from "@/lib/site-url";
-import { themeBootstrapScript } from "@/lib/theme-bootstrap";
+import { themeBootstrapScript, themeBootstrapStyle } from "@/lib/theme-bootstrap";
 import { jetBrainsMono, plusJakartaSans } from "./fonts";
 import "./globals.css";
 
@@ -83,10 +83,19 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
       className={`${plusJakartaSans.variable} ${jetBrainsMono.variable}`}
     >
+      <head>
+        <script
+          id="theme-bootstrap"
+          dangerouslySetInnerHTML={{ __html: themeBootstrapScript }}
+          blocking="render"
+        />
+        <style
+          id="theme-bootstrap-style"
+          dangerouslySetInnerHTML={{ __html: themeBootstrapStyle }}
+        />
+      </head>
       <body className="font-sans antialiased selection:bg-primary/20">
-        <Script id="theme-bootstrap" strategy="beforeInteractive">
-          {themeBootstrapScript}
-        </Script>
+        <ThemeSync />
         {children}
       </body>
     </html>
